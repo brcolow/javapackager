@@ -1,0 +1,4 @@
+include 'fxpackager', 'fxpackagerservices'
+
+project(":fxpackager").projectDir = file("modules/jdk.packager")
+project(":fxpackagerservices").projectDir = file("modules/jdk.packager.services")

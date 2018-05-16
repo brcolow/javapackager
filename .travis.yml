@@ -1,0 +1,43 @@
+language: java
+sudo: false
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+
+matrix:
+  fast_finish: true
+  include:
+    - os: linux
+      dist: trusty
+      jdk: oraclejdk9
+      addons:
+        apt:
+          packages:
+            - oracle-java9-installer
+    - os: osx
+      osx_image: xcode9
+
+before_script:
+  - wget https://services.gradle.org/distributions/gradle-4.3-bin.zip
+  - unzip gradle-4.3-bin.zip
+  - export GRADLE_HOME=$PWD/gradle-4.3
+  - export PATH=$GRADLE_HOME/bin:$PATH
+  - echo $JAVA_OPTS
+  - echo $GRADLE_OPTS
+
+# skip install stage.
+install: true
+
+before_install:
+  - if [[ "${TRAVIS_OS_NAME}" == osx ]]; then brew update && brew cask reinstall java && (brew outdated gradle || brew upgrade gradle); fi
+
+script: gradle build
+
+notifications:
+  email: false
+

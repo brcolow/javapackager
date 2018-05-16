@@ -1,0 +1,38 @@
+version: "{branch} {build}"
+
+image: Visual Studio 2017
+
+environment:
+  JAVA_HOME: C:\\jdk10
+  VCINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
+  APPVEYOR_CACHE_ENTRY_ZIP_ARGS: "-t7z -m0=lzma -mx=9"
+
+shallow_clone: true
+
+build_script:
+  - ps: |
+      choco install jdk10 -params 'installdir=c:\\jdk10'
+      choco install gradle --version 4.3.0
+      $msvcToolsVer = Get-Content "$env:VCINSTALLDIR\Microsoft.VCToolsVersion.default.txt"
+      if ([string]::IsNullOrWhitespace($msvcToolsVer)) {
+        # The MSVC tools version file can have txt *or* props extension.
+        $msvcToolsVer = Get-Content "$env:VCINSTALLDIR\Microsoft.VCToolsVersion.default.props"
+      }
+      $env:MSVC_VER = $msvcToolsVer
+      $env:VS150COMNTOOLS = $env:VCINSTALLDIR
+      $env:VSVARS32FILE = "$env:VCINSTALLDIR\vcvars32.bat"
+      refreshenv
+  - cmd: gradle build
+
+on_success:
+  - ps: |
+        $buildZip = "build.zip"
+        Compress-Archive -Path ".\build\modular-sdk" -DestinationPath $buildZip -CompressionLevel Optimal
+        Push-AppveyorArtifact $buildZip -Verbose
+
+cache:
+  - C:\Users\appveyor\.gradle\caches
+  - '%JAVA_HOME% -> appveyor.yml'
+  - C:\ProgramData\chocolatey\bin -> appveyor.yml
+  - C:\ProgramData\chocolatey\lib -> appveyor.yml
+
