@@ -25,7 +25,6 @@
 
 package jdk.packager.internal.legacy;
 
-
 import com.openjdk.tools.packager.StandardBundlerParam;
 import com.openjdk.tools.packager.BundlerParamInfo;
 import com.openjdk.tools.packager.RelativeFileSet;
@@ -73,7 +72,6 @@ import java.util.zip.ZipInputStream;
 import jdk.packager.internal.legacy.builders.AbstractAppImageBuilder;
 import jdk.packager.internal.legacy.Module;
 import jdk.tools.jlink.internal.packager.AppRuntimeImageBuilder;
-
 
 public final class JLinkBundlerHelper {
 

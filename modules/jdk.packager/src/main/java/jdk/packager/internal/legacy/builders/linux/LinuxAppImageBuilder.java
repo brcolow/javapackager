@@ -24,7 +24,6 @@
  */
 package jdk.packager.internal.legacy.builders.linux;
 
-
 import com.openjdk.tools.packager.BundlerParamInfo;
 import com.openjdk.tools.packager.IOUtils;
 import com.openjdk.tools.packager.Log;
@@ -54,7 +53,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
-
 
 public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
 

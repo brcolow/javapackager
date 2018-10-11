@@ -19,13 +19,23 @@ matrix:
         apt:
           packages:
             - oracle-java9-installer
+    - os: linux
+      dist: trusty
+      jdk: openjdk10
+    - os: linux
+      dist: trusty
+      jdk: openjdk11
     - os: osx
-      osx_image: xcode9
+      jdk: openjdk10
+      osx_image: xcode9.4
+    - os: osx
+      jdk: openjdk11
+      osx_image: xcode10
 
 before_script:
-  - wget https://services.gradle.org/distributions/gradle-4.3-bin.zip
-  - unzip gradle-4.3-bin.zip
-  - export GRADLE_HOME=$PWD/gradle-4.3
+  - wget https://services.gradle.org/distributions/gradle-4.10.2-bin.zip
+  - unzip gradle-4.10.2-bin.zip
+  - export GRADLE_HOME=$PWD/gradle-4.10.2
   - export PATH=$GRADLE_HOME/bin:$PATH
   - echo $JAVA_OPTS
   - echo $GRADLE_OPTS
@@ -33,10 +43,7 @@ before_script:
 # skip install stage.
 install: true
 
-before_install:
-  - if [[ "${TRAVIS_OS_NAME}" == osx ]]; then brew update && brew cask reinstall java && (brew outdated gradle || brew upgrade gradle); fi
-
-script: gradle build
+script: gradle build  --no-daemon
 
 notifications:
   email: false

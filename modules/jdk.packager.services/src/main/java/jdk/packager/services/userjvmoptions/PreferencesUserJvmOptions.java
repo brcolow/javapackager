@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,7 +43,8 @@ import java.util.prefs.Preferences;
  */
 final public class PreferencesUserJvmOptions implements UserJvmOptionsService {
 
-    Preferences node = Preferences.userRoot().node(System.getProperty("app.preferences.id").replace(".", "/")).node("JVMUserOptions");
+    Preferences node = Preferences.userRoot().node(System.getProperty(
+            "app.preferences.id").replace(".", "/")).node("JVMUserOptions");
 
     @Override
     public Map<String, String> getUserJVMOptions() {
@@ -76,6 +77,7 @@ final public class PreferencesUserJvmOptions implements UserJvmOptionsService {
 
     @Override
     public Map<String, String> getUserJVMOptionDefaults() {
-        throw new UnsupportedOperationException("Preferences backed UserJvmOptions do not enumerate their defaults");
+        throw new UnsupportedOperationException(
+                "Preferences backed UserJvmOptions do not enumerate their defaults");
     }
 }
