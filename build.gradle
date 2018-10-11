@@ -23,6 +23,10 @@ defineProperty("RETAIN_PACKAGER_TESTS", "false")
 defineProperty("TEST_PACKAGER_DMG", "false")
 defineProperty("FULL_TEST", "true")
 defineProperty("JDK_JMODS", System.getenv("JDK_JMODS") ?: System.getenv("JDK_HOME") + "/jmods")
+defineProperty("IS_DEBUG_NATIVE", "false")
+defineProperty("PRODUCT_NAME", "OpenJFX")
+defineProperty("COMPANY_NAME", "N/A")
+defineProperty("PLATFORM_NAME", "Platform")
 ext.IS_MAC = OS_NAME.contains("mac") || OS_NAME.contains("darwin")
 ext.IS_WINDOWS = OS_NAME.contains("windows")
 ext.IS_LINUX = OS_NAME.contains("linux")
@@ -38,6 +42,15 @@ try {
     }
 } finally {
     inStream2.close();
+}
+System.out.println("HAS_JAVAFX_MODULES: ${HAS_JAVAFX_MODULES}")
+
+// Define the number of threads to use when compiling (specifically for native compilation)
+// On Mac we limit it to 1 by default due to problems running gcc in parallel
+if (IS_MAC) {
+    defineProperty("NUM_COMPILE_THREADS", "1")
+} else {
+    defineProperty("NUM_COMPILE_THREADS", "${Runtime.runtime.availableProcessors()}")
 }
 
 project.ext.defaultModuleSourcePath = rootProject.projectDir.path + '/modules/*/src/main/java'
@@ -425,12 +438,6 @@ project(":fxpackager") {
 
     sourceSets {
         main
-        antplugin {
-            java {
-                compileClasspath += main.output
-                runtimeClasspath += main.output
-            }
-        }
         test
     }
 
@@ -444,17 +451,11 @@ project(":fxpackager") {
 
     repositories {
         mavenCentral()
-        maven {
-            url "https://repository.apache.org"
-        }
     }
 
     dependencies {
         testCompile group: "junit", name: "junit", version: "4.8.2"
-        antpluginCompile group: "org.apache.ant", name: "ant", version: "1.8.2"
-        testCompile project(":fxpackager"),
-                group: "org.apache.ant", name: "ant", version: "1.8.2",
-                sourceSets.antplugin.output
+        testCompile project(":fxpackager")
     }
 
     //Note: these should be reflected in the module-info additions passed to the JDK
@@ -471,10 +472,7 @@ project(":fxpackager") {
             "--add-exports=java.logging/java.util.logging=jdk.packager",
     ])
 
-    compileAntpluginJava.dependsOn([ compileJava, processResources ])
-    compileAntpluginJava.options.compilerArgs.addAll(computeModulePathArgs("antlib", project.moduleChain, false))
-
-
+    /*
     task buildVersionFile() {
         File dir = new File("${project.projectDir}/build/resources/antplugin/resources");
         File versionFile = new File(dir, "/version.properties");
@@ -486,32 +484,22 @@ project(":fxpackager") {
         }
         outputs.file(versionFile)
     }
+    */
 
-    // When producing the ant-javafx.jar, we need to relocate a few class files
-    // from their normal location to a resources/classes or resources/web-files
-    // location
-    task antpluginJar(type: Jar, dependsOn: [ compileJava, jar, compileAntpluginJava, buildVersionFile ]) {
+    // The "man" task will create a $buildDir/man containing the man
+    // files for the system being built
+    task man(type: Copy) {
         includeEmptyDirs = false
-        archiveName = "ant-javafx.jar"
-
-        from (sourceSets.antplugin.output) {
-            eachFile { FileCopyDetails details ->
-                if (details.path.startsWith("com/javafx/main")) {
-                    details.path = "resources/classes/$details.path"
-                }
-            }
-        }
-
-        from (sourceSets.main.resources) {
-            includes = [ "com/sun/javafx/tools/ant/**" ]
-        }
-
-        from (sourceSets.main.output.resourcesDir) {
-            includes = [ "resources/web-files/**" ]
-        }
+        enabled = IS_LINUX || IS_MAC
+        from "src/main/man"
+        into "$buildDir/man"
+        exclude "**/*.html"
+        if (IS_MAC) exclude "**/ja_JP.UTF-8/**"
     }
+    processResources.dependsOn man
 
-    assemble.dependsOn(antpluginJar)
+
+    String buildClassesDir = "${sourceSets.main.output.classesDir}/${moduleName}"
 
     if (IS_WINDOWS) {
         setupTools("windows_tools",
@@ -562,9 +550,25 @@ project(":fxpackager") {
             }
         )
 
+        def winVsVer = Integer.parseInt(WINDOWS_VS_VER)
         if (WINDOWS_SDK_DIR == null || WINDOWS_SDK_DIR == "") {
             throw new GradleException("FAIL: WINSDK_DIR not defined");
         }
+
+        def msvcVer = System.getenv("MSVC_VER") ?: "14.10.25017"
+        def msvcBinDir = ""
+        if (winVsVer == 150) {
+            msvcBinDir = (IS_64
+                    ? "$WINDOWS_VS_VSINSTALLDIR/VC/Tools/MSVC/$msvcVer/bin/HostX64/x64"
+                    : "$WINDOWS_VS_VSINSTALLDIR/VC/Tools/MSVC/$msvcVer/bin/HostX86/x86")
+        } else if (winVsVer <= 120) {
+            msvcBinDir = (IS_64
+                    ? "$WINDOWS_VS_VSINSTALLDIR/VC/BIN/amd64"
+                    : "$WINDOWS_VS_VSINSTALLDIR/VC/BIN")
+        }
+
+        // Define set of flags shared for all targets that support debug compilation
+        def ccDebugFlags = IS_DEBUG_NATIVE ? ["/MDd", "/Od", "/Zi", "/DDEBUG"] : ["/O2", "/MD", "/DNDEBUG"]
 
         ext.WINDOWS_NATIVE_COMPILE_ENVIRONMENT = [
                 "VCINSTALLDIR"         : WINDOWS_VS_VCINSTALLDIR,
@@ -579,38 +583,156 @@ project(":fxpackager") {
                 "DXSDK_DIR"            : WINDOWS_DXSDK_DIR
         ];
 
+        def winSdkBinDir = "$WINDOWS_SDK_DIR/Bin"
+        if (WINDOWS_VS_VER != "100") {
+            winSdkBinDir += "/" + (IS_64 ? "x64" : "x86")
+        }
+
+        if (!file("$winSdkBinDir/RC.Exe").exists()) {
+            winSdkBinDir = "$WINDOWS_SDK_DIR/Bin/$WINDOWS_SDK_VERSION"
+            if (WINDOWS_VS_VER != "100") {
+                winSdkBinDir += "/" + (IS_64 ? "x64" : "x86")
+            }
+        }
+        println "winSdkBinDir=$winSdkBinDir"
+        ext.RC = "${winSdkBinDir}/rc.exe"
+        ext.MC = "${winSdkBinDir}/mt.exe"
+        def rcCompiler = RC
+        if (!file(RC).exists()) throw new GradleException("FAIL: cannot find RC: " + RC)
+
+        def msvcRedistVer = System.getenv("MSVC_REDIST_VER") ?: "14.10.25008"
+        String msvcRedstDir = (IS_64
+                ? "$WINDOWS_VS_VSINSTALLDIR/VC/Redist/MSVC/$msvcRedistVer/x64"
+                : "$WINDOWS_VS_VSINSTALLDIR/VC/Redist/MSVC/$msvcRedistVer/x86")
+        def WINDOWS_DLL_VER = WINDOWS_VS_VER
+        ext.MSVCR = null
+        ext.MSVCP = null
+
+        def windowsCRTVer = System.getenv("WINDOWS_CRT_VER") ?: "150"
+        if (WINDOWS_VS_VER == "150") {
+            WINDOWS_DLL_VER = "140"
+            ext.MSVCR = "${msvcRedstDir}/Microsoft.VC${windowsCRTVer}.CRT/vcruntime${WINDOWS_DLL_VER}.dll"
+            ext.MSVCP = "${msvcRedstDir}/Microsoft.VC${windowsCRTVer}.CRT/msvcp${WINDOWS_DLL_VER}.dll"
+        }
+        // Product version variables passed to RC:
+        def rcVer = "0.0.1"
+        def rcVerMajor = 0
+        def rcVerMinor = 0
+        def rcVerSecurity = 0
+        def rcVerPatch = 1
+        def rcVerFile = "${rcVerMajor},${rcVerMinor},${rcVerSecurity},${rcVerPatch}"
+        def rcVerBuild = "0.0.1"
+        def rcVerCopyrYear = "${Calendar.getInstance().get(Calendar.YEAR)}"
+        def rcFlags = [
+                "/d", "\"JFX_COMPANY=${COMPANY_NAME}\"",
+                "/d", "\"JFX_COMPONENT=${PRODUCT_NAME} ${PLATFORM_NAME} binary\"",
+                "/d", "\"JFX_NAME=${PRODUCT_NAME} ${PLATFORM_NAME} ${rcVerMajor}\"",
+                "/d", "\"JFX_VER=${rcVer}\"",
+                "/d", "\"JFX_BUILD_ID=${rcVerBuild}\"",
+                "/d", "\"JFX_COPYRIGHT=Copyright \u00A9 ${rcVerCopyrYear}\"",
+                "/d", "\"JFX_FVER=${rcVerFile}\"",
+                "/d", "\"JFX_FTYPE=0x2L\"",
+                "/nologo"
+        ];
+
         ext.WIN = [:]
+        WIN.launcher = [:]
+        WIN.launcher.ccFlags = ["/nologo", "/W3", "/MT", "/EHsc", "/D_WINDOWS", "/DUNICODE", "/D_UNICODE", "/DWIN32",
+                                "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN", "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
+                                ccDebugFlags].flatten();
+        WIN.launcher.linkFlags = ["/link", "/nologo", "/WX", "/SUBSYSTEM:WINDOWS", "user32.lib", "shell32.lib", "advapi32.lib"]
+        if (IS_DEBUG_NATIVE) WIN.launcher.linkFlags.add("/debug");
+
+        WIN.launcherlibrary = [:]
+        WIN.launcherlibrary.ccFlags = ["/nologo", "/W3", "/FS",
+                                       // "/WX",
+                                       "/EHsc", "/c", "/D_WINDOWS", "/DUNICODE", "/D_UNICODE", "/DWIN32",
+                                       "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN", "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
+                                       ccDebugFlags].flatten();
+        WIN.launcherlibrary.linkFlags = ["/nologo", "/WX", "/DLL", "/SUBSYSTEM:WINDOWS", "user32.lib", "shell32.lib", "advapi32.lib", "ole32.lib"]
+        if (IS_DEBUG_NATIVE) WIN.launcherlibrary.linkFlags.add("/debug");
+
         WIN.fxpackager = [:]
-        WIN.fxpackager.nativeSource = [
-            file("modules/jdk.packager/src/main/native/javapackager/win")]
-        WIN.fxpackager.compiler = compiler
+        WIN.fxpackager.nativeSource = [file("src/main/native/javapackager/win")] // remove modules/jdk.packager from file?
         WIN.fxpackager.ccFlags = ["/nologo", "/W3", "/EHsc", "/MT", "/GS",  "/DUNICODE", "/D_UNICODE",
                             "/DWIN32", "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN",
                             "/D_WIN32_WINDOWS=0X0500", "/D_WIN32_WINNT=0X0500",
                             "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
                             "/O2", "-c"]
-        WIN.fxpackager.linker = linker
         WIN.fxpackager.linkFlags = ["/nologo", "/SUBSYSTEM:CONSOLE", "/opt:REF", "/incremental:no", "/manifest", "kernel32.lib", "advapi32.lib"];
-        WIN.fxpackager.rcSource = file("modules/jdk.packager/src/main/native/javapackager/win/javapackager.rc")
+        WIN.fxpackager.rcSource = file("src/main/native/javapackager/win/javapackager.rc")
         WIN.fxpackager.rcCompiler = rcCompiler
         WIN.fxpackager.rcFlags = [
             "/l", "0x409",
             "/d", "JFX_FNAME=javapackager.exe",
             "/d", "JFX_INTERNAL_NAME=javapackager",
         rcFlags].flatten();
-    }
 
-    // Builds the javapackager executable. For everything other than windows,
-    // this is simply moving the existing shell script and ensuring it has proper
-    // permissions. For Windows, this includes compiling the native executable
-    if (IS_WINDOWS){
+        task buildWinLauncher(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher";
+            matches = "WinLauncher\\.cpp";
+            params.addAll(WIN.launcher.ccFlags);
+            output(file("$buildDir/native/WinLauncher"));
+            source(file("src/main/native/launcher/win"));
+            compiler = "${msvcBinDir}/cl.exe"
+            exe = true;
+            linkerOptions.addAll(WIN.launcher.linkFlags);
+        }
+
+        task copyWinLauncher(type: Copy, group: "Build", dependsOn: buildWinLauncher) {
+            from "$buildDir/native/WinLauncher/WinLauncher.exe"
+            from "$MSVCR"
+            from "$MSVCP"
+            into "${buildClassesDir}/com/oracle/tools/packager/windows"
+        }
+
+        task compileWinLibrary(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher library";
+            matches = ".*\\.cpp"
+            source(file("src/main/native/library/common"));
+            params.addAll(WIN.launcherlibrary.ccFlags)
+            output(file("$buildDir/native/WinLauncher/obj"));
+            compiler = "${msvcBinDir}/cl.exe"
+        }
+
+        task linkWinLibrary(type: LinkTask, group: "Build", dependsOn: compileWinLibrary) {
+            description = "Links native sources for the application co-bundle launcher library";
+            objectDir = file("$buildDir/native/WinLauncher/obj")
+            linkParams.addAll(WIN.launcherlibrary.linkFlags);
+            lib = file("$buildDir/native/WinLauncher/packager.dll")
+            linker = "${msvcBinDir}/link.exe"
+        }
+
+        task copyWinLibrary(type: Copy, group: "Build", dependsOn: linkWinLibrary) {
+            from "$buildDir/native/WinLauncher/packager.dll"
+            into "${buildClassesDir}/com/oracle/tools/packager/windows"
+        }
+
+        task buildWinLauncherSvc(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher";
+            matches = "WinLauncherSvc\\.cpp";
+            params.addAll(WIN.launcher.ccFlags);
+            output(file("$buildDir/native/WinLauncherSvc"));
+            source(file("src/main/native/service/win"));
+            compiler = "${msvcBinDir}/cl.exe"
+            exe = true;
+            linkerOptions.addAll(WIN.launcher.linkFlags);
+        }
+
+        task copyWinLauncherSvc(type: Copy, group: "Build", dependsOn: buildWinLauncherSvc) {
+            from "$buildDir/native/WinLauncherSvc/WinLauncherSvc.exe"
+            into "${buildClassesDir}/com/oracle/tools/packager/windows"
+        }
+
+        task compileLauncher(dependsOn: [copyWinLauncher, copyWinLibrary, copyWinLauncherSvc])
+
         task setupCompileJavaPackager(type: Copy, group: "Build") {
             mkdir "$buildDir/native"
             mkdir "$buildDir/native/javapackager"
             from file("src/main/native/javapackager/win/javapackager.manifest")
             into file("$buildDir/native/javapackager")
             filter { line->
-                line = line.replace("FXVERSION", "v0.0.1")
+                line = line.replace("FXVERSION", "0.0.0.1")
             }
         }
 
@@ -618,7 +740,7 @@ project(":fxpackager") {
             description = "Compiles native sources for javapackager.exe"
             matches = ".*\\.cpp"
             params.addAll(WIN.fxpackager.ccFlags)
-            compiler = WIN.fxpackager.compiler
+            compiler = "${msvcBinDir}/cl.exe"
             output(file("$buildDir/native/javapackager/obj"))
             source WIN.fxpackager.nativeSource
             doLast {
@@ -638,12 +760,12 @@ project(":fxpackager") {
             objectDir = file("$buildDir/native/javapackager/obj")
             linkParams.addAll(WIN.fxpackager.linkFlags);
             lib = file("$buildDir/native/javapackager/javapackager.exe")
-            linker = WIN.fxpackager.linker
+            linker = "${msvcBinDir}/link.exe"
             doLast {
                 exec({
                     commandLine("$MC", "-manifest",
-                                       "$buildDir/native/javapackager/javapackager.manifest",
-                                       "-outputresource:$buildDir/native/javapackager/javapackager.exe")
+                            "$buildDir/native/javapackager/javapackager.manifest",
+                            "-outputresource:$buildDir/native/javapackager/javapackager.exe")
                     environment(WINDOWS_NATIVE_COMPILE_ENVIRONMENT)
                 })
             }
@@ -655,7 +777,185 @@ project(":fxpackager") {
         }
 
         task buildJavaPackager(dependsOn: [copyJavaPackager])
-    } else {
+    } else if (IS_LINUX) {
+
+        ext.LINUX = [:]
+        LINUX.launcher = [:]
+        LINUX.launcher.ccFlags = ["-Wextra", "-Wformat", "-Wformat-security", "-DJAVAARCH=\"$OS_ARCH\"", "-I$JDK_HOME/include", "-I$JDK_HOME/include/linux", "-c"]
+        LINUX.launcher.linkFlags = ["-ldl"]
+        if (!IS_64) {
+            LINUX.launcher.ccFlags += "-m32"
+            LINUX.launcher.linkFlags += "-m32"
+        }
+        LINUX.launcherlibrary = [:]
+        LINUX.launcherlibrary.ccFlags = ["-Wextra", "-Wformat", "-Wformat-security", "-DJAVAARCH=\"$OS_ARCH\"", "-I$JDK_HOME/include", "-I$JDK_HOME/include/linux", "-c", "-fPIC"]
+        LINUX.launcherlibrary.linkFlags = ["-ldl", "-lpthread", "-shared"]
+        if (!IS_64) {
+            LINUX.launcherlibrary.ccFlags += "-m32"
+            LINUX.launcherlibrary.linkFlags += "-m32"
+        }
+
+        task compileLinuxLauncher(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher"
+            matches = ".*\\.cpp"
+            source file("src/main/native/launcher/linux")
+            params.addAll(LINUX.launcher.ccFlags)
+            compiler = "gcc"
+            output(file("$buildDir/native/linuxlauncher/launcherobj"))
+        }
+
+        task linkLinuxLauncher(type: LinkTask, dependsOn: compileLinuxLauncher, group: "Build") {
+            description = "Links native dynamic library for the application co-bundle launcher"
+            objectDir = file("$buildDir/native/linuxlauncher/launcherobj")
+            linkParams.addAll(LINUX.launcher.linkFlags)
+            linker = "g++"
+            lib = file("${buildClassesDir}/com/oracle/tools/packager/linux/JavaAppLauncher")
+        }
+
+        task compileLinuxLibrary(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher library"
+            matches = ".*\\.cpp"
+            source file("src/main/native/library/common")
+            params.addAll(LINUX.launcherlibrary.ccFlags)
+            compiler = "gcc"
+            output(file("$buildDir/native/linuxlauncher/obj"))
+        }
+
+        task linkLinuxLibrary(type: LinkTask, dependsOn: compileLinuxLibrary, group: "Build") {
+            description = "Links native dynamic library for the application co-bundle launcher library"
+            objectDir = file("$buildDir/native/linuxlauncher/obj")
+            linkParams.addAll(LINUX.launcherlibrary.linkFlags)
+            linker = "g++"
+            lib = file("${buildClassesDir}/com/oracle/tools/packager/linux/libpackager.so")
+        }
+
+        task compileLauncher(dependsOn: [linkLinuxLauncher, linkLinuxLibrary])
+    } else if (IS_MAC) {
+        /*
+         * Define settings for Mac compilation. If we don't find the preferred SDK
+         * in the default location then we will use "xcodebuild" to locate a suitable SDK.
+         * In extreme cases you can provide your own properties in your home dir to
+         * override these settings or pass them on the command line.
+         */
+        def prefSdkVersion = "10.9"
+        def defaultSdkPath = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${prefSdkVersion}.sdk";
+
+        // Set the minimum API version that we require (developers do not need to override this)
+        // Note that this is not necessarily the same as the preferred SDK version
+        defineProperty("MACOSX_MIN_VERSION", "10.9");
+
+        // Create $buildDir/mac_tools.properties file and load props from it
+        setupTools("mac_tools",
+                { propFile ->
+                    propFile << ""
+                    if (!file(defaultSdkPath).isDirectory()) {
+                        // Get list of all macosx sdks
+                        ByteArrayOutputStream results = new ByteArrayOutputStream();
+                        exec {
+                            commandLine("xcodebuild", "-version", "-showsdks");
+                            setStandardOutput(results);
+                        }
+
+                        BufferedReader reader = new BufferedReader(new StringReader(results.toString().trim()));
+                        // If our preferred SDK is in the list use it, else use the default
+                        String sdk = "macosx"
+                        String prefSdk = sdk + prefSdkVersion
+                        while (true) {
+                            def line = reader.readLine();
+                            if (line == null) break;
+                            if (line.contains("-sdk ${prefSdk}")) {
+                                sdk = prefSdk
+                                break;
+                            }
+                        }
+
+                        results = new ByteArrayOutputStream();
+                        exec {
+                            commandLine("xcodebuild", "-version", "-sdk", sdk, "Path");
+                            setStandardOutput(results);
+                        }
+                        String sdkPath = results.toString().trim();
+                        propFile << "MACOSX_SDK_PATH=" << sdkPath << "\n";
+                    }
+                },
+                { properties ->
+                    defineProperty("MACOSX_SDK_PATH", properties, defaultSdkPath)
+                }
+        )
+        println "MACOSX_MIN_VERSION = $MACOSX_MIN_VERSION"
+        println "MACOSX_SDK_PATH = $MACOSX_SDK_PATH"
+
+        if (!file(MACOSX_SDK_PATH).isDirectory()) {
+            throw new GradleException("FAIL: Cannot find $MACOSX_SDK_PATH")
+        }
+
+        // NOTE: There is no space between -iframework and the specified path
+        def commonParams = [
+                "-mmacosx-version-min=$MACOSX_MIN_VERSION",
+                "-isysroot", "$MACOSX_SDK_PATH",
+                "-iframework$MACOSX_SDK_PATH/System/Library/Frameworks",
+                "-arch", "x86_64"]
+
+        def ccBaseFlags = [
+                commonParams,
+                "-I$JDK_HOME/include",
+                "-I$JDK_HOME/include/darwin"].flatten()
+        ext.MAC = [:]
+        MAC.launcher = [:]
+        MAC.launcher.ccFlags = [
+                "-std=c99",
+                ccBaseFlags,
+                "-framework", "Cocoa",
+                IS_DEBUG_NATIVE ? ["-DDEBUG", "-O0"] : ["-O3", "-DNDEBUG"]].flatten()
+        MAC.launcher.linkFlags = ["-ldl"]
+
+        MAC.launcherlibrary = [:]
+        MAC.launcherlibrary.ccFlags = [
+                "-c",
+                ccBaseFlags,
+                IS_DEBUG_NATIVE ? ["-DDEBUG", "-O0"] : ["-O3", "-DNDEBUG"]].flatten()
+        MAC.launcherlibrary.ccFlags += "-stdlib=libc++"
+        MAC.launcherlibrary.linkFlags = ["-ldl", "-dynamiclib",
+                                         "-framework", "Cocoa",
+                                         "-stdlib=libc++"]
+
+        task buildMacLauncher(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher"
+            matches = ".*\\.m"
+            source file("src/main/native/launcher/mac")
+            params.addAll(MAC.launcher.ccFlags)
+            compiler = "clang"
+            output(file("${buildClassesDir}/com/oracle/tools/packager/mac"))
+            outputs.file(file("${buildClassesDir}/main/com/oracle/tools/packager/mac/JavaAppLauncher"))
+            eachOutputFile = { f ->
+                return new File(f.getParent(), "JavaAppLauncher")
+            }
+        }
+
+        task compileMacLibrary(type: CCTask, group: "Build") {
+            description = "Compiles native sources for the application co-bundle launcher library"
+            matches = ".*\\.cpp|.*\\.mm"
+            source file("src/main/native/library/common");
+            params.addAll(MAC.launcherlibrary.ccFlags)
+            compiler = "clang"
+            output(file("$buildDir/native/maclauncher/obj"))
+        }
+
+        task linkMacLibrary(type: LinkTask, group: "Build", dependsOn: compileMacLibrary) {
+            description = "Links native sources for the application co-bundle launcher library"
+            objectDir = file("$buildDir/native/maclauncher/obj")
+            linkParams.addAll(MAC.launcherlibrary.linkFlags)
+            linker = "clang++"
+            lib = file("${buildClassesDir}/com/oracle/tools/packager/mac/libpackager.dylib")
+        }
+
+        task compileLauncher(dependsOn: [buildMacLauncher, linkMacLibrary])
+    }
+
+    // Builds the javapackager executable. For everything other than windows,
+    // this is simply moving the existing shell script and ensuring it has proper
+    // permissions. For Windows, this includes compiling the native executable
+    if (!IS_WINDOWS) {
         task buildJavaPackager(type: Copy, group: "Build") {
             enabled = true
             from "src/main/native/javapackager/shell"
@@ -664,6 +964,7 @@ project(":fxpackager") {
         }
     }
 
+    assemble.dependsOn compileLauncher
     assemble.dependsOn buildJavaPackager
 
     task setupPackagerFakeJar(type: Copy) {
@@ -731,7 +1032,7 @@ project(":fxpackager") {
     task packagerDev(dependsOn: [jar, testClasses, packagerFakeJar], type:JavaExec) {
         workingDir = project.file("build/tmp/tests/appResources/")
         executable = JAVA
-        classpath = project.files("build/libs/ant-javafx.jar", "build/classes/test", "build/resources/test")
+        classpath = project.files("build/classes/test", "build/resources/test")
         main = "hello.SimpleBundle"
         args = [
                 '--module-path', JDK_JMODS,
@@ -844,7 +1145,6 @@ project(":fxpackager") {
             copy {
                 from SOURCEJDK_HOME
                 into DEBUGJDK_HOME
-                exclude("*/ant-javafx.jar")
                 exclude("*/javapackager$EXE")
                 exclude("*/java$EXE")
                 exclude("*/javac$EXE")
@@ -861,11 +1161,6 @@ project(":fxpackager") {
                 from "$SOURCEJDK_HOME/bin/javac$EXE"
                 into "$DEBUGJDK_HOME/bin"
                 rename "javac$EXE", "javac.original$EXE"
-            }
-
-            copy {
-                from "$rootProject.buildDir/modular-sdk/modules_libs/jdk.packager/ant-javafx.jar"
-                into "$DEBUGJDK_HOME/lib"
             }
 
             copy {

@@ -12,7 +12,7 @@ shallow_clone: true
 build_script:
   - ps: |
       choco install jdk10 -params 'installdir=c:\\jdk10'
-      choco install gradle --version 4.3.0
+      choco install gradle --version 4.10.2
       $msvcToolsVer = Get-Content "$env:VCINSTALLDIR\Microsoft.VCToolsVersion.default.txt"
       if ([string]::IsNullOrWhitespace($msvcToolsVer)) {
         # The MSVC tools version file can have txt *or* props extension.
@@ -22,12 +22,12 @@ build_script:
       $env:VS150COMNTOOLS = $env:VCINSTALLDIR
       $env:VSVARS32FILE = "$env:VCINSTALLDIR\vcvars32.bat"
       refreshenv
-  - cmd: gradle build
+  - cmd: gradle build --no-daemon
 
 on_success:
   - ps: |
         $buildZip = "build.zip"
-        Compress-Archive -Path ".\build\modular-sdk" -DestinationPath $buildZip -CompressionLevel Optimal
+        Compress-Archive -Path ".\build", ".\modules\jdk.packager\build", ".\modules\jdk.packager.services\build" -DestinationPath $buildZip -CompressionLevel Optimal
         Push-AppveyorArtifact $buildZip -Verbose
 
 cache:
@@ -35,4 +35,3 @@ cache:
   - '%JAVA_HOME% -> appveyor.yml'
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
-
