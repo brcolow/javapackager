@@ -25,7 +25,7 @@
 
 package com.openjdk.tools.packager;
 
-import jdk.packager.internal.legacy.JLinkBundlerHelper;
+import com.openjdk.legacy.JLinkBundlerHelper;
 
 import com.sun.openjfx.tools.packager.bundlers.BundleParams;
 
@@ -56,8 +56,8 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import static jdk.packager.internal.legacy.JLinkBundlerHelper.findPathOfModule;
-import static jdk.packager.internal.legacy.JLinkBundlerHelper.listOfPathToString;
+import static com.openjdk.legacy.JLinkBundlerHelper.findPathOfModule;
+import static com.openjdk.legacy.JLinkBundlerHelper.listOfPathToString;
 
 public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
 

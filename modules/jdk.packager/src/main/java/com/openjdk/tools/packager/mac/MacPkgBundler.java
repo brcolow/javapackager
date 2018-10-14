@@ -56,7 +56,7 @@ import java.util.ResourceBundle;
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
 import static com.openjdk.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEYCHAIN;
 import static com.openjdk.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEY_USER;
-import jdk.packager.internal.legacy.mac.MacCertificate;
+import com.openjdk.legacy.mac.MacCertificate;
 
 public class MacPkgBundler extends MacBaseInstallerBundler {
 

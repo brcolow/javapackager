@@ -38,7 +38,7 @@ import static com.openjdk.tools.packager.StandardBundlerParam.SECONDARY_LAUNCHER
 import static com.openjdk.tools.packager.StandardBundlerParam.SERVICE_HINT;
 import static com.openjdk.tools.packager.StandardBundlerParam.VERBOSE;
 import static com.openjdk.tools.packager.windows.WindowsBundlerParam.*;
-import jdk.packager.internal.legacy.windows.WindowsDefender;
+import com.openjdk.legacy.windows.WindowsDefender;
 
 public class WinExeBundler extends AbstractBundler {
 

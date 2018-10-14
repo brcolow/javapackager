@@ -278,7 +278,7 @@ JavaVersion * parseName(const char * jName) {
     }
 
 
-    unsigned int nn = s.length();
+    size_t nn = s.length();
     for (unsigned int i = 0; i < s.length(); i++) {
         string c = s.substr(i, 1);
         int tmp;

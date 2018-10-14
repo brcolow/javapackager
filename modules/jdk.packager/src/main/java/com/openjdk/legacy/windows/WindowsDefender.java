@@ -23,7 +23,7 @@
  * questions.
  */
 
-package jdk.packager.internal.legacy.windows;
+package com.openjdk.legacy.windows;
 
 import com.openjdk.tools.packager.Platform;
 import java.util.List;

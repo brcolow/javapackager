@@ -43,7 +43,6 @@ try {
 } finally {
     inStream2.close();
 }
-System.out.println("HAS_JAVAFX_MODULES: ${HAS_JAVAFX_MODULES}")
 
 // Define the number of threads to use when compiling (specifically for native compilation)
 // On Mac we limit it to 1 by default due to problems running gcc in parallel
@@ -411,7 +410,11 @@ project(":fxpackagerservices") {
     project.ext.moduleName = "jdk.packager.services"
 
     sourceSets {
-        main
+        main {
+            java {
+                srcDirs = ['modules/jdk.packager.services/src/main/java']
+            }
+        }
         test
     }
 
@@ -437,8 +440,16 @@ project(":fxpackager") {
     project.ext.moduleSourcePathShim = defaultModuleSourcePathShim
 
     sourceSets {
-        main
-        test
+        main {
+            java {
+                srcDirs = ['modules/jdk.packager/src/main/java']
+            }
+        }
+        test {
+            java {
+                srcDirs = ['modules/jdk.packager/src/test/java']
+            }
+        }
     }
 
     commonModuleSetup(project, [ 'fxpackagerservices', 'fxpackager' ])

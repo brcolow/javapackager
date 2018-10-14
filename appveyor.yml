@@ -22,7 +22,7 @@ build_script:
       $env:VS150COMNTOOLS = $env:VCINSTALLDIR
       $env:VSVARS32FILE = "$env:VCINSTALLDIR\vcvars32.bat"
       refreshenv
-  - cmd: gradle build --no-daemon
+  - cmd: gradle build --no-daemon --warning-mode all
 
 on_success:
   - ps: |

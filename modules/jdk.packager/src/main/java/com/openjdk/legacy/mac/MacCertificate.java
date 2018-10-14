@@ -23,7 +23,7 @@
  * questions.
  */
 
-package jdk.packager.internal.legacy.mac;
+package com.openjdk.legacy.mac;
 
 import com.openjdk.tools.packager.IOUtils;
 import java.io.BufferedOutputStream;

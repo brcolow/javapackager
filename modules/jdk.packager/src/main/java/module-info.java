@@ -36,7 +36,6 @@
  * @moduleGraph
  * @since 9
  */
-@SuppressWarnings("removal")
 module jdk.packager {
     requires jdk.jlink;
 
@@ -69,5 +68,5 @@ module jdk.packager {
         com.openjdk.tools.packager.windows.WinMsiBundler;
 
     provides java.util.spi.ToolProvider
-        with jdk.packager.internal.JavaPackagerToolProvider;
+        with com.openjdk.JavaPackagerToolProvider;
 }

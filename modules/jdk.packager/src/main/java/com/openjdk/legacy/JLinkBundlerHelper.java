@@ -23,7 +23,7 @@
  * questions.
  */
 
-package jdk.packager.internal.legacy;
+package com.openjdk.legacy;
 
 import com.openjdk.tools.packager.StandardBundlerParam;
 import com.openjdk.tools.packager.BundlerParamInfo;
@@ -69,8 +69,8 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import jdk.packager.internal.legacy.builders.AbstractAppImageBuilder;
-import jdk.packager.internal.legacy.Module;
+import com.openjdk.legacy.builders.AbstractAppImageBuilder;
+import com.openjdk.legacy.Module;
 import jdk.tools.jlink.internal.packager.AppRuntimeImageBuilder;
 
 public final class JLinkBundlerHelper {
