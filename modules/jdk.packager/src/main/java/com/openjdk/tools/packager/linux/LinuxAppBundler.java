@@ -37,9 +37,9 @@ import com.openjdk.tools.packager.RelativeFileSet;
 import com.openjdk.tools.packager.StandardBundlerParam;
 import com.openjdk.tools.packager.UnsupportedPlatformException;
 import com.sun.openjfx.tools.packager.bundlers.BundleParams;
-import jdk.packager.internal.legacy.builders.linux.LinuxAppImageBuilder;
+import com.openjdk.legacy.builders.linux.LinuxAppImageBuilder;
 
-import jdk.packager.internal.legacy.JLinkBundlerHelper;
+import com.openjdk.legacy.JLinkBundlerHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +52,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
-import jdk.packager.internal.legacy.builders.AbstractAppImageBuilder;
+import com.openjdk.legacy.builders.AbstractAppImageBuilder;
 
 public class LinuxAppBundler extends AbstractImageBundler {
 

@@ -22,7 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.packager.internal.legacy.builders.windows;
+package com.openjdk.legacy.builders.windows;
 
 
 import com.openjdk.tools.packager.BundlerParamInfo;
@@ -32,7 +32,7 @@ import com.openjdk.tools.packager.IOUtils;
 import com.openjdk.tools.packager.StandardBundlerParam;
 import com.openjdk.tools.packager.windows.WinResources;
 import com.openjdk.tools.packager.windows.WindowsBundlerParam;
-import jdk.packager.internal.legacy.builders.AbstractAppImageBuilder;
+import com.openjdk.legacy.builders.AbstractAppImageBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
-import jdk.packager.internal.legacy.windows.WindowsDefender;
+import com.openjdk.legacy.windows.WindowsDefender;
 
 /**
  *

@@ -301,7 +301,7 @@ std::list<TString> Helpers::StringToArray(TString Value) {
     std::list<TString> result;
     TString line;
 
-    for (int index = 0; index < Value.length(); index++) {
+    for (std::size_t index = 0, max = Value.length(); index < max; index++) {
         TCHAR c = Value[index];
 
 //        Environment::NewLine;

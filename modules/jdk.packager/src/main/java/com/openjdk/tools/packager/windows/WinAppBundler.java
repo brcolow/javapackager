@@ -34,9 +34,9 @@ import com.openjdk.tools.packager.Platform;
 import com.openjdk.tools.packager.RelativeFileSet;
 import com.openjdk.tools.packager.StandardBundlerParam;
 import com.openjdk.tools.packager.UnsupportedPlatformException;
-import jdk.packager.internal.legacy.builders.windows.WindowsAppImageBuilder;
+import com.openjdk.legacy.builders.windows.WindowsAppImageBuilder;
 
-import jdk.packager.internal.legacy.JLinkBundlerHelper;
+import com.openjdk.legacy.JLinkBundlerHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -50,7 +50,7 @@ import java.util.ResourceBundle;
 
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
 import static com.openjdk.tools.packager.windows.WindowsBundlerParam.*;
-import jdk.packager.internal.legacy.builders.AbstractAppImageBuilder;
+import com.openjdk.legacy.builders.AbstractAppImageBuilder;
 
 public class WinAppBundler extends AbstractImageBundler {
 

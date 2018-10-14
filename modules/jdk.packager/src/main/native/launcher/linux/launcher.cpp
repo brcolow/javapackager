@@ -44,7 +44,7 @@ typedef void (*stop_launcher)();
 #define MAX_PATH 1024
 
 std::string GetProgramPath() {
-    size_t len = 0;
+    ssize_t len = 0;
     std::string result;
     char buffer[MAX_PATH] = {0};
 

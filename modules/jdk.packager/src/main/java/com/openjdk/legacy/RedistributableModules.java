@@ -22,8 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.packager.internal.legacy;
-
+package com.openjdk.legacy;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -46,7 +45,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 
 public final class RedistributableModules {
     private static final String JDK_PACKAGER_MODULE = "jdk.packager";

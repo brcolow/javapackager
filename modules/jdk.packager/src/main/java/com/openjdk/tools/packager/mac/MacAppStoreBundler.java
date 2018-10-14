@@ -32,7 +32,7 @@ import com.openjdk.tools.packager.ConfigException;
 import com.openjdk.tools.packager.IOUtils;
 import com.openjdk.tools.packager.Platform;
 import com.openjdk.tools.packager.UnsupportedPlatformException;
-import jdk.packager.internal.legacy.builders.mac.MacAppImageBuilder;
+import com.openjdk.legacy.builders.mac.MacAppImageBuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,7 +49,7 @@ import java.util.ResourceBundle;
 
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
 import static com.openjdk.tools.packager.mac.MacAppBundler.*;
-import jdk.packager.internal.legacy.mac.MacCertificate;
+import com.openjdk.legacy.mac.MacCertificate;
 
 public class MacAppStoreBundler extends MacBaseInstallerBundler {
 

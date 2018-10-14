@@ -33,9 +33,9 @@ import com.openjdk.tools.packager.Log;
 import com.openjdk.tools.packager.Platform;
 import com.openjdk.tools.packager.StandardBundlerParam;
 import com.openjdk.tools.packager.UnsupportedPlatformException;
-import jdk.packager.internal.legacy.builders.mac.MacAppImageBuilder;
+import com.openjdk.legacy.builders.mac.MacAppImageBuilder;
 
-import jdk.packager.internal.legacy.JLinkBundlerHelper;
+import com.openjdk.legacy.JLinkBundlerHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,8 +50,8 @@ import java.util.ResourceBundle;
 
 import static com.openjdk.tools.packager.StandardBundlerParam.*;
 import static com.openjdk.tools.packager.mac.MacBaseInstallerBundler.*;
-import jdk.packager.internal.legacy.builders.AbstractAppImageBuilder;
-import jdk.packager.internal.legacy.mac.MacCertificate;
+import com.openjdk.legacy.builders.AbstractAppImageBuilder;
+import com.openjdk.legacy.mac.MacCertificate;
 
 public class MacAppBundler extends AbstractImageBundler {
 

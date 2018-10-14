@@ -93,7 +93,7 @@ TCHAR* LinuxPlatform::ConvertFileSystemStringToString(TCHAR* Source, bool &relea
 }
 
 TString LinuxPlatform::GetModuleFileName() {
-    size_t len = 0;
+    ssize_t len = 0;
     TString result;
     DynamicBuffer<TCHAR> buffer(MAX_PATH);
 
@@ -1122,7 +1122,7 @@ ProcessReactivator::ProcessReactivator(pid_t pid): _pid(pid) {
 
     DllFunction<XInternAtomFuncPtr> XInternAtomFunc(libX11, "XInternAtom");
 
-    _atomPid = XInternAtomFunc(_display, "_NET_WM_PID", True);
+    _atomPid = XInternAtomFunc(_display, (char *)"_NET_WM_PID", True);
 
     if (_atomPid == None) {
         return;
@@ -1208,7 +1208,7 @@ void ProcessReactivator::reactivateProcess() {
         // try sending an event to activate window,
         // after that we can try to raise it.
         XEvent xev;
-        Atom atom = XInternAtomFunc (_display, "_NET_ACTIVE_WINDOW", False);
+        Atom atom = XInternAtomFunc (_display, (char *)"_NET_ACTIVE_WINDOW", False);
         xev.xclient.type = ClientMessage;
         xev.xclient.serial = 0;
         xev.xclient.send_event = True;

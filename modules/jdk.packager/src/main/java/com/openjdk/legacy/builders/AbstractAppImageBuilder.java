@@ -23,7 +23,7 @@
  * questions.
  */
 
-package jdk.packager.internal.legacy.builders;
+package com.openjdk.legacy.builders;
 
 
 import com.openjdk.tools.packager.IOUtils;
@@ -52,8 +52,8 @@ import static com.openjdk.tools.packager.StandardBundlerParam.*;
 import static com.openjdk.tools.packager.StandardBundlerParam.ARGUMENTS;
 import static com.openjdk.tools.packager.StandardBundlerParam.USER_JVM_OPTIONS;
 import java.util.ArrayList;
-import jdk.packager.internal.legacy.JLinkBundlerHelper;
-import jdk.packager.internal.legacy.Module;
+import com.openjdk.legacy.JLinkBundlerHelper;
+import com.openjdk.legacy.Module;
 
 
 public abstract class AbstractAppImageBuilder {
