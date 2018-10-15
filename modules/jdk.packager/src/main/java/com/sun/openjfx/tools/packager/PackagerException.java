@@ -26,31 +26,27 @@
 package com.sun.openjfx.tools.packager;
 
 import java.text.MessageFormat;
-import java.util.ResourceBundle;
 
 public class PackagerException extends Exception {
-    private static final ResourceBundle bundle =
-            ResourceBundle.getBundle("com/sun/javafx/tools/packager/Bundle");
 
     public PackagerException(Throwable cause) {
         super(cause);
     }
 
-    public PackagerException(String key, Throwable cause) {
-        super(bundle.getString(key), cause);
+    public PackagerException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 
-    public PackagerException(String key) {
-        super(bundle.getString(key));
+    public PackagerException(String msg) {
+        super(msg);
     }
 
-    public PackagerException(String key, String ... arguments) {
-        super(MessageFormat.format(bundle.getString(key), (Object[]) arguments));
+    public PackagerException(String msg, String ... arguments) {
+        super(MessageFormat.format(msg, (Object[]) arguments));
     }
 
-    public PackagerException(Throwable cause, String key, String ... arguments) {
-        super(MessageFormat.format(bundle.getString(key), (Object[]) arguments),
-              cause);
+    public PackagerException(Throwable cause, String msg, String ... arguments) {
+        super(MessageFormat.format(msg, (Object[]) arguments), cause);
     }
 
 }

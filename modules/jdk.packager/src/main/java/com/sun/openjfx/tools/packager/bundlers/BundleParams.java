@@ -25,23 +25,56 @@
 
 package com.sun.openjfx.tools.packager.bundlers;
 
-import com.openjdk.tools.packager.*;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
 import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import static com.openjdk.tools.packager.StandardBundlerParam.*;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ARGUMENTS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CATEGORY;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.COPYRIGHT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_OPTIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_FILE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_TYPE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MANIFEST_JAVAFX_MAIN;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MENU_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.PREFERENCES_ID;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.PRELOADER_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SHORTCUT_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SOURCE_DIR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SYSTEM_WIDE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.TITLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.USER_JVM_OPTIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VENDOR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 
-import com.openjdk.legacy.JLinkBundlerHelper;
+import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
 
 public class BundleParams {
 
-    final protected Map<String, ? super Object> params;
+    protected final Map<String, ? super Object> params;
 
     public static final String PARAM_RUNTIME                = "runtime"; // RelativeFileSet
     public static final String PARAM_APP_RESOURCES          = "appResources"; // RelativeFileSet
@@ -150,7 +183,7 @@ public class BundleParams {
     }
 
     //NOTE: we do not care about application parameters here
-    // as they will be embeded into jar file manifest and
+    // as they will be embedded into jar file manifest and
     // java launcher will take care of them!
 
     public Map<String, ? super Object> getBundleParamsAsMap() {
@@ -314,12 +347,10 @@ public class BundleParams {
         putUnlessNull(PARAM_NAME, name);
     }
 
-    @SuppressWarnings("deprecation")
     public BundleType getType() {
         return fetchParam(BundleType.class, PARAM_TYPE);
     }
 
-    @SuppressWarnings("deprecation")
     public void setType(BundleType type) {
         putUnlessNull(PARAM_TYPE, type);
     }
@@ -361,7 +392,7 @@ public class BundleParams {
     //  - FX marker (jfxrt.jar)
     //  - JDK marker (tools.jar)
     private static boolean checkJDKRoot(File jdkRoot) {
-        String exe = (Platform.getPlatform() == Platform.WINDOWS) ? ".exe" : "";
+        String exe = Platform.getPlatform() == Platform.WINDOWS ? ".exe" : "";
         File javac = new File(jdkRoot, "bin/javac" + exe);
         if (!javac.exists()) {
             Log.verbose("javac is not found at " + javac.getAbsolutePath());
@@ -386,7 +417,6 @@ public class BundleParams {
                     return false;
                 }
             }
-
 
             File toolsJar = new File(jdkRoot, "lib/tools.jar");
             if (!toolsJar.exists()) {
@@ -420,17 +450,16 @@ public class BundleParams {
             //On Mac it could be jdk/ or jdk/Contents/Home
             //Norm to jdk/Contents/Home for validation
             if (Platform.getPlatform() == Platform.MAC) {
-                File f = new File(javaHome, "Contents/Home");
-                if (f.exists() && f.isDirectory()) {
-                    javaHome = f;
+                File file = new File(javaHome, "Contents/Home");
+                if (file.exists() && file.isDirectory()) {
+                    javaHome = file;
                 }
             }
             jdkRoot = javaHome;
         }
 
         if (!checkJDKRoot(jdkRoot)) {
-            throw new RuntimeException(
-                    "Can not find JDK artifacts in specified location: "
+            throw new RuntimeException("Can not find JDK artifacts in specified location: "
                     + javaHome.getAbsolutePath());
         }
 
@@ -455,30 +484,16 @@ public class BundleParams {
         params.put(PARAM_RUNTIME, baseDir.toString());
     }
 
-    //Currently unused?
-    //
-    //public void setRuntime(RelativeFileSet fs) {
-    //       runtime = fs;
-    //}
-
-    public com.openjdk.tools.packager.RelativeFileSet getAppResource() {
+    public RelativeFileSet getAppResource() {
         return fetchParam(APP_RESOURCES);
     }
 
-    public void setAppResource(com.openjdk.tools.packager.RelativeFileSet fs) {
+    public void setAppResource(com.sun.openjfx.tools.packager.RelativeFileSet fs) {
         putUnlessNull(PARAM_APP_RESOURCES, fs);
     }
 
-    public void setAppResourcesList(List<com.openjdk.tools.packager.RelativeFileSet> rfs) {
+    public void setAppResourcesList(List<com.sun.openjfx.tools.packager.RelativeFileSet> rfs) {
         putUnlessNull(APP_RESOURCES_LIST.getID(), rfs);
-    }
-
-    public File getIcon() {
-        return fetchParam(ICON);
-    }
-
-    public void setIcon(File icon) {
-        putUnlessNull(PARAM_ICON, icon);
     }
 
     public String getApplicationCategory() {
@@ -487,20 +502,6 @@ public class BundleParams {
 
     public void setApplicationCategory(String category) {
         putUnlessNull(PARAM_CATEGORY, category);
-    }
-
-    public String getMainClassName() {
-        String applicationClass = getApplicationClass();
-
-        if (applicationClass == null) {
-            return null;
-        }
-
-        int idx = applicationClass.lastIndexOf(".");
-        if (idx >= 0) {
-            return applicationClass.substring(idx+1);
-        }
-        return applicationClass;
     }
 
     public String getCopyright() {
@@ -549,7 +550,7 @@ public class BundleParams {
             return mainJar;
         }
 
-        com.openjdk.tools.packager.RelativeFileSet appResources = getAppResource();
+        RelativeFileSet appResources = getAppResource();
         String applicationClass = getApplicationClass();
 
         if (appResources == null || applicationClass == null) {

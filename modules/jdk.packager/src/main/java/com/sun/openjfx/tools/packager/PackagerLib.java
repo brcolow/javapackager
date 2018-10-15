@@ -25,18 +25,6 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.openjdk.tools.packager.Bundlers;
-import com.openjdk.tools.packager.ConfigException;
-import com.openjdk.tools.packager.Log;
-import com.openjdk.tools.packager.Platform;
-import com.openjdk.tools.packager.UnsupportedPlatformException;
-import com.openjdk.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.JarSignature.InputStreamSource;
-import com.sun.openjfx.tools.packager.bundlers.BundleParams;
-import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
-import com.sun.openjfx.tools.resource.PackagerResource;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -44,10 +32,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.InvalidKeyException;
@@ -61,7 +47,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -69,7 +54,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -79,17 +63,19 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javafx.css.Stylesheet;
+
+import com.sun.openjfx.tools.packager.JarSignature.InputStreamSource;
+import com.sun.openjfx.tools.packager.bundlers.BundleParams;
+import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
+import com.sun.openjfx.tools.resource.PackagerResource;
+
 public class PackagerLib {
     public static final String JAVAFX_VERSION = System.getProperty("java.version");
-
-    private static final ResourceBundle bundle =
-            ResourceBundle.getBundle("com/sun/javafx/tools/packager/Bundle");
 
     private CreateJarParams createJarParams;
     private CreateBSSParams createBssParams;
     private File bssTmpDir;
-
-
     private enum Filter {ALL, CLASSES_ONLY, RESOURCES}
 
     //  if set of input resources consist of SINGLE element and
@@ -110,7 +96,7 @@ public class PackagerLib {
                 return f;
             } catch (Exception e) {
                 //treat any exception as "not a special case" scenario
-                com.openjdk.tools.packager.Log.verbose(e);
+                com.sun.openjfx.tools.packager.Log.verbose(e);
             }
         }
         return null;
@@ -132,7 +118,7 @@ public class PackagerLib {
         Manifest m = null;
 
         if (jarToUpdate != null) {
-            com.openjdk.tools.packager.Log.info(MessageFormat.format(bundle.getString("MSG_UpdatingJar"), jarToUpdate.getAbsolutePath()));
+            com.sun.openjfx.tools.packager.Log.info(MessageFormat.format("Updating jar file: {0}", jarToUpdate.getAbsolutePath()));
             try (JarFile jf = new JarFile(jarToUpdate)) {
                 //extract data we want to preserve
                 m = jf.getManifest();
@@ -160,7 +146,7 @@ public class PackagerLib {
                 }
             } catch (IOException ex) {
                 throw new PackagerException(
-                        ex, "ERR_FileReadFailed", jarToUpdate.getAbsolutePath());
+                        ex, "Error: Failed reading file {0}", jarToUpdate.getAbsolutePath());
             }
         }
 
@@ -184,7 +170,7 @@ public class PackagerLib {
                 jarToUpdate = newInputJar;
             } catch (IOException ioe) {
                 throw new PackagerException(
-                        ioe, "ERR_FileCopyFailed", jarToUpdate.getAbsolutePath());
+                        ioe, "Error: Failed copy file to directory {0}", jarToUpdate.getAbsolutePath());
             }
         }
 
@@ -220,7 +206,7 @@ public class PackagerLib {
                     Boolean.TRUE.equals(createJarParams.allPermissions) ? "all-permissions" : "sandbox");
         } else if (createJarParams.allPermissions != null && !Boolean.valueOf(existingSetting).equals(createJarParams.allPermissions)) {
             throw new PackagerException(
-                "ERR_ContradictorySetting", "Permissions");
+                "Error: Ant script manifest argument ''{0}'' contradicts Ant script data type settings.", "Permissions");
         }
 
         existingSetting = attr.getValue("Codebase");
@@ -230,10 +216,8 @@ public class PackagerLib {
             }
         } else if (createJarParams.codebase != null && !existingSetting.equals(createJarParams.codebase)) {
             throw new PackagerException(
-                    "ERR_ContradictorySetting", "Codebase");
+                    "Error: Ant script manifest argument ''{0}'' contradicts Ant script data type settings.", "Codebase");
         }
-
-        attr.put(new Attributes.Name("JavaFX-Version"), createJarParams.fxVersion);
 
         if (createJarParams.preloader != null) {
             attr.put(new Attributes.Name("JavaFX-Preloader-Class"), createJarParams.preloader);
@@ -268,14 +252,14 @@ public class PackagerLib {
             try {
                 bssTmpDir = File.createTempFile("bssfiles", "");
             } catch (IOException ex) {
-                throw new PackagerException(ex, "ERR_CreatingTempFileFailed");
+                throw new PackagerException(ex, "Error: Failed to create temporary file");
             }
             bssTmpDir.delete();
         }
 
         if (applicationJar.exists() && !applicationJar.delete()) {
             throw new PackagerException(
-                    "ERR_CantDeleteFile", createJarParams.outfile);
+                    "Error: File {0} could not be deleted.", createJarParams.outfile);
         }
         try {
             jar(m, createJarParams.resources, jarToUpdate,
@@ -283,7 +267,7 @@ public class PackagerLib {
                     Filter.ALL);
         } catch (IOException ex) {
             throw new PackagerException(
-                    ex, "ERR_CreatingJarFailed", createJarParams.outfile);
+                    ex, "Error: Failed to create jar file {0}", createJarParams.outfile);
         }
 
         // cleanup
@@ -300,51 +284,29 @@ public class PackagerLib {
             BundleParams bp = deployParams.getBundleParams();
 
             if (bp != null) {
-                switch(deployParams.getBundleType()) {
-                    case NATIVE: {
-                        // Generate disk images.
-                        generateNativeBundles(deployParams.outdir,
-                                              bp.getBundleParamsAsMap(),
-                                              BundleType.IMAGE.toString(),
-                                              deployParams.getTargetFormat());
-
-                        // Generate installers.
-                        generateNativeBundles(deployParams.outdir,
-                                              bp.getBundleParamsAsMap(),
-                                              BundleType.INSTALLER.toString(),
-                                              deployParams.getTargetFormat());
-                        break;
-                    }
-
-                    case JNLP:
-                    case NONE: {
-                        // Old school default. Just generate JNLP.
-                        generateNativeBundles(deployParams.outdir,
-                                              bp.getBundleParamsAsMap(),
-                                              BundleType.JNLP.toString(),
-                                              "jnlp");
-                        break;
-                    }
-
-                    default: {
-                        // A specefic output format, just generate that.
-                        generateNativeBundles(deployParams.outdir,
-                                              bp.getBundleParamsAsMap(),
-                                              deployParams.getBundleType().toString(),
-                                              deployParams.getTargetFormat());
-                    }
+                // Generate disk images.
+                // Generate installers.
+                // A specific output format, just generate that.
+                if (deployParams.getBundleType() == BundleType.NATIVE) {
+                    generateNativeBundles(deployParams.outdir, bp.getBundleParamsAsMap(),
+                            BundleType.IMAGE.toString(), deployParams.getTargetFormat());
+                    generateNativeBundles(deployParams.outdir, bp.getBundleParamsAsMap(),
+                            BundleType.INSTALLER.toString(), deployParams.getTargetFormat());
+                } else {
+                    generateNativeBundles(deployParams.outdir, bp.getBundleParamsAsMap(),
+                            deployParams.getBundleType().toString(), deployParams.getTargetFormat());
                 }
             }
         } catch (PackagerException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new PackagerException(ex, "ERR_DeployFailed", ex.getMessage());
+            throw new PackagerException(ex, "Error: deploy failed", ex.getMessage());
         }
 
     }
 
     private void generateNativeBundles(File outdir, Map<String, ? super Object> params, String bundleType, String bundleFormat) throws PackagerException {
-        for (com.openjdk.tools.packager.Bundler bundler : Bundlers.createBundlersInstance().getBundlers(bundleType)) {
+        for (com.sun.openjfx.tools.packager.Bundler bundler : Bundlers.createBundlersInstance().getBundlers(bundleType)) {
             // if they specify the bundle format, require we match the ID
             if (bundleFormat != null && !bundleFormat.equalsIgnoreCase(bundler.getID())) continue;
 
@@ -354,21 +316,27 @@ public class PackagerLib {
                     File result = bundler.execute(localParams, outdir);
                     bundler.cleanup(localParams);
                     if (result == null) {
-                        throw new PackagerException("MSG_BundlerFailed", bundler.getID(), bundler.getName());
+                        throw new PackagerException("Error: Bundler \"{1}\" ({0}) failed to produce a bundle.",
+                                bundler.getID(), bundler.getName());
                     }
                 }
             } catch (UnsupportedPlatformException e) {
-                com.openjdk.tools.packager.Log.debug(MessageFormat.format(bundle.getString("MSG_BundlerPlatformException"), bundler.getName()));
+                Log.debug(MessageFormat.format(
+                        "Bundler {0} skipped because the bundler does not support bundling on this platform.",
+                        bundler.getName()));
             } catch (ConfigException e) {
-                com.openjdk.tools.packager.Log.debug(e);
+                Log.debug(e);
                 if (e.getAdvice() != null) {
-                    com.openjdk.tools.packager.Log.info(MessageFormat.format(bundle.getString("MSG_BundlerConfigException"), bundler.getName(), e.getMessage(), e.getAdvice()));
+                    Log.info(MessageFormat.format(
+                            "Bundler {0} skipped because of a configuration problem: {1}\n  Advice to fix: {2}\n",
+                            bundler.getName(), e.getMessage(), e.getAdvice()));
                 } else {
-                    com.openjdk.tools.packager.Log.info(MessageFormat.format(bundle.getString("MSG_BundlerConfigExceptionNoAdvice"), bundler.getName(), e.getMessage()));
+                    Log.info(MessageFormat.format("Bundler {0} skipped because of a configuration problem: {1}",
+                            bundler.getName(), e.getMessage()));
                 }
             } catch (RuntimeException re) {
-                com.openjdk.tools.packager.Log.info(MessageFormat.format(bundle.getString("MSG_BundlerRuntimeException"), bundler.getName(), re.toString()));
-                com.openjdk.tools.packager.Log.debug(re);
+                Log.info(MessageFormat.format("Bundler {0} failed because of {1}", bundler.getName(), re.toString()));
+                Log.debug(re);
             }
         }
     }
@@ -391,12 +359,11 @@ public class PackagerLib {
             }
 
         } catch (Exception ex) {
-            com.openjdk.tools.packager.Log.verbose(ex);
-            throw new PackagerException("ERR_SignFailed", ex);
+            Log.verbose(ex);
+            throw new PackagerException("Error: Signing failed", ex);
         }
 
     }
-
 
     private JarSignature retrieveSignature(SignJarParams params) throws KeyStoreException,
             NoSuchAlgorithmException, UnrecoverableKeyException, IOException,
@@ -421,7 +388,7 @@ public class PackagerLib {
         store.load(new FileInputStream(params.keyStore), params.storePass.toCharArray());
 
         Certificate[] chain = store.getCertificateChain(params.alias);
-        X509Certificate certChain[] = new X509Certificate[chain.length];
+        X509Certificate[] certChain = new X509Certificate[chain.length];
         for (int i=0; i<chain.length; i++) {
             certChain[i] = (X509Certificate) chain[i];
         }
@@ -492,7 +459,7 @@ public class PackagerLib {
             jHome = System.getProperty("java.home");
         }
         if (jHome == null) {
-            throw new PackagerException("ERR_MissingJavaHome");
+            throw new PackagerException("Error: Java home directory is not known.");
         }
 
         final File javac = new File(new File(jHome), "bin/javac" + exe);
@@ -525,7 +492,7 @@ public class PackagerLib {
                         "@" + tmpFile.getAbsolutePath());
             }
 
-            int ret = -1;
+            int ret;
             if (makeAllParams.classpath != null) {
                 ret = IOUtils.execute(
                         javac.getAbsolutePath(),
@@ -540,12 +507,12 @@ public class PackagerLib {
             }
 
             if (ret != 0) {
-                throw new PackagerException("ERR_JavacFailed", Integer.toString(ret));
+                throw new PackagerException("Error: javac execution failed, exit code: {0}", Integer.toString(ret));
             }
         } catch (PackagerException e) {
             throw e;
         } catch (Exception e) {
-            throw new PackagerException(e, "ERR_MakeAllJavacFailed");
+            throw new PackagerException(e, "Error: compilation of java sources failed");
         }
 
         CreateJarParams cjp = new CreateJarParams();
@@ -579,11 +546,11 @@ public class PackagerLib {
 
     private static void scanAndCopy(PackagerResource dir, Writer out, File outdir) throws PackagerException {
         if (!dir.getFile().exists()) {
-            throw new PackagerException("ERR_MissingDirectory", dir.getFile().getName());
+            throw new PackagerException("Missing directory {0}", dir.getFile().getName());
         }
         File[] dirFilesList = dir.getFile().listFiles();
         if ((dirFilesList == null) || (dirFilesList.length == 0)) {
-            throw new PackagerException("ERR_EmptySourceDirectory", dir.getFile().getName());
+            throw new PackagerException("Empty source directory {0}", dir.getFile().getName());
         }
         try {
             for (File f : dirFilesList) {
@@ -599,11 +566,11 @@ public class PackagerLib {
                 }
             }
         } catch (IOException ex) {
-            throw new PackagerException("ERR_FileCopyFailed", dir.getFile().getName());
+            throw new PackagerException("Error: Failed copy file to directory {0}", dir.getFile().getName());
         }
     }
 
-    private String encodeAsBase64(byte inp[]) {
+    private String encodeAsBase64(byte[] inp) {
         return Base64.getEncoder().encodeToString(inp);
     }
 
@@ -612,7 +579,7 @@ public class PackagerLib {
 
         final File outDir = fout.getParentFile();
         if (!outDir.exists() && !outDir.mkdirs()) {
-            throw new PackagerException("ERR_CreatingDirFailed", outDir.getPath());
+            throw new PackagerException("Error: Failed to create directory {0}", outDir.getPath());
         }
         try (InputStream is = isa; OutputStream out = new FileOutputStream(fout)) {
             byte[] buf = new byte[16384];
@@ -621,7 +588,7 @@ public class PackagerLib {
                 out.write(buf, 0, len);
             }
         } catch (IOException ex) {
-            throw new PackagerException(ex, "ERR_FileCopyFailed", outDir.getPath());
+            throw new PackagerException(ex, "Error: Failed copy file to directory {0}", outDir.getPath());
         }
     }
 
@@ -629,7 +596,7 @@ public class PackagerLib {
             Manifest manifest, List<PackagerResource> files,
             File importJarFile, JarOutputStream jar, Filter filter)
             throws IOException, PackagerException {
-        try {
+        try (jar) {
             jar.putNextEntry(new ZipEntry("META-INF/"));
             jar.closeEntry();
             jar.putNextEntry(new ZipEntry(JarFile.MANIFEST_NAME));
@@ -646,7 +613,6 @@ public class PackagerLib {
                 }
             }
         } finally {
-            jar.close();
             alreadyAddedEntries.clear();
         }
     }
@@ -698,8 +664,7 @@ public class PackagerLib {
     private void jar(File f, JarOutputStream jar, Filter filter, int cut)
             throws IOException, PackagerException {
         if (!f.exists()) {
-            throw new FileNotFoundException("Input folder does not exist ["
-                    +f.getAbsolutePath()+"]");
+            throw new FileNotFoundException("Input folder does not exist [" + f.getAbsolutePath() + "]");
         }
 
         if (f.isDirectory()) {
@@ -735,7 +700,7 @@ public class PackagerLib {
                 jar.putNextEntry(new ZipEntry(absPath.substring(cut).replace('\\', '/')));
             }
 
-            byte b[] = new byte[65000];
+            byte[] b = new byte[65000];
             int i;
 
             try (FileInputStream in = new FileInputStream(f)) {
@@ -749,7 +714,7 @@ public class PackagerLib {
 
     private void createBinaryCss(List<PackagerResource> cssResources, File outdir)
             throws PackagerException {
-        for (PackagerResource cssRes: cssResources) {
+        for (PackagerResource cssRes : cssResources) {
             String relPath = cssRes.getRelativePath();
             createBinaryCss(cssRes.getFile(), outdir, relPath);
         }
@@ -774,9 +739,7 @@ public class PackagerLib {
     }
 
     private void createBinaryCss(String cssFile, String binCssFile) throws PackagerException {
-        String ofname = (binCssFile != null)
-                ? binCssFile
-                : replaceExtensionByBSS(cssFile);
+        String ofname = binCssFile != null ? binCssFile : replaceExtensionByBSS(cssFile);
 
         // create parent directories
         File of = new File(ofname);
@@ -784,35 +747,17 @@ public class PackagerLib {
         if (parentFile != null) {
             parentFile.mkdirs();
         }
-
-        // Using reflection because CSS parser is part of runtime
-        // and we want to avoid dependency on javafx.graphics
-        Class<?> clazz;
         try {
-            clazz = Class.forName("com.sun.openjfx.css.parser.Css2Bin");
-        } catch (ClassNotFoundException e) {
-            Throwable causeEx = e.getCause();
-            String cause = (causeEx != null) ? causeEx.getMessage()
-                    : bundle.getString("ERR_UnknownReason");
-            throw new PackagerException(e, "ERR_BSSConversionFailed", cssFile, cause);
-        }
-
-        try {
-            Method m = clazz.getMethod("convertToBinary", String.class, String.class);
-            m.invoke(null, cssFile, ofname);
-        } catch (Exception ex) {
-            Throwable causeEx = ex.getCause();
-            String cause = (causeEx != null) ? causeEx.getMessage()
-                    : bundle.getString("ERR_UnknownReason");
-
-            throw new PackagerException(ex, "ERR_BSSConversionFailed", cssFile, cause);
+            Stylesheet.convertToBinary(new File(cssFile), of);
+        } catch (IOException e) {
+            throw new PackagerException(e, "Error: Conversion of CSS file to binary form failed for " +
+                    "file: {0}, reason: {1}", cssFile, e.getMessage());
         }
     }
 
     private static String replaceExtensionByBSS(String cssName) {
         return cssName.substring(0, cssName.lastIndexOf(".") + 1).concat("bss");
     }
-
 
     private boolean isResource(String name) {
         if (name.endsWith(".class")) {

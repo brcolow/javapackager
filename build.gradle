@@ -19,8 +19,8 @@ defineProperty("JDK_HOME",
 ext.JAVA_HOME = JDK_HOME
 defineProperty("CONF", "Debug")
 defineProperty("JAVA", "$JDK_HOME/bin/java")
-defineProperty("RETAIN_PACKAGER_TESTS", "false")
-defineProperty("TEST_PACKAGER_DMG", "false")
+defineProperty("RETAIN_PACKAGER_TESTS", "true")
+defineProperty("TEST_PACKAGER_DMG", "true")
 defineProperty("FULL_TEST", "true")
 defineProperty("JDK_JMODS", System.getenv("JDK_JMODS") ?: System.getenv("JDK_HOME") + "/jmods")
 defineProperty("IS_DEBUG_NATIVE", "false")
@@ -32,16 +32,19 @@ ext.IS_WINDOWS = OS_NAME.contains("windows")
 ext.IS_LINUX = OS_NAME.contains("linux")
 ext.OS_ARCH = System.getProperty("os.arch")
 ext.IS_64 = OS_ARCH.toLowerCase().contains("64")
+ext.PLATFORM = IS_MAC ? 'mac' : (IS_WINDOWS ? 'win' : 'linux')
 ext.HAS_JAVAFX_MODULES = false
-def inStream2 = new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.ProcessBuilder(JAVA, "--list-modules").start().getInputStream()));
+def inStream2 = new BufferedReader(new InputStreamReader(new ProcessBuilder(JAVA, "--list-modules").start().getInputStream()))
 try {
-    String v;
+    String v
     while ((v = inStream2.readLine()) != null) {
-        v = v.trim();
-        if (v.startsWith("javafx.base")) ext.HAS_JAVAFX_MODULES = true;
+        v = v.trim()
+        if (v.startsWith("javafx.base")) { 
+            ext.HAS_JAVAFX_MODULES = true
+        }
     }
 } finally {
-    inStream2.close();
+    inStream2.close()
 }
 
 // Define the number of threads to use when compiling (specifically for native compilation)
@@ -53,60 +56,6 @@ if (IS_MAC) {
 }
 
 project.ext.defaultModuleSourcePath = rootProject.projectDir.path + '/modules/*/src/main/java'
-project.ext.defaultModuleSourcePathShim = rootProject.projectDir.path + '/modules/*/src/{main,shims}/java'
-ext.EXTRAADDEXPORTS = 'buildSrc/addExports'
-
-repositories {
-    mavenCentral()
-}
-
-test {
-    executable = JAVA
-    enableAssertions = true
-    scanForTestClasses = false
-    include("**/*Test.*")
-    testLogging {
-        // set options for log level LIFECYCLE
-        events TestLogEvent.PASSED, TestLogEvent.SKIPPED,
-                TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT
-        showExceptions true
-        exceptionFormat TestExceptionFormat.FULL
-        showCauses true
-        showStackTraces true
-
-        // set options for log level DEBUG and INFO
-        debug {
-            events TestLogEvent.STARTED, TestLogEvent.PASSED,
-                    TestLogEvent.SKIPPED, TestLogEvent.FAILED,
-                    TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR
-        }
-        info.events = debug.events
-        afterTest { desc, result ->
-            if (desc.parent) {
-                if (result.getResultType() == TestResult.ResultType.FAILURE) {
-                    failedTestSummary += "${desc.getClassName()}#${desc.getName()} FAILED:\n" +
-                            "${result.getExceptions()}\n"
-                }
-            }
-        }
-        afterSuite { desc, result ->
-            if (!desc.parent) { // will match the outermost suite
-                def output = "Results: ${result.resultType} (${result.testCount} tests, " +
-                        "${result.successfulTestCount} successes, " +
-                        "${result.failedTestCount} failures, " +
-                        "${result.skippedTestCount} skipped)"
-                def startItem = '|  ', endItem = '  |'
-                def repeat = startItem + output + endItem
-                println('\n' + ('-' * repeat.length()) + '\n' + repeat + '\n' + ('-' * repeat.length()))
-                if (result.failedTestCount > 0) {
-                    println(failedTestSummary)
-                }
-            }
-        }
-    }
-    compileTestJava {
-    }
-}
 
 // Return a list containing the --upgrade-module-path or --module-path
 // used with Javac
@@ -122,12 +71,7 @@ List<String> computeModulePathArgs(String  pname, List<String> deps, boolean tes
                 proj.buildModule &&
                 !(!test && proj.name.equals(pname))) {
 
-            File dir;
-            if (test && proj.sourceSets.hasProperty('shims')) {
-                dir = new File(proj.sourceSets.shims.java.outputDir, proj.ext.moduleName);
-            } else {
-                dir = new File(proj.sourceSets.main.java.outputDir, proj.ext.moduleName);
-            }
+            File dir = new File(proj.sourceSets.main.java.outputDir, proj.ext.moduleName)
             if (mp == null) {
                 mp = dir.path
             } else {
@@ -194,22 +138,22 @@ void setupTools(String name, Closure loader, Closure processor) {
     // Check to see whether $buildDir/$name.properties file exists. If not,
     // then generate it. Once generated, we need to read the properties file to
     // help us define the defaults for this block of properties
-    File propFile = file("$buildDir/${name}.properties");
+    File propFile = file("$buildDir/${name}.properties")
     if (!propFile.exists()) {
         // Create the properties file
-        propFile.getParentFile().mkdirs();
-        propFile.createNewFile();
-        loader(propFile);
+        propFile.getParentFile().mkdirs()
+        propFile.createNewFile()
+        loader(propFile)
     }
 
     // Try reading the properties in order to define the properties. If the property file cannot
     // be located, then we will throw an exception because we cannot guess these values
-    InputStream propStream = null;
+    InputStream propStream = null
     try {
-        Properties properties = new Properties();
-        propStream = new FileInputStream(propFile);
-        properties.load(propStream);
-        processor(properties);
+        Properties properties = new Properties()
+        propStream = new FileInputStream(propFile)
+        properties.load(propStream)
+        processor(properties)
     } finally {
         try { propStream.close() } catch (Exception e) { }
     }
@@ -226,7 +170,7 @@ void setupTools(String name, Closure loader, Closure processor) {
  */
 void defineProperty(String name, String defaultValue) {
     if (!project.hasProperty(name)) {
-        project.ext.set(name, defaultValue);
+        project.ext.set(name, defaultValue)
     }
 }
 
@@ -241,7 +185,7 @@ void defineProperty(String name, String defaultValue) {
  */
 void defineProperty(String name, Properties props, String defaultValue) {
     if (!project.hasProperty(name)) {
-        project.ext.set(name, props.getProperty(name, defaultValue));
+        project.ext.set(name, props.getProperty(name, defaultValue))
     }
 }
 
@@ -251,10 +195,7 @@ void commonModuleSetup(Project p, List<String> moduleChain) {
     p.ext.moduleChain = moduleChain
 
     if (p.hasProperty("moduleName")) {
-        p.ext.moduleDir = new File (p.sourceSets.main.java.outputDir, "${p.moduleName}")
-        if (p.sourceSets.hasProperty('shims')) {
-            p.ext.moduleShimsDir = new File (p.sourceSets.shims.java.outputDir, "${p.moduleName}")
-        }
+        p.ext.moduleDir = new File(p.sourceSets.main.java.outputDir, "${p.moduleName}")
     }
 
     def mpa = computeModulePathArgs(p.name, moduleChain, false)
@@ -262,9 +203,9 @@ void commonModuleSetup(Project p, List<String> moduleChain) {
         p.ext.modulePathArgs = mpa
     }
 
-    p.ext.testModulePathArgs = computePatchModuleArgs(moduleChain, true, false)
-    p.ext.patchModuleArgs = computePatchModuleArgs(moduleChain ,false, true)
-    p.ext.testPatchModuleArgs = computePatchModuleArgs(moduleChain, true, true)
+    p.ext.testModulePathArgs = computePatchModuleArgs(moduleChain, true)
+    p.ext.patchModuleArgs = computePatchModuleArgs(moduleChain ,false)
+    p.ext.testPatchModuleArgs = computePatchModuleArgs(moduleChain, true)
 
     moduleChain.each() {e ->
         if (!e.equals(p.name)) {
@@ -272,80 +213,18 @@ void commonModuleSetup(Project p, List<String> moduleChain) {
             p.compileTestJava.dependsOn(project(e).testClasses)
         }
     }
-
-    // read in any addExports file
-    File addExportsFile = new File(p.projectDir,"src/test/addExports")
-    if (addExportsFile.exists()) {
-        List<String> ae = []
-        addExportsFile.eachLine { line ->
-            line = line.trim()
-            if (!(line.startsWith("#") || line.equals(""))) {
-                ae += line.split(' ')
-            }
-        }
-        p.ext.testAddExports  = ae.flatten()
-    }
-
-    // read in the temporary addExports file EXTRAADDEXPORTS)
-    //
-    // These extra --add-exports will be used in two places and so we
-    // create/modify two items:
-    // p.testAddExports - add the extra items so they are included in test builds
-    //
-    // p.extraAddExports - for use in any other place where we don't automatically update
-    //    for example any non modular, non 'test' compile, any compile that does not
-    //    use a module-source-path that includes the dependent modules
-    //
-    // Note that we don't modify the modular build (main, shims) because they use
-    // module-info directly, and we don't want to cover up any missing items there.
-    //
-    if (!rootProject.hasProperty("EXTRA_ADDEXPORTS_ARGS")) {
-        List<String> extraAddExportsList = []
-        String fullae = ""
-        File tmpaddExportsFile = new File(rootProject.projectDir, EXTRAADDEXPORTS)
-        if (tmpaddExportsFile.exists()) {
-            String nl = System.getProperty("line.separator")
-            tmpaddExportsFile.eachLine { line ->
-                line = line.trim()
-                fullae += line + nl
-                if (!(line.startsWith("#") || line.equals(""))) {
-                    extraAddExportsList += line.split(' ')
-                }
-            }
-        }
-        // This string is used in the creation of the build/*.args files
-        // so we preserve comments
-        if (!extraAddExportsList.isEmpty()) {
-            rootProject.ext.EXTRA_ADDEXPORTS_STRING = fullae
-        }
-        rootProject.ext.EXTRA_ADDEXPORTS_ARGS = extraAddExportsList
-    }
-
-    if (HAS_JAVAFX_MODULES) {
-        // use this variable, because it shows we have a non empty addition
-        if (rootProject.hasProperty("EXTRA_ADDEXPORTS_STRING")) {
-            p.ext.extraAddExports = EXTRA_ADDEXPORTS_ARGS.flatten()
-            if (p.hasProperty("testAddExports")) {
-                p.testAddExports += EXTRA_ADDEXPORTS_ARGS.flatten()
-            }
-        }
-    }
 }
+
 // Return list with the arguments needed for --patch-module or --module-path
 // for the provided projects. Used with Java executables ie. tests
-List<String> computePatchModuleArgs(List<String> deps, boolean test, boolean includeJLP) {
+List<String> computePatchModuleArgs(List<String> deps, boolean test) {
     List<String> pma = []
 
     if (HAS_JAVAFX_MODULES) {
         deps.each { String projname ->
             def proj = project(projname)
             if (proj.hasProperty("moduleName")) {
-                File dir;
-                if (test && proj.sourceSets.hasProperty('shims')) {
-                    dir = file("${rootProject.buildDir}/shims")
-                } else {
-                    dir = file("${rootProject.buildDir}/modular-sdk/modules")
-                }
+                File dir = file("${rootProject.buildDir}/modular-sdk/modules")
                 String moduleName = proj.ext.moduleName
                 String dirpath = "${dir}/${moduleName}"
                 pma += "--patch-module=${moduleName}=${dirpath}"
@@ -357,12 +236,7 @@ List<String> computePatchModuleArgs(List<String> deps, boolean test, boolean inc
             def proj = project(projname)
             if (proj.hasProperty("moduleName")) {
                 String moduleName = proj.ext.moduleName
-                File dir;
-                if (test && proj.sourceSets.hasProperty('shims')) {
-                    dir = file("${rootProject.buildDir}/shims/${moduleName}")
-                } else {
-                    dir = file("${rootProject.buildDir}/sdk/lib/${moduleName}.jar")
-                }
+                File dir = file("${rootProject.buildDir}/sdk/lib/${moduleName}.jar")
                 if (mp == null) {
                     mp = dir.path
                 } else {
@@ -399,57 +273,50 @@ List<String> computePatchModuleArgs(List<String> deps, boolean test, boolean inc
     return pma
 }
 
-subprojects {
-    apply plugin: "java"
-}
-
 project(":fxpackagerservices") {
+    apply plugin: 'java'
     project.ext.buildModule = true
-    project.ext.includeSources = true
-    project.ext.moduleRuntime = false
-    project.ext.moduleName = "jdk.packager.services"
+    project.ext.moduleName = "com.brcolow.packager.services"
 
     sourceSets {
         main {
             java {
-                srcDirs = ['modules/jdk.packager.services/src/main/java']
+                srcDirs = ['src/main/java']
             }
         }
-        test
     }
 
     project.ext.moduleSourcePath = defaultModuleSourcePath
-    project.ext.moduleSourcePathShim = defaultModuleSourcePathShim
 
-    // commonModuleSetup(project, [ 'base', 'graphics', 'controls' ])
-
-    compileTestJava.enabled = false // FIXME: JIGSAW -- support this with modules
-
-    test {
-        enabled = false // FIXME: JIGSAW -- support this with modules
-        logger.info("JIGSAW Testing disabled for fxpackagerservices")
+    if (project.hasProperty("moduleName")) {
+        project.ext.moduleDir = new File(project.sourceSets.main.java.outputDir, "${project.moduleName}")
     }
 }
 
 project(":fxpackager") {
+    apply plugin: 'java'
     project.ext.buildModule = true
-    project.ext.includeSources = true
-    project.ext.moduleName = "jdk.packager"
-    project.ext.moduleRuntime = false
+    project.ext.moduleName = "com.brcolow.javapackager"
     project.ext.moduleSourcePath = defaultModuleSourcePath
-    project.ext.moduleSourcePathShim = defaultModuleSourcePathShim
 
     sourceSets {
         main {
             java {
-                srcDirs = ['modules/jdk.packager/src/main/java']
+                srcDirs = ['src/main/java']
             }
         }
         test {
             java {
-                srcDirs = ['modules/jdk.packager/src/test/java']
+                srcDirs = ['src/test/java']
+            }
+            resources {
+                srcDirs = ['src/test/resources', "$projectDir/build/tmp/tests/appResources"]
             }
         }
+    }
+
+    jar {
+        from "$buildDir/generated-resources"
     }
 
     commonModuleSetup(project, [ 'fxpackagerservices', 'fxpackager' ])
@@ -465,37 +332,32 @@ project(":fxpackager") {
     }
 
     dependencies {
-        testCompile group: "junit", name: "junit", version: "4.8.2"
+        compile "org.openjfx:javafx-base:11:${PLATFORM}"
+        compile "org.openjfx:javafx-graphics:11:${PLATFORM}"
+        compile "org.openjfx:javafx-controls:11:${PLATFORM}"
+        testCompile group: "junit", name: "junit", version: "4.12"
+        testCompile group: "com.github.stefanbirkner", name: "system-rules", "version": "1.18.0"
+        testCompile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
         testCompile project(":fxpackager")
     }
 
-    //Note: these should be reflected in the module-info additions passed to the JDK
-    compileJava.options.compilerArgs.addAll([
-            "--add-exports=java.base/sun.security.timestamp=jdk.packager",
-            "--add-exports=java.base/sun.security.x509=jdk.packager",
-
-            // Note: retain jdk.jlink qualified export for cases where the JDK does
-            // not contain the jdk.packager module.
-            "--add-exports=jdk.jlink/jdk.tools.jlink.internal.packager=jdk.packager",
-
-            // Note: not in extras...
-            "--add-exports=java.base/sun.security.pkcs=jdk.packager",
-            "--add-exports=java.logging/java.util.logging=jdk.packager",
-    ])
-
-    /*
-    task buildVersionFile() {
-        File dir = new File("${project.projectDir}/build/resources/antplugin/resources");
-        File versionFile = new File(dir, "/version.properties");
-        doLast {
-            dir.mkdirs()
-            if (!versionFile.exists()) {
-                versionFile << "version=0.0.1\n"
-            }
+    compileJava {
+        inputs.property("moduleName", moduleName)
+        doFirst {
+            options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'javafx.controls',
+                    '--add-modules', 'javafx.graphics',
+                    "--add-exports=java.base/sun.security.timestamp=${project.ext.moduleName}",
+                    "--add-exports=java.base/sun.security.x509=${project.ext.moduleName}",
+                    "--add-exports=jdk.jlink/jdk.tools.jlink.internal.packager=${project.ext.moduleName}",
+                    "--add-exports=java.base/sun.security.pkcs=${project.ext.moduleName}",
+                    "--add-exports=java.logging/java.util.logging=${project.ext.moduleName}",
+            ]
+            classpath = files()
         }
-        outputs.file(versionFile)
+        options.encoding = 'UTF-8'
     }
-    */
 
     // The "man" task will create a $buildDir/man containing the man
     // files for the system being built
@@ -507,17 +369,15 @@ project(":fxpackager") {
         exclude "**/*.html"
         if (IS_MAC) exclude "**/ja_JP.UTF-8/**"
     }
+
     processResources.dependsOn man
-
-
-    String buildClassesDir = "${sourceSets.main.output.classesDir}/${moduleName}"
 
     if (IS_WINDOWS) {
         setupTools("windows_tools",
             { propFile ->
                 // Create the properties file
-                ByteArrayOutputStream results = new ByteArrayOutputStream();
-                String winsdkDir = System.getenv().get("WINSDK_DIR");
+                ByteArrayOutputStream results = new ByteArrayOutputStream()
+                String winsdkDir = System.getenv().get("WINSDK_DIR")
                 exec({
                     environment([
                             "WINSDKPATH" : winsdkDir == null ? "" : winsdkDir,
@@ -525,21 +385,21 @@ project(":fxpackager") {
                             "VCARCH"     : IS_64 ? "amd64" : "x86",
                             "SDKARCH"    : IS_64 ? "/x64" : "/x86",
                     ]);
-                    commandLine("cmd", "/q", "/c", "genVSproperties.bat");
-                    setStandardOutput(results);
+                    commandLine("cmd", "/q", "/c", "genVSproperties.bat")
+                    setStandardOutput(results)
                 });
-                BufferedReader reader = new BufferedReader(new StringReader(results.toString().trim()));
-                reader.readLine();
-                reader.readLine();
+                BufferedReader reader = new BufferedReader(new StringReader(results.toString().trim()))
+                reader.readLine()
+                reader.readLine()
                 String line;
                 while ((line = reader.readLine()) != null && !line.startsWith("######")) {
-                    line = line.replace("\\", "/").replace("/@@ENDOFLINE@@", "").replace("@@ENDOFLINE@@", "").replace("//", "/").replace("windows.vs.", "WINDOWS_VS_");
-                    propFile << line << "\r\n";
+                    line = line.replace("\\", "/").replace("/@@ENDOFLINE@@", "").replace("@@ENDOFLINE@@", "").replace("//", "/").replace("windows.vs.", "WINDOWS_VS_")
+                    propFile << line << "\r\n"
                 }
             },
             { properties ->
-                defineProperty("WINDOWS_VS_VSINSTALLDIR", properties, "c:/Program Files (x86)/Microsoft Visual Studio/2017/Professional");
-                defineProperty("WINDOWS_VS_WINSDKDLLINSTALLDIR", properties, "c:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs");
+                defineProperty("WINDOWS_VS_VSINSTALLDIR", properties, "c:/Program Files (x86)/Microsoft Visual Studio/2017/Professional")
+                defineProperty("WINDOWS_VS_WINSDKDLLINSTALLDIR", properties, "c:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs")
                 defineProperty("WINDOWS_SDK_DIR", properties, System.getenv().get("WINSDK_DIR"))
                 defineProperty("WINDOWS_SDK_VERSION", properties, "")
                 defineProperty("WINDOWS_VS_VCINSTALLDIR", properties, "$WINDOWS_VS_VSINSTALLDIR/VC")
@@ -563,7 +423,8 @@ project(":fxpackager") {
 
         def winVsVer = Integer.parseInt(WINDOWS_VS_VER)
         if (WINDOWS_SDK_DIR == null || WINDOWS_SDK_DIR == "") {
-            throw new GradleException("FAIL: WINSDK_DIR not defined");
+            // Skip so IDEs can configure project.
+            // throw new GradleException("FAIL: WINSDK_DIR not defined");
         }
 
         def msvcVer = System.getenv("MSVC_VER") ?: "14.10.25017"
@@ -609,7 +470,9 @@ project(":fxpackager") {
         ext.RC = "${winSdkBinDir}/rc.exe"
         ext.MC = "${winSdkBinDir}/mt.exe"
         def rcCompiler = RC
-        if (!file(RC).exists()) throw new GradleException("FAIL: cannot find RC: " + RC)
+
+        // Skip so IDEs can configure project.
+        // if (!file(RC).exists()) throw new GradleException("FAIL: cannot find RC: " + RC)
 
         def msvcRedistVer = System.getenv("MSVC_REDIST_VER") ?: "14.10.25008"
         String msvcRedstDir = (IS_64
@@ -652,7 +515,7 @@ project(":fxpackager") {
                                 "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN", "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
                                 ccDebugFlags].flatten();
         WIN.launcher.linkFlags = ["/link", "/nologo", "/WX", "/SUBSYSTEM:WINDOWS", "user32.lib", "shell32.lib", "advapi32.lib"]
-        if (IS_DEBUG_NATIVE) WIN.launcher.linkFlags.add("/debug");
+        if (IS_DEBUG_NATIVE) WIN.launcher.linkFlags.add("/debug")
 
         WIN.launcherlibrary = [:]
         WIN.launcherlibrary.ccFlags = ["/nologo", "/W3", "/FS",
@@ -661,10 +524,10 @@ project(":fxpackager") {
                                        "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN", "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
                                        ccDebugFlags].flatten();
         WIN.launcherlibrary.linkFlags = ["/nologo", "/WX", "/DLL", "/SUBSYSTEM:WINDOWS", "user32.lib", "shell32.lib", "advapi32.lib", "ole32.lib"]
-        if (IS_DEBUG_NATIVE) WIN.launcherlibrary.linkFlags.add("/debug");
+        if (IS_DEBUG_NATIVE) WIN.launcherlibrary.linkFlags.add("/debug")
 
         WIN.fxpackager = [:]
-        WIN.fxpackager.nativeSource = [file("src/main/native/javapackager/win")] // remove modules/jdk.packager from file?
+        WIN.fxpackager.nativeSource = [file("src/main/native/javapackager/win")]
         WIN.fxpackager.ccFlags = ["/nologo", "/W3", "/EHsc", "/MT", "/GS",  "/DUNICODE", "/D_UNICODE",
                             "/DWIN32", "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN",
                             "/D_WIN32_WINDOWS=0X0500", "/D_WIN32_WINNT=0X0500",
@@ -677,62 +540,62 @@ project(":fxpackager") {
             "/l", "0x409",
             "/d", "JFX_FNAME=javapackager.exe",
             "/d", "JFX_INTERNAL_NAME=javapackager",
-        rcFlags].flatten();
+        rcFlags].flatten()
 
         task buildWinLauncher(type: CCTask, group: "Build") {
-            description = "Compiles native sources for the application co-bundle launcher";
-            matches = "WinLauncher\\.cpp";
-            params.addAll(WIN.launcher.ccFlags);
-            output(file("$buildDir/native/WinLauncher"));
-            source(file("src/main/native/launcher/win"));
+            description = "Compiles native sources for the application co-bundle launcher"
+            matches = "WinLauncher\\.cpp"
+            params.addAll(WIN.launcher.ccFlags)
+            output(file("$buildDir/native/WinLauncher"))
+            source(file("src/main/native/launcher/win"))
             compiler = "${msvcBinDir}/cl.exe"
-            exe = true;
-            linkerOptions.addAll(WIN.launcher.linkFlags);
+            exe = true
+            linkerOptions.addAll(WIN.launcher.linkFlags)
         }
 
         task copyWinLauncher(type: Copy, group: "Build", dependsOn: buildWinLauncher) {
             from "$buildDir/native/WinLauncher/WinLauncher.exe"
             from "$MSVCR"
             from "$MSVCP"
-            into "${buildClassesDir}/com/oracle/tools/packager/windows"
+            into "${buildDir}/generated-resources/com/sun/openjfx/tools/packager/windows"
         }
 
         task compileWinLibrary(type: CCTask, group: "Build") {
-            description = "Compiles native sources for the application co-bundle launcher library";
+            description = "Compiles native sources for the application co-bundle launcher library"
             matches = ".*\\.cpp"
-            source(file("src/main/native/library/common"));
+            source(file("src/main/native/library/common"))
             params.addAll(WIN.launcherlibrary.ccFlags)
-            output(file("$buildDir/native/WinLauncher/obj"));
+            output(file("$buildDir/native/WinLauncher/obj"))
             compiler = "${msvcBinDir}/cl.exe"
         }
 
         task linkWinLibrary(type: LinkTask, group: "Build", dependsOn: compileWinLibrary) {
-            description = "Links native sources for the application co-bundle launcher library";
+            description = "Links native sources for the application co-bundle launcher library"
             objectDir = file("$buildDir/native/WinLauncher/obj")
-            linkParams.addAll(WIN.launcherlibrary.linkFlags);
+            linkParams.addAll(WIN.launcherlibrary.linkFlags)
             lib = file("$buildDir/native/WinLauncher/packager.dll")
             linker = "${msvcBinDir}/link.exe"
         }
 
         task copyWinLibrary(type: Copy, group: "Build", dependsOn: linkWinLibrary) {
             from "$buildDir/native/WinLauncher/packager.dll"
-            into "${buildClassesDir}/com/oracle/tools/packager/windows"
+            into "${buildDir}/generated-resources/com/sun/openjfx/tools/packager/windows"
         }
 
         task buildWinLauncherSvc(type: CCTask, group: "Build") {
-            description = "Compiles native sources for the application co-bundle launcher";
-            matches = "WinLauncherSvc\\.cpp";
-            params.addAll(WIN.launcher.ccFlags);
-            output(file("$buildDir/native/WinLauncherSvc"));
-            source(file("src/main/native/service/win"));
+            description = "Compiles native sources for the application co-bundle launcher"
+            matches = "WinLauncherSvc\\.cpp"
+            params.addAll(WIN.launcher.ccFlags)
+            output(file("$buildDir/native/WinLauncherSvc"))
+            source(file("src/main/native/service/win"))
             compiler = "${msvcBinDir}/cl.exe"
-            exe = true;
-            linkerOptions.addAll(WIN.launcher.linkFlags);
+            exe = true
+            linkerOptions.addAll(WIN.launcher.linkFlags)
         }
 
         task copyWinLauncherSvc(type: Copy, group: "Build", dependsOn: buildWinLauncherSvc) {
             from "$buildDir/native/WinLauncherSvc/WinLauncherSvc.exe"
-            into "${buildClassesDir}/com/oracle/tools/packager/windows"
+            into "${buildDir}/generated-resources/com/sun/openjfx/tools/packager/windows"
         }
 
         task compileLauncher(dependsOn: [copyWinLauncher, copyWinLibrary, copyWinLauncherSvc])
@@ -742,7 +605,7 @@ project(":fxpackager") {
             mkdir "$buildDir/native/javapackager"
             from file("src/main/native/javapackager/win/javapackager.manifest")
             into file("$buildDir/native/javapackager")
-            filter { line->
+            filter { line ->
                 line = line.replace("FXVERSION", "0.0.0.1")
             }
         }
@@ -769,7 +632,7 @@ project(":fxpackager") {
         task linkJavaPackager(type: LinkTask, dependsOn: compileJavaPackager, group: "Build") {
             description = "Links javapackager.exe"
             objectDir = file("$buildDir/native/javapackager/obj")
-            linkParams.addAll(WIN.fxpackager.linkFlags);
+            linkParams.addAll(WIN.fxpackager.linkFlags)
             lib = file("$buildDir/native/javapackager/javapackager.exe")
             linker = "${msvcBinDir}/link.exe"
             doLast {
@@ -784,12 +647,11 @@ project(":fxpackager") {
 
         task copyJavaPackager(type: Copy, group: "Build", dependsOn: linkJavaPackager) {
             from file("$buildDir/native/javapackager/javapackager.exe")
-            into file("$buildDir/javapackager")
+            into file("$buildDir/generated-resources/com/sun/openjfx/tools/packager/windows/javapackager.exe")
         }
 
         task buildJavaPackager(dependsOn: [copyJavaPackager])
     } else if (IS_LINUX) {
-
         ext.LINUX = [:]
         LINUX.launcher = [:]
         LINUX.launcher.ccFlags = ["-Wextra", "-Wformat", "-Wformat-security", "-DJAVAARCH=\"$OS_ARCH\"", "-I$JDK_HOME/include", "-I$JDK_HOME/include/linux", "-c"]
@@ -820,7 +682,7 @@ project(":fxpackager") {
             objectDir = file("$buildDir/native/linuxlauncher/launcherobj")
             linkParams.addAll(LINUX.launcher.linkFlags)
             linker = "g++"
-            lib = file("${buildClassesDir}/com/oracle/tools/packager/linux/JavaAppLauncher")
+            lib = file("${buildDir}/generated-resources/com/sun/openjfx/tools/packager/linux/JavaAppLauncher")
         }
 
         task compileLinuxLibrary(type: CCTask, group: "Build") {
@@ -837,7 +699,7 @@ project(":fxpackager") {
             objectDir = file("$buildDir/native/linuxlauncher/obj")
             linkParams.addAll(LINUX.launcherlibrary.linkFlags)
             linker = "g++"
-            lib = file("${buildClassesDir}/com/oracle/tools/packager/linux/libpackager.so")
+            lib = file("${buildDir}/generated-resources/com/sun/openjfx/tools/packager/linux/libpackager.so")
         }
 
         task compileLauncher(dependsOn: [linkLinuxLauncher, linkLinuxLibrary])
@@ -849,11 +711,11 @@ project(":fxpackager") {
          * override these settings or pass them on the command line.
          */
         def prefSdkVersion = "10.9"
-        def defaultSdkPath = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${prefSdkVersion}.sdk";
+        def defaultSdkPath = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${prefSdkVersion}.sdk"
 
         // Set the minimum API version that we require (developers do not need to override this)
         // Note that this is not necessarily the same as the preferred SDK version
-        defineProperty("MACOSX_MIN_VERSION", "10.9");
+        defineProperty("MACOSX_MIN_VERSION", "10.9")
 
         // Create $buildDir/mac_tools.properties file and load props from it
         setupTools("mac_tools",
@@ -861,32 +723,32 @@ project(":fxpackager") {
                     propFile << ""
                     if (!file(defaultSdkPath).isDirectory()) {
                         // Get list of all macosx sdks
-                        ByteArrayOutputStream results = new ByteArrayOutputStream();
+                        ByteArrayOutputStream results = new ByteArrayOutputStream()
                         exec {
-                            commandLine("xcodebuild", "-version", "-showsdks");
-                            setStandardOutput(results);
+                            commandLine("xcodebuild", "-version", "-showsdks")
+                            setStandardOutput(results)
                         }
 
-                        BufferedReader reader = new BufferedReader(new StringReader(results.toString().trim()));
+                        BufferedReader reader = new BufferedReader(new StringReader(results.toString().trim()))
                         // If our preferred SDK is in the list use it, else use the default
                         String sdk = "macosx"
                         String prefSdk = sdk + prefSdkVersion
                         while (true) {
-                            def line = reader.readLine();
-                            if (line == null) break;
+                            def line = reader.readLine()
+                            if (line == null) break
                             if (line.contains("-sdk ${prefSdk}")) {
                                 sdk = prefSdk
-                                break;
+                                break
                             }
                         }
 
-                        results = new ByteArrayOutputStream();
+                        results = new ByteArrayOutputStream()
                         exec {
-                            commandLine("xcodebuild", "-version", "-sdk", sdk, "Path");
-                            setStandardOutput(results);
+                            commandLine("xcodebuild", "-version", "-sdk", sdk, "Path")
+                            setStandardOutput(results)
                         }
-                        String sdkPath = results.toString().trim();
-                        propFile << "MACOSX_SDK_PATH=" << sdkPath << "\n";
+                        String sdkPath = results.toString().trim()
+                        propFile << "MACOSX_SDK_PATH=" << sdkPath << "\n"
                     }
                 },
                 { properties ->
@@ -936,8 +798,8 @@ project(":fxpackager") {
             source file("src/main/native/launcher/mac")
             params.addAll(MAC.launcher.ccFlags)
             compiler = "clang"
-            output(file("${buildClassesDir}/com/oracle/tools/packager/mac"))
-            outputs.file(file("${buildClassesDir}/main/com/oracle/tools/packager/mac/JavaAppLauncher"))
+            output(file("${buildDir}/generated-resources/com/sun/openjfx/tools/packager/mac"))
+            outputs.file(file("${buildDir}/generated-resources/com/sun/openjfx/tools/packager/mac/JavaAppLauncher"))
             eachOutputFile = { f ->
                 return new File(f.getParent(), "JavaAppLauncher")
             }
@@ -946,7 +808,7 @@ project(":fxpackager") {
         task compileMacLibrary(type: CCTask, group: "Build") {
             description = "Compiles native sources for the application co-bundle launcher library"
             matches = ".*\\.cpp|.*\\.mm"
-            source file("src/main/native/library/common");
+            source file("src/main/native/library/common")
             params.addAll(MAC.launcherlibrary.ccFlags)
             compiler = "clang"
             output(file("$buildDir/native/maclauncher/obj"))
@@ -957,7 +819,7 @@ project(":fxpackager") {
             objectDir = file("$buildDir/native/maclauncher/obj")
             linkParams.addAll(MAC.launcherlibrary.linkFlags)
             linker = "clang++"
-            lib = file("${buildClassesDir}/com/oracle/tools/packager/mac/libpackager.dylib")
+            lib = file("${buildDir}/generated-resources/com/sun/openjfx/tools/packager/mac/libpackager.dylib")
         }
 
         task compileLauncher(dependsOn: [buildMacLauncher, linkMacLibrary])
@@ -979,16 +841,15 @@ project(":fxpackager") {
     assemble.dependsOn buildJavaPackager
 
     task setupPackagerFakeJar(type: Copy) {
-        from "$projectDir/src/main/resources/com/oracle/tools/packager/linux/javalogo_white_48.png"
-        from "$projectDir/src/main/resources/com/oracle/tools/packager/mac/GenericAppHiDPI.icns"
-        from "$projectDir/src/main/resources/com/oracle/tools/packager/windows/javalogo_white_48.ico"
+        from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/javalogo_white_48.png"
+        from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/GenericAppHiDPI.icns"
+        from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/javalogo_white_48.ico"
         from "$projectDir/src/test/resources/hello/java-logo2.gif"
         from "$projectDir/src/test/resources/hello/small.ico"
         from "$projectDir/src/test/resources/hello/test.icns"
         from "$projectDir/src/test/resources/hello/LICENSE-RTF.rtf"
         into project.file("$projectDir/build/tmp/tests/appResources")
     }
-
 
     task packagerFakeJar(type: Jar, dependsOn: [setupPackagerFakeJar]) {
         dependsOn compileTestJava
@@ -1003,6 +864,58 @@ project(":fxpackager") {
                     "Main-Class": "hello.HelloRectangle",
                     "Custom-Attribute": " Is it stripped?"
             )
+        }
+
+        doFirst {
+            copy {
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/javalogo_white_16.png"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/javalogo_white_32.png"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/javalogo_white_48.png"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/GenericAppHiDPI.icns"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/javalogo_white_48.ico"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.control"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.copyright"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.deb.init.script"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.desktop"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.postinst"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.postrm"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.preinst"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.prerm"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.rpm.init.script"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/linux/template.spec"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/background_dmg.png"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/background_pkg.png"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/DMGsetup.scpt"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/GenericApp.icns"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/GenericAppHiDPI.icns"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/Info.plist.template"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/Info-lite.plist.template"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/launchd.plist.template"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/lic_template.plist"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/MacAppStore.entitlements"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/MacAppStore_Inherit.entitlements"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/postinstall.template"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/preinstall.template"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/mac/Runtime-Info.plist.template"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/icon_inno_setup.bmp"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/javalogo_white_16.ico"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/javalogo_white_32.ico"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/javalogo_white_48.ico"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/template.iss"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/template.wxs"
+                from "$projectDir/src/main/resources/com/sun/openjfx/tools/packager/windows/WinLauncher.properties"
+                from "$projectDir/src/test/resources/hello/java-logo2.gif"
+                from "$projectDir/src/test/resources/hello/small.ico"
+                from "$projectDir/src/test/resources/hello/test.icns"
+                from "$projectDir/src/test/resources/hello/LICENSE-RTF.rtf"
+                from "$projectDir/../../LICENSE"
+                into project.file("$projectDir/build/tmp/tests/appResources")
+            }
+            copy {
+                from "$projectDir/../../LICENSE"
+                into project.file("$projectDir/build/tmp/tests/appResources")
+                rename '(.*)LICENSE', '$1LICENSE2'
+            }
         }
     }
 
@@ -1021,16 +934,80 @@ project(":fxpackager") {
         }
     }
 
-    compileTestJava.enabled = false // FIXME: JIGSAW -- support this with modules
+    compileTestJava {
+        exclude "hello/**"
+        inputs.property("moduleName", project.ext.moduleName)
+        doFirst {
+            options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'junit',
+                    '--add-reads', "${project.ext.moduleName}=junit",
+                    "--add-exports", "jdk.jlink/jdk.tools.jlink.internal.packager=${project.ext.moduleName}",
+                    '--patch-module', "${project.ext.moduleName}=" + files(sourceSets.test.java.srcDirs).asPath,
+            ]
+            classpath = files()
+        }
+    }
+
     test {
-        enabled = false // FIXME: JIGSAW -- support this with modules
-        logger.info("JIGSAW Testing disabled for fxpackager")
+        inputs.property("moduleName", project.ext.moduleName)
+        doFirst {
+            jvmArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-exports', "${project.ext.moduleName}/com.sun.openjfx.tools.packager.windows=junit",
+                    '--add-exports', "${project.ext.moduleName}/com.sun.openjfx.tools.packager.mac=junit",
+                    '--add-exports', "${project.ext.moduleName}/com.sun.openjfx.tools.packager.linux=junit",
+                    '--add-exports', "jdk.jlink/jdk.tools.jlink.internal.packager=${project.ext.moduleName}",
+                    '--add-modules', 'ALL-MODULE-PATH',
+                    '--add-reads', "${project.ext.moduleName}=junit",
+                    '--add-reads', "${project.ext.moduleName}=system.rules",
+                    '--patch-module', "${project.ext.moduleName}=" + files(sourceSets.test.java.outputDir).asPath,
+            ]
+            classpath = files()
+        }
+        enableAssertions = true
+        scanForTestClasses = false
+        include("**/*Test.*")
+        exclude("**/test/java/hello/*.java")
+        testLogging {
+            events TestLogEvent.STARTED, TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED, TestLogEvent.FAILED,
+                    TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR
+            showExceptions true
+            exceptionFormat TestExceptionFormat.FULL
+            showCauses true
+            showStackTraces true
+
+            info.events = debug.events
+            def failedTestSummary = "\n\nFAILED TESTS SUMMARY: \n\n"
+            afterTest { desc, result ->
+                if (desc.parent) {
+                    if (result.getResultType() == TestResult.ResultType.FAILURE) {
+                        failedTestSummary += "${desc.getClassName()}#${desc.getName()} FAILED:\n" +
+                                "${result.getExceptions()}\n"
+                    }
+                }
+            }
+            afterSuite { desc, result ->
+                if (!desc.parent) { // will match the outermost suite
+                    def output = "Results: ${result.resultType} (${result.testCount} tests, " +
+                            "${result.successfulTestCount} successes, " +
+                            "${result.failedTestCount} failures, " +
+                            "${result.skippedTestCount} skipped)"
+                    def startItem = '|  ', endItem = '  |'
+                    def repeat = startItem + output + endItem
+                    println('\n' + ('-' * repeat.length()) + '\n' + repeat + '\n' + ('-' * repeat.length()))
+                    if (result.failedTestCount > 0) {
+                        println(failedTestSummary)
+                    }
+                }
+            }
+        }
 
         dependsOn packagerFXPackagedJar
         systemProperty "RETAIN_PACKAGER_TESTS", RETAIN_PACKAGER_TESTS
         systemProperty "TEST_PACKAGER_DMG", TEST_PACKAGER_DMG
         systemProperty "FULL_TEST", FULL_TEST
-        executable = JAVA;
     }
 
     def packagerDevOpts = []
@@ -1040,7 +1017,7 @@ project(":fxpackager") {
         packagerDevOpts.addAll("image")
     }
 
-    task packagerDev(dependsOn: [jar, testClasses, packagerFakeJar], type:JavaExec) {
+    task packagerDev(dependsOn: [jar, testClasses, packagerFakeJar], type : JavaExec) {
         workingDir = project.file("build/tmp/tests/appResources/")
         executable = JAVA
         classpath = project.files("build/classes/test", "build/resources/test")
@@ -1109,7 +1086,7 @@ project(":fxpackager") {
 
         doLast {
             new File("$DEBUGJDK_HOME/bin").mkdirs()
-            def runscript = new File("$DEBUGJDK_HOME/bin/java")//.withWriter('utf-8') //{
+            def runscript = new File("$DEBUGJDK_HOME/bin/java")
             runscript.write(TEXT)
         }
 
@@ -1138,7 +1115,7 @@ project(":fxpackager") {
 
         doLast {
             new File("$DEBUGJDK_HOME/bin").mkdirs()
-            def buildscript = new File("$DEBUGJDK_HOME/bin/javac")//.withWriter('utf-8') //{
+            def buildscript = new File("$DEBUGJDK_HOME/bin/javac")
             buildscript.write(TEXT)
         }
 
@@ -1187,24 +1164,12 @@ project(":fxpackager") {
     }
 
     task copyRedistributableFiles(type: Copy) {
-        def projectDir = "tools/java/legacy"
-        def sourceDir = "src/$projectDir"
-        def buildDir = "build/$projectDir"
-        def resourceDir = "${moduleDir}/jdk/packager/internal/resources/tools/legacy"
+        def sourceDir = "src/tools/java/legacy"
+        def resourceDir = "com/sun/openjfx/legacy"
 
         from "$sourceDir/jre.list"
         into project.file("$resourceDir")
     }
 
     processResources.dependsOn copyRedistributableFiles
-
-    task copyDTtoPackager(type: Copy) {
-        def destDt = "${moduleDir}/com/sun/javafx/tools/resource"
-        from (sourceSets.main.output.resourcesDir) {
-            includes = [ "resources/web-files/**" ]
-        }
-        into new File("$destDt", "dtoolkit")
-    }
-
-    processResources.dependsOn copyDTtoPackager
 }

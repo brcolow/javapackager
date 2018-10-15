@@ -28,7 +28,5 @@ package com.sun.openjfx.tools.resource;
 import java.io.File;
 
 public interface ResourceTraversal {
-    boolean traverse(PackagerResource rootResource,
-                     File file,
-                     String relativePath);
+    boolean traverse(PackagerResource rootResource, File file, String relativePath);
 }

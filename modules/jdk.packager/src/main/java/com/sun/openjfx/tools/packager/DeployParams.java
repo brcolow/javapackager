@@ -25,15 +25,9 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.openjdk.tools.packager.*;
-import com.openjdk.tools.packager.RelativeFileSet;
-import com.openjdk.tools.packager.jnlp.JNLPBundler;
-import com.sun.openjfx.tools.packager.bundlers.*;
-import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -43,17 +37,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.openjdk.legacy.JLinkBundlerHelper;
-
-import static com.openjdk.tools.packager.jnlp.JNLPBundler.*;
+import com.sun.openjfx.tools.packager.bundlers.BundleParams;
+import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
 
 public class DeployParams extends CommonParams {
-    public enum RunMode {
-        WEBSTART, EMBEDDED, STANDALONE, ALL
-    }
 
     final List<RelativeFileSet> resources = new ArrayList<>();
-
     String id;
     String title;
     String vendor;
@@ -68,13 +57,11 @@ public class DeployParams extends CommonParams {
     Boolean signBundle;
     Boolean installdirChooser;
     Boolean singleton;
-
     String applicationClass;
     String preloader;
-
     public List<Param> params;
     List<HtmlParam> htmlParams;
-    List<String> arguments; //unnamed arguments
+    List<String> arguments; // unnamed arguments
 
     // Java 9 modules support
     String addModules = null;
@@ -88,56 +75,28 @@ public class DeployParams extends CommonParams {
 
     int width;
     int height;
-    String embeddedWidth = null;
-    String embeddedHeight = null;
-
     String appName;
     String codebase;
-
-    boolean embedJNLP = true;
-    @Deprecated final boolean embedCertificates = false;
-    boolean allPermissions = false;
-    String updateMode = "background";
-    public boolean isExtension = false;
-    boolean isSwingApp = false;
-
+    boolean isExtension = false;
     Boolean needShortcut = null;
     Boolean needMenu = null;
-    Boolean needInstall = null;
-
     public String outfile;
-    //if true then we cobundle js and image files needed
-    // for web deployment with the application
-    boolean includeDT;
-
     String placeholder = "'javafx-app-placeholder'";
     String appId = null;
-
-    // didn't have a setter...
-    boolean offlineAllowed = true;
-
-    List<JSCallback> callbacks = null;
-
-    //list of HTML templates to process
-    List<Template> templates = new LinkedList<>();
-
-    String jrePlatform = PackagerLib.JAVAFX_VERSION+"+";
-    String fxPlatform = PackagerLib.JAVAFX_VERSION+"+";
+    String jrePlatform = PackagerLib.JAVAFX_VERSION + "+";
+    String fxPlatform = PackagerLib.JAVAFX_VERSION + "+";
     File javaRuntimeToUse = null;
     boolean javaRuntimeWasSet = false;
 
-    //list of jvm args (in theory string can contain spaces and need to be escaped
+    // list of jvm args (in theory string can contain spaces and need to be escaped
     List<String> jvmargs = new LinkedList<>();
     Map<String, String> jvmUserArgs = new LinkedHashMap<>();
 
-    //list of jvm properties (can also be passed as VM args
-    // but keeping them separate make it a bit more convinient for JNLP generation)
+    // list of jvm properties (can also be passed as VM args)
     Map<String, String> properties = new LinkedHashMap<>();
 
     // raw arguments to the bundler
     Map<String, ? super Object> bundlerArguments = new LinkedHashMap<>();
-
-    String fallbackApp = null;
 
     public void setJavaRuntimeSource(File src) {
         javaRuntimeToUse = src;
@@ -192,43 +151,6 @@ public class DeployParams extends CommonParams {
         jrePlatform = v;
     }
 
-    public void setSwingAppWithEmbeddedJavaFX(boolean v) {
-        isSwingApp = v;
-    }
-
-    public void setNeedInstall(boolean b) {
-        needInstall = b;
-    }
-
-    public void setOfflineAllowed(boolean b) {
-        offlineAllowed = b;
-    }
-
-    public void setNeedShortcut(Boolean b) {
-        needShortcut = b;
-    }
-
-    public void setNeedMenu(Boolean b) {
-        needMenu = b;
-    }
-
-    public void setEmbeddedDimensions(String w, String h) {
-        embeddedWidth = w;
-        embeddedHeight = h;
-    }
-
-    public void setFallback(String v) {
-        if (v == null) {
-            return;
-        }
-
-        if ("none".equals(v) || "null".equals(v)) {
-            fallbackApp = null;
-        } else {
-            fallbackApp = v;
-        }
-    }
-
     public void setJavafx(String v) {
         fxPlatform = v;
     }
@@ -243,10 +165,6 @@ public class DeployParams extends CommonParams {
 
     public void addJvmProperty(String n, String v) {
         properties.put(n, v);
-    }
-
-    public void setAllPermissions(boolean allPermissions) {
-        this.allPermissions = allPermissions;
     }
 
     public void setAppName(String appName) {
@@ -299,17 +217,6 @@ public class DeployParams extends CommonParams {
         this.description = description;
     }
 
-    public void setEmbedJNLP(boolean embedJNLP) {
-        this.embedJNLP = embedJNLP;
-    }
-
-    @Deprecated
-    public void setEmbedCertifcates(boolean v) {
-        if (v) {
-            Log.info("JavaFX Packager no longer supports embedding certificates in JNLP files.  Setting will be ignored.");
-        }
-    }
-
     public void setPlaceholder(String p) {
         placeholder = p;
     }
@@ -342,16 +249,8 @@ public class DeployParams extends CommonParams {
         this.title = title;
     }
 
-    public void setUpdateMode(String updateMode) {
-        this.updateMode = updateMode;
-    }
-
     public void setVendor(String vendor) {
         this.vendor = vendor;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public void setWidth(int width) {
@@ -366,44 +265,14 @@ public class DeployParams extends CommonParams {
         this.applicationClass = applicationClass;
     }
 
-    public void setIncludeDT(boolean doEmbed) {
-        includeDT = doEmbed;
-    }
-
-    public void setJSCallbacks(List<JSCallback> list) {
-        callbacks = list;
-    }
-
-    public void addCallback(String name, String cmd) {
-        if (callbacks == null) {
-            callbacks = new ArrayList<>();
-        }
-
-        callbacks.add(new JSCallback(name, cmd));
-    }
-
-    static class Template {
-        File in;
-        File out;
-
-        Template(File in, File out) {
-            this.in = in;
-            this.out = out;
-        }
-    }
-
-    public void addTemplate(File in, File out) {
-        templates.add(new Template(in, out));
-    }
-
-    //we need to expand as in some cases
+    // we need to expand as in some cases
     // (most notably javapackager)
-    //we may get "." as filename and assumption is we include
+    // we may get "." as filename and assumption is we include
     // everything in the given folder
     // (IOUtils.copyfiles() have recursive behavior)
     List<File> expandFileset(File root) {
         List<File> files = new LinkedList<>();
-        if (com.openjdk.tools.packager.IOUtils.isNotSymbolicLink(root)) {
+        if (IOUtils.isNotSymbolicLink(root)) {
             if (root.isDirectory()) {
                 File[] children = root.listFiles();
                 if (children != null) {
@@ -434,7 +303,7 @@ public class DeployParams extends CommonParams {
 
     @Override
     public void addResource(File baseDir, File file) {
-        //normalize initial file
+        // normalize initial file
         // to strip things like "." in the path
         // or it can confuse symlink detection logic
         file = file.getAbsoluteFile();
@@ -471,8 +340,6 @@ public class DeployParams extends CommonParams {
         if (type == null) {
             if (file.getName().endsWith(".jar")) {
                 return RelativeFileSet.Type.jar;
-            } else if (file.getName().endsWith(".jnlp")) {
-                return RelativeFileSet.Type.jnlp;
             } else {
                 return RelativeFileSet.Type.UNKNOWN;
             }
@@ -483,64 +350,31 @@ public class DeployParams extends CommonParams {
 
     private static File createFile(final File baseDir, final String path) {
         final File testFile = new File(path);
-        return testFile.isAbsolute()
-                ? testFile
-                : new File(baseDir == null
-                    ? null
-                    : baseDir.getAbsolutePath(),
-                      path);
+        return testFile.isAbsolute() ? testFile : new File(baseDir == null
+                ? null : baseDir.getAbsolutePath(), path);
     }
-
 
     @Override
     public void validate() throws PackagerException {
         if (outdir == null) {
-            throw new PackagerException("ERR_MissingArgument", "-outdir");
-        }
-
-        if (getBundleType() == BundleType.JNLP && outfile == null) {
-            throw new PackagerException("ERR_MissingArgument", "-outfile");
+            throw new PackagerException("Error: Missing argument: {0}", "-outdir");
         }
 
         if (module == null) {
             if (resources.isEmpty()) {
-                throw new PackagerException("ERR_MissingAppResources");
+                // throw new PackagerException("Error: Resources empty");
             }
             if (applicationClass == null) {
-                throw new PackagerException("ERR_MissingArgument", "-appclass");
+                throw new PackagerException("Error: Missing argument: {0}", "-appclass");
             }
         }
-    }
-
-    public boolean validateForJNLP() {
-        boolean result = false;
-
-        // Success
-        if (applicationClass != null && !applicationClass.isEmpty() &&
-            (getBundleType() == BundleType.JNLP)) {
-            result = true;
-        }
-
-        // Failed
-        if ((module != null && !module.isEmpty()) ||
-            (addModules != null && !addModules.isEmpty()) ||
-            (limitModules != null && !limitModules.isEmpty()) |
-            (modulePath != null && !modulePath.isEmpty()) ||
-            getBundleType() == BundleType.INSTALLER ||
-            getBundleType() == BundleType.NATIVE ||
-            getBundleType() == BundleType.IMAGE) {
-
-            result = false;
-        }
-
-        return result;
     }
 
     public boolean validateForBundle() {
         boolean result = false;
 
         // Success
-        if (((applicationClass != null && !applicationClass.isEmpty()) ||
+        if ((applicationClass != null && !applicationClass.isEmpty() ||
             (module != null && !module.isEmpty()))) {
             result = true;
         }
@@ -548,41 +382,8 @@ public class DeployParams extends CommonParams {
         return result;
     }
 
-    //could be icon or splash
-    static class Icon {
-        final static int UNDEFINED = -1;
-
-        String href;
-        String kind;
-        int width = UNDEFINED;
-        int height = UNDEFINED;
-        int depth = UNDEFINED;
-        RunMode mode = RunMode.WEBSTART;
-
-        Icon(String href, String kind, int w, int h, int d, RunMode m) {
-            mode = m;
-            this.href = href;
-            this.kind = kind;
-            if (w > 0) {
-                width = w;
-            }
-            if (h > 0) {
-                height = h;
-            }
-            if (d > 0) {
-                depth = d;
-            }
-        }
-    }
-
-    List<Icon> icons = new LinkedList<>();
-
-    public void addIcon(String href, String kind, int w, int h, int d, RunMode m) {
-        icons.add(new Icon(href, kind, w, h, d, m));
-    }
-
     BundleType bundleType = BundleType.NONE;
-    String targetFormat = null; //means any
+    String targetFormat = null; // means any
 
     public void setBundleType(BundleType type) {
         bundleType = type;
@@ -613,7 +414,7 @@ public class DeployParams extends CommonParams {
         return arch;
     }
 
-    static final Set<String> multi_args = new TreeSet<>(Arrays.asList(
+    static final Set<String> MULTI_ARGS = new TreeSet<>(Arrays.asList(
             StandardBundlerParam.JVM_PROPERTIES.getID(),
             StandardBundlerParam.JVM_OPTIONS.getID(),
             StandardBundlerParam.USER_JVM_OPTIONS.getID(),
@@ -628,15 +429,15 @@ public class DeployParams extends CommonParams {
     @SuppressWarnings("unchecked")
     public void addBundleArgument(String key, Object value) {
         // special hack for multi-line arguments
-        if (multi_args.contains(key) && value instanceof String) {
+        if (MULTI_ARGS.contains(key) && value instanceof String) {
             Object existingValue = bundlerArguments.get(key);
             if (existingValue instanceof String) {
                 bundlerArguments.put(key, existingValue + "\n\n" + value);
             } else if (existingValue instanceof List) {
-                ((List)existingValue).add(value);
-            } else if (existingValue instanceof Map && ((String)value).contains("=")) {
-                String[] mapValues = ((String)value).split("=", 2);
-                ((Map)existingValue).put(mapValues[0], mapValues[1]);
+                ((List) existingValue).add(value);
+            } else if (existingValue instanceof Map && ((String) value).contains("=")) {
+                String[] mapValues = ((String) value).split("=", 2);
+                ((Map) existingValue).put(mapValues[0], mapValues[1]);
             } else {
                 bundlerArguments.put(key, value);
             }
@@ -648,15 +449,14 @@ public class DeployParams extends CommonParams {
     public BundleParams getBundleParams() {
         BundleParams bundleParams = new BundleParams();
 
-        //construct app resources
-        //  relative to output folder!
+        // construct app resources - relative to output folder!
         String currentOS = System.getProperty("os.name").toLowerCase();
         String currentArch = getArch();
 
         for (RelativeFileSet rfs : resources) {
             String os = rfs.getOs();
             String arch = rfs.getArch();
-            //skip resources for other OS
+            // skip resources for other OS
             // and nativelib jars (we are including raw libraries)
             if ((os == null || currentOS.contains(os.toLowerCase())) &&
                     (arch == null || currentArch.startsWith(arch.toLowerCase()))
@@ -686,7 +486,7 @@ public class DeployParams extends CommonParams {
         bundleParams.setEmail(email);
         bundleParams.setShortcutHint(needShortcut);
         bundleParams.setMenuHint(needMenu);
-        putUnlessNull(INSTALL_HINT.getID(), needInstall);
+        // putUnlessNull(INSTALL_HINT.getID(), needInstall);
         bundleParams.setSystemWide(systemWide);
         bundleParams.setServiceHint(serviceHint);
         bundleParams.setInstalldirChooser(installdirChooser);
@@ -734,44 +534,12 @@ public class DeployParams extends CommonParams {
             bundleParams.setDetectMods(detectmods);
         }
 
-        File appIcon = null;
-        List<Map<String, ? super Object>> bundlerIcons = new ArrayList<>();
-        for (Icon ic: icons) {
-            //NB: in theory we should be paying attention to RunMode but
-            // currently everything is marked as webstart internally and runmode
-            // is not publicly documented property
-            if (/* (ic.mode == RunMode.ALL || ic.mode == RunMode.STANDALONE) && */
-                (ic.kind == null || ic.kind.equals("default")))
-            {
-                //could be full path or something relative to the output folder
-                appIcon = new File(ic.href);
-                if (!appIcon.exists()) {
-                    com.openjdk.tools.packager.Log.debug("Icon [" + ic.href + "] is not valid absolute path. " +
-                            "Assume it is relative to the output dir.");
-                    appIcon = new File(outdir, ic.href);
-                }
-            }
-
-            Map<String, ? super Object> iconInfo = new TreeMap<>();
-            if (ic.href != null) iconInfo.put(ICONS_HREF.getID(), ic.href);
-            if (ic.kind != null) iconInfo.put(ICONS_KIND.getID(), ic.kind);
-            if (ic.width > 0)    iconInfo.put(ICONS_WIDTH.getID(), Integer.toString(ic.width));
-            if (ic.height > 0)   iconInfo.put(ICONS_HEIGHT.getID(), Integer.toString(ic.height));
-            if (ic.depth > 0)    iconInfo.put(ICONS_DEPTH.getID(), Integer.toString(ic.depth));
-
-            if (!iconInfo.isEmpty()) bundlerIcons.add(iconInfo);
-        }
-        putUnlessNullOrEmpty(ICONS.getID(), bundlerIcons);
-
-        bundleParams.setIcon(appIcon);
-
         Map<String, String> paramsMap = new TreeMap<>();
         if (params != null) {
             for (Param p : params) {
                 paramsMap.put(p.name, p.value);
             }
         }
-        putUnlessNullOrEmpty(JNLPBundler.APP_PARAMS.getID(), paramsMap);
 
         Map<String, String> unescapedHtmlParams = new TreeMap<>();
         Map<String, String> escapedHtmlParams = new TreeMap<>();
@@ -784,48 +552,6 @@ public class DeployParams extends CommonParams {
                 }
             }
         }
-        putUnlessNullOrEmpty(JNLPBundler.APPLET_PARAMS.getID(), unescapedHtmlParams);
-        putUnlessNullOrEmpty(ESCAPED_APPLET_PARAMS.getID(), escapedHtmlParams);
-
-
-        putUnlessNull(WIDTH.getID(), width);
-        putUnlessNull(HEIGHT.getID(), height);
-        putUnlessNull(EMBEDDED_WIDTH.getID(), embeddedWidth);
-        putUnlessNull(EMBEDDED_HEIGHT.getID(), embeddedHeight);
-
-        putUnlessNull(CODEBASE.getID(), codebase);
-        putUnlessNull(EMBED_JNLP.getID(), embedJNLP);
-        // embedCertificates
-        putUnlessNull(ALL_PERMISSIONS.getID(), allPermissions);
-        putUnlessNull(UPDATE_MODE.getID(), updateMode);
-        putUnlessNull(EXTENSION.getID(), isExtension);
-        putUnlessNull(SWING_APP.getID(), isSwingApp);
-
-        putUnlessNull(OUT_FILE.getID(), outfile);
-        putUnlessNull(INCLUDE_DT.getID(), includeDT);
-        putUnlessNull(PLACEHOLDER.getID(), placeholder);
-        putUnlessNull(OFFLINE_ALLOWED.getID(), offlineAllowed);
-
-        Map<String, String> callbacksMap = new TreeMap<>();
-        if (callbacks != null) {
-            for (JSCallback callback : callbacks) {
-                callbacksMap.put(callback.getName(), callback.getCmd());
-            }
-        }
-        putUnlessNull(JS_CALLBACKS.getID(), callbacksMap);
-
-        Map<File, File> templatesMap = new TreeMap<>();
-        if (templates != null) {
-            for (Template template : templates) {
-                templatesMap.put(template.in, template.out);
-            }
-        }
-        putUnlessNull(TEMPLATES.getID(), templatesMap);
-
-        putUnlessNull(FX_PLATFORM.getID(), fxPlatform);
-        putUnlessNull(JRE_PLATFORM.getID(), jrePlatform);
-
-        putUnlessNull(FALLBACK_APP.getID(), fallbackApp);
 
         // check for collisions
         TreeSet<String> keys = new TreeSet<>(bundlerArguments.keySet());
@@ -838,23 +564,5 @@ public class DeployParams extends CommonParams {
         bundleParams.addAllBundleParams(bundlerArguments);
 
         return bundleParams;
-    }
-
-    public void putUnlessNull(String param, Object value) {
-        if (value != null) {
-            bundlerArguments.put(param, value);
-        }
-    }
-
-    public void putUnlessNullOrEmpty(String param, Map<?, ?> value) {
-        if (value != null && !value.isEmpty()) {
-            bundlerArguments.put(param, value);
-        }
-    }
-
-    public void putUnlessNullOrEmpty(String param, Collection<?> value) {
-        if (value != null && !value.isEmpty()) {
-            bundlerArguments.put(param, value);
-        }
     }
 }

@@ -27,16 +27,16 @@
  * Defines the services used by the jpackager tool.
  *
  * @moduleGraph
- * @since 11
  */
-module jdk.packager.services {
-    exports jdk.packager.services;
-    exports jdk.packager.services.singleton;
+module com.brcolow.javapackager.services {
+    exports com.openjfx.packager.services;
+    exports com.openjfx.packager.services.singleton;
 
     requires java.prefs;
     requires java.desktop;
 
-    uses jdk.packager.services.UserJvmOptionsService;
+    uses com.openjfx.packager.services.UserJvmOptionsService;
 
-    provides jdk.packager.services.UserJvmOptionsService with jdk.packager.services.userjvmoptions.LauncherUserJvmOptions;
+    provides com.openjfx.packager.services.UserJvmOptionsService with
+            com.openjfx.packager.services.userjvmoptions.LauncherUserJvmOptions;
 }

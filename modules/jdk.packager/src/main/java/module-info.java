@@ -27,46 +27,47 @@
  * Defines the Java packager tool, javapackager.
  *
  * <p>The javapackager is a tool for generating bundles for self-contained applications.
- * It can be located under the name {@code "javapackager"} using the {@link ToolProvider}, for example:
+ * It can be located under the name {@code "javapackager"} using the
+ * {@link java.util.spi.ToolProvider}, for example:
  * <pre>{@code
  * ToolProvider javaPackager = ToolProvider.findFirst("javapackager").orElseThrow(...);
  * javaPackager.run(...);
  * }</pre>
  *
  * @moduleGraph
- * @since 9
  */
-module jdk.packager {
-    requires jdk.jlink;
+module com.brcolow.javapackager {
 
     requires java.xml;
     requires java.desktop;
     requires java.logging;
+    requires javafx.controls;
+    requires javafx.graphics;
+    requires jdk.jlink;
 
-    exports com.openjdk.tools.packager;
     exports com.sun.openjfx.tools.packager;
     exports com.sun.openjfx.tools.packager.bundlers;
     exports com.sun.openjfx.tools.resource;
 
-    uses com.openjdk.tools.packager.Bundler;
-    uses com.openjdk.tools.packager.Bundlers;
+    uses com.sun.openjfx.tools.packager.Bundler;
+    uses com.sun.openjfx.tools.packager.Bundlers;
+    provides com.sun.openjfx.tools.packager.Bundlers with
+            com.sun.openjfx.tools.packager.BasicBundlers;
 
-    provides com.openjdk.tools.packager.Bundlers with
-        com.openjdk.tools.packager.BasicBundlers;
-
-    provides com.openjdk.tools.packager.Bundler with
-        com.openjdk.tools.packager.jnlp.JNLPBundler,
-        com.openjdk.tools.packager.linux.LinuxAppBundler,
-        com.openjdk.tools.packager.linux.LinuxDebBundler,
-        com.openjdk.tools.packager.linux.LinuxRpmBundler,
-        com.openjdk.tools.packager.mac.MacAppBundler,
-        com.openjdk.tools.packager.mac.MacAppStoreBundler,
-        com.openjdk.tools.packager.mac.MacDmgBundler,
-        com.openjdk.tools.packager.mac.MacPkgBundler,
-        com.openjdk.tools.packager.windows.WinAppBundler,
-        com.openjdk.tools.packager.windows.WinExeBundler,
-        com.openjdk.tools.packager.windows.WinMsiBundler;
+    provides com.sun.openjfx.tools.packager.Bundler with
+            com.sun.openjfx.tools.packager.linux.LinuxAppBundler,
+            com.sun.openjfx.tools.packager.linux.LinuxDebBundler,
+            com.sun.openjfx.tools.packager.linux.LinuxRpmBundler,
+            com.sun.openjfx.tools.packager.mac.MacAppBundler,
+            com.sun.openjfx.tools.packager.mac.MacAppStoreBundler,
+            com.sun.openjfx.tools.packager.mac.MacDaemonBundler,
+            com.sun.openjfx.tools.packager.mac.MacDmgBundler,
+            com.sun.openjfx.tools.packager.mac.MacPkgBundler,
+            com.sun.openjfx.tools.packager.windows.WinAppBundler,
+            com.sun.openjfx.tools.packager.windows.WinExeBundler,
+            com.sun.openjfx.tools.packager.windows.WinMsiBundler,
+            com.sun.openjfx.tools.packager.windows.WinServiceBundler;
 
     provides java.util.spi.ToolProvider
-        with com.openjdk.JavaPackagerToolProvider;
+        with com.sun.openjfx.tools.JavaPackagerToolProvider;
 }

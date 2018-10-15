@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CreateBSSParams extends CommonParams {
-    final List<PackagerResource> resources = new ArrayList<PackagerResource>();
+    final List<PackagerResource> resources = new ArrayList<>();
 
     @Override
     public void addResource(File baseDir, String path) {
@@ -47,7 +47,7 @@ public class CreateBSSParams extends CommonParams {
     @Override
     public void validate() throws PackagerException {
         if (outdir == null) {
-            throw new PackagerException("ERR_MissingArgument", "-outdir");
+            throw new PackagerException("Error: Missing argument: {0}", "-outdir");
         }
     }
 }

@@ -33,7 +33,7 @@ import java.util.List;
 
 public class SignJarParams extends CommonParams {
 
-    final List<PackagerResource> resources = new ArrayList<PackagerResource>();
+    final List<PackagerResource> resources = new ArrayList<>();
 
     File keyStore;
     String alias;
@@ -80,14 +80,14 @@ public class SignJarParams extends CommonParams {
     @Override
     public void validate() throws PackagerException {
         if (keyStore == null) {
-            throw new PackagerException("ERR_InvalidStoreFile",
+            throw new PackagerException("Error: Invalid keystore file: {0}",
                     "null keystore");
         }
         if (!keyStore.isFile()) {
-            throw new PackagerException("ERR_InvalidStoreFile", keyStore.getAbsolutePath());
+            throw new PackagerException("Error: Invalid keystore file: {0}", keyStore.getAbsolutePath());
         }
         if (alias == null) {
-            throw new PackagerException("ERR_MissingArgument", "alias");
+            throw new PackagerException("Error: Missing argument: {0}", "alias");
         }
         if (storeType == null) {
             storeType = "jks";

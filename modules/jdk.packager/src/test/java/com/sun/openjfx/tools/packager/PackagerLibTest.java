@@ -42,11 +42,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -56,6 +52,12 @@ import org.junit.rules.TemporaryFolder;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class PackagerLibTest {
 
@@ -72,7 +74,6 @@ public class PackagerLibTest {
     @BeforeClass
     public static void prepareApp() {
         retain = Boolean.parseBoolean(System.getProperty("RETAIN_PACKAGER_TESTS"));
-        System.out.println(retain?"Retain apps" : "destroy apps");
     }
 
     @Before
@@ -87,8 +88,6 @@ public class PackagerLibTest {
             srcRoot = src.getRoot();
             destRoot = dest.getRoot();
         }
-        System.out.println("src " + srcRoot);
-        System.out.println("dest " + destRoot);
     }
 
     @Test(expected=IllegalArgumentException.class)
@@ -100,7 +99,6 @@ public class PackagerLibTest {
         CreateJarParams params = new CreateJarParams();
         params.outdir = dest.getRoot();
         params.outfile = "temp";
-        params.embedLauncher = false;
         params.css2bin = false;
         params.applicationClass = DUMMY_APP_MAIN;
 
@@ -170,7 +168,6 @@ public class PackagerLibTest {
         assertEquals("bar", m.getMainAttributes().getValue("testfoo"));
     }
 
-
     @Test
     @Ignore // requires jfxrt.jar on classpath
     public void testPackageAsJar_css2bss() throws PackagerException, IOException {
@@ -187,45 +184,17 @@ public class PackagerLibTest {
     }
 
     @Test
-    @Ignore
-    public void testPackageAsJar_embedLauncher() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.applicationClass = "FooBar";
-        params.embedLauncher = true;
-        params.fxVersion = "2.0";
-        params.resources.add(new PackagerResource(src.getRoot(), "."));
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        JarFile jar = new JarFile(testFile);
-        Manifest m = jar.getManifest();
-        assertEquals("1.0",
-                m.getMainAttributes().get(Attributes.Name.MANIFEST_VERSION));
-        assertEquals("com/javafx/main/Main",
-                m.getMainAttributes().get(Attributes.Name.MAIN_CLASS));
-        assertEquals("FooBar",
-                m.getMainAttributes().getValue("JavaFX-Application-Class"));
-        assertEquals("2.0", m.getMainAttributes().getValue("JavaFX-Version"));
-        assertEquals(null, m.getMainAttributes().getValue("JavaFX-Preloader-Class"));
-        assertEquals(null, m.getMainAttributes().getValue("JavaFX-Class-Path"));
-        assertEquals(null, m.getMainAttributes().getValue("JavaFX-Fallback-Class"));
-    }
-
-    @Test
     public void testPackageAsJar_embedLauncher2() throws PackagerException, IOException {
         CreateJarParams params = defaultParams();
         params.applicationClass = "FooBar";
         params.preloader = "PreLoader";
-        params.fxVersion = "2.0";
-        params.embedLauncher = true;
         params.resources.add(new PackagerResource(src.getRoot(), "."));
         lib.packageAsJar(params);
 
         File testFile = new File(dest.getRoot(), "temp.jar");
         JarFile jar = new JarFile(testFile);
         Manifest m = jar.getManifest();
-        assertEquals("PreLoader",
-                m.getMainAttributes().getValue("JavaFX-Preloader-Class"));
+        assertEquals("PreLoader", m.getMainAttributes().getValue("JavaFX-Preloader-Class"));
     }
 
     @Test
@@ -234,8 +203,6 @@ public class PackagerLibTest {
         CreateJarParams params = defaultParams();
         params.applicationClass = "FooBar";
         params.classpath = "/a/b/c;d/e/f/";
-        params.fxVersion = "2.0";
-        params.embedLauncher = true;
         params.resources.add(new PackagerResource(src.getRoot(), "."));
         lib.packageAsJar(params);
 
@@ -253,8 +220,6 @@ public class PackagerLibTest {
         params.applicationClass = "FooBar";
         params.preloader = "PreLoader";
         params.fallbackClass = "com.sun.Fallback";
-        params.fxVersion = "2.0";
-        params.embedLauncher = true;
         params.resources.add(new PackagerResource(src.getRoot(), "."));
         lib.packageAsJar(params);
 
@@ -263,113 +228,6 @@ public class PackagerLibTest {
         Manifest m = jar.getManifest();
         assertEquals("com.sun.Fallback",
                 m.getMainAttributes().getValue("JavaFX-Fallback-Class"));
-    }
-
-    // Right now we only validate that XML is well formed. We should validate against schema
-    private void validateJNLP(File file) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setValidating(false);
-            factory.setNamespaceAware(true);
-
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            builder.setErrorHandler(new SimpleErrorHandler());
-            try {
-                builder.parse(file);
-            } catch (SAXException ex) {
-                fail("Parsing exception: "+ex);
-            } catch (IOException ex) {
-                fail("IOException: "+ex);
-            }
-        } catch (ParserConfigurationException ex) {
-            fail("Runtime issue: "+ex);
-        }
-    }
-
-    @Test
-    public void testGenerateDeploymentPackages() throws PackagerException, IOException {
-        DeployParams params = new DeployParams();
-        params.outdir = new File(destRoot, "smoke");
-        params.outfile = "temp";
-        params.setApplicationClass(DUMMY_APP_MAIN);
-        File j1 = createTestJar(null, DUMMY_APP_MAIN);
-        params.addResource(j1.getParentFile(), j1);
-
-        lib.generateDeploymentPackages(params);
-
-        File jnlpFile = new File(params.outdir, "temp.jnlp");
-        File htmlFile = new File(params.outdir, "temp.html");
-        assertTrue(jnlpFile.exists() && jnlpFile.canRead());
-        assertTrue(htmlFile.exists() && htmlFile.canRead());
-
-        validateJNLP(jnlpFile);
-
-        //
-    }
-
-    @Test
-    //extension JNLP with 1 jar
-    public void testGenerateExtensionJNLP_basic() throws PackagerException, IOException {
-        DeployParams params = new DeployParams();
-        params.outdir = new File(destRoot, "ext");
-        params.outfile = "temp";
-        params.isExtension = true;
-        params.setApplicationClass(DUMMY_APP_MAIN);
-        File j1 = createTestJar(null, DUMMY_APP_MAIN);
-        params.addResource(j1.getParentFile(), j1);
-
-        lib.generateDeploymentPackages(params);
-
-        File jnlpFile = new File(params.outdir, "temp.jnlp");
-        assertTrue(jnlpFile.exists() && jnlpFile.canRead());
-
-        validateJNLP(jnlpFile);
-    }
-
-    @Test
-    //extension JNLP with 2 jars
-    public void testGenerateExtensionJNLP_multi() throws PackagerException, IOException {
-        DeployParams params = new DeployParams();
-        params.outdir = new File(destRoot, "ext2");
-        params.outfile = "temp";
-        params.isExtension = true;
-        params.setApplicationClass(DUMMY_APP_MAIN);
-        File j1 = createTestJar(null, DUMMY_APP_MAIN);
-        File j2 = createTestJar(null, DUMMY_APP_MAIN);
-        params.addResource(j1.getParentFile(), j1);
-        params.addResource(j2.getParentFile(), j2);
-
-        lib.generateDeploymentPackages(params);
-
-        File jnlpFile = new File(params.outdir, "temp.jnlp");
-        assertTrue(jnlpFile.exists() && jnlpFile.canRead());
-
-        validateJNLP(jnlpFile);
-    }
-
-    @Test
-    //extension JNLP with several jars. jars may be platform specific
-    public void testGenerateExtensionJNLP_multi_mix() throws PackagerException, IOException {
-        DeployParams params = new DeployParams();
-        params.outdir = new File(destRoot, "ext_mix");
-        params.outfile = "temp";
-        params.isExtension = true;
-        params.setApplicationClass(DUMMY_APP_MAIN);
-        File j1 = createTestJar(null, DUMMY_APP_MAIN);
-        File j2 = createTestJar(null, DUMMY_APP_MAIN);
-        File j3 = createTestJar(null, DUMMY_APP_MAIN);
-        params.addResource(j1.getParentFile(), j1, "eager", null, "win", null);
-        params.addResource(j2.getParentFile(), j2);
-        params.addResource(j2.getParentFile(), j3, "eager", null, "win", null);
-        params.addResource(j2.getParentFile(), j3, "eager", null, "linux", null);
-
-        lib.generateDeploymentPackages(params);
-
-        File jnlpFile = new File(params.outdir, "temp.jnlp");
-        assertTrue(jnlpFile.exists() && jnlpFile.canRead());
-
-        validateJNLP(jnlpFile);
     }
 
     void validateSignedJar(File jar) throws IOException {
@@ -451,7 +309,7 @@ public class PackagerLibTest {
         return res;
     }
 
-    final private static String DUMMY_APP_MAIN = "DummyLauncherClass";
+    private static final String DUMMY_APP_MAIN = "DummyLauncherClass";
 
     private void doTest_existingJar(Manifest inputManifest, CreateJarParams params)
             throws PackagerException, IOException {
@@ -464,7 +322,6 @@ public class PackagerLibTest {
 
         //common settings
         params.outdir = dest.getRoot();
-        params.embedLauncher = true;
         params.resources.add(
                 new PackagerResource(inputJar.getParentFile(), inputJar));
 
@@ -533,7 +390,7 @@ public class PackagerLibTest {
             }
 
         }
-        //TODO: validate that manifest entries for jar enttries are copied
+        //TODO: validate that manifest entries for jar entries are copied
     }
 
     @Test
@@ -597,7 +454,6 @@ public class PackagerLibTest {
         //common settings
         params.outdir = dest.getRoot();
         params.outfile = "temp";
-        params.embedLauncher = true;
         params.css2bin = false;
         params.resources.add(
                 new PackagerResource(inputJar.getParentFile(), inputJar));
@@ -622,7 +478,6 @@ public class PackagerLibTest {
         //common settings
         params.outdir = inputJar.getParentFile();
         params.outfile = inputJar.getName();
-        params.embedLauncher = true;
         params.resources.add(
                 new PackagerResource(inputJar.getParentFile(), inputJar));
 
@@ -644,27 +499,6 @@ public class PackagerLibTest {
             jar.close();
         }
 
-    }
-
-    private static class SimpleErrorHandler implements ErrorHandler {
-
-        public SimpleErrorHandler() {
-        }
-
-        public void warning(SAXParseException saxpe) throws SAXException {
-            saxpe.printStackTrace();
-            fail("Warning");
-        }
-
-        public void error(SAXParseException saxpe) throws SAXException {
-            saxpe.printStackTrace();
-            fail("Parsing error");
-        }
-
-        public void fatalError(SAXParseException saxpe) throws SAXException {
-            saxpe.printStackTrace();
-            fail("Fatal error");
-        }
     }
 
 }
