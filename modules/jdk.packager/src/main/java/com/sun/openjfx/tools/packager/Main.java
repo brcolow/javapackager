@@ -25,58 +25,42 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.openjdk.tools.packager.*;
-import com.openjdk.tools.packager.ConfigException;
-import com.openjdk.tools.packager.UnsupportedPlatformException;
-import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
-import com.openjdk.tools.packager.Log;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.stream.Stream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Stream;
 
-import com.openjdk.legacy.JLinkBundlerHelper;
+import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
+
+import static com.sun.openjfx.tools.packager.Help.HELP_MSG;
 
 public class Main {
-
-    private static final ResourceBundle bundle =
-            ResourceBundle.getBundle("com/sun/javafx/tools/packager/Bundle");
-
-    private static final String version = bundle.getString("MSG_Version")
-            + " " + PackagerLib.JAVAFX_VERSION + "\n";
-    private static final String help = bundle.getString("MSG_Help_1")
-                                        + bundle.getString("MSG_Help_2")
-                                        + MessageFormat.format(bundle.getString("MSG_Help_3"), File.pathSeparator)
-                                        + bundle.getString("MSG_Help_4")
-                                        + bundle.getString("MSG_Help_5")
-                                        + bundle.getString("MSG_Help_6")
-                                        + bundle.getString("MSG_Help_7");
-
-    private static String nextArg(String args[], int i) {
-        return (i == args.length - 1) ? "" : args[i + 1];
-    }
-
-    private static boolean verbose = false;
-    private static boolean packageAsJar = false;
-    private static boolean genJNLP = false;
-    private static boolean genPackages = false;
-    private static boolean css2Bin = false;
-    private static boolean signJar = false;
-    private static boolean makeAll = false;
 
     private static final String CREATE_BSS_INTERNAL = "-createbss_internal";
     private static final String CREATE_BSS_EXTERNAL = "-createbss";
     private static final String CREATE_JAR_INTERNAL = "-createjar_internal";
     private static final String CREATE_JAR_EXTERNAL = "-createjar";
+    private static final String VERSION = "Java Packager version " + PackagerLib.JAVAFX_VERSION + "\n";
 
-    private static void addResources(CommonParams commonParams,
-                                     String srcdir, String srcfiles) {
+    private static boolean verbose = false;
+    private static boolean packageAsJar = false;
+    private static boolean genPackages = false;
+    private static boolean css2Bin = false;
+    private static boolean signJar = false;
+
+    private static void addResources(CommonParams commonParams, String srcdir, String srcfiles)
+            throws PackagerException {
         if (srcdir == null || "".equals(srcdir)) {
             return;
         }
@@ -85,7 +69,7 @@ public class Main {
 
         if (!baseDir.isDirectory()) {
             Log.info("Unable to add resources: \"-srcdir\" is not a directory.");
-            return;
+            throw new PackagerException("Unable to add resources: \"-srcdir\" is not a directory but was: " + srcdir);
         }
 
         List<String> fileNames;
@@ -147,11 +131,11 @@ public class Main {
 
         List<Param> parameters = new ArrayList<>(properties.size());
 
-        for (Map.Entry en : properties.entrySet()) {
-            Param p = new Param();
-            p.setName((String)en.getKey());
-            p.setValue((String)en.getValue());
-            parameters.add(p);
+        for (Map.Entry entry : properties.entrySet()) {
+            Param param = new Param();
+            param.setName((String) entry.getKey());
+            param.setValue((String) entry.getValue());
+            parameters.add(param);
         }
         return parameters;
     }
@@ -165,26 +149,13 @@ public class Main {
 
         List<HtmlParam> parameters = new ArrayList<>(properties.size());
 
-        for (Map.Entry en : properties.entrySet()) {
-            HtmlParam p = new HtmlParam();
-            p.setName((String)en.getKey());
-            p.setValue((String)en.getValue());
-            parameters.add(p);
+        for (Map.Entry entry : properties.entrySet()) {
+            HtmlParam param = new HtmlParam();
+            param.setName((String) entry.getKey());
+            param.setValue((String) entry.getValue());
+            parameters.add(param);
         }
         return parameters;
-    }
-
-    private static List<JSCallback> parseCallbacks(String param) {
-        String[] callbacks = param.split(",");
-        List<JSCallback> list = new ArrayList<>(callbacks.length);
-
-        for (String cb: callbacks) {
-            String[] nameCmd = cb.split(":");
-            if (nameCmd.length == 2) {
-                list.add(new JSCallback(nameCmd[0], nameCmd[1]));
-            }
-        }
-        return list;
     }
 
     public static void main(String... args) throws Exception {
@@ -208,11 +179,10 @@ public class Main {
     }
 
     private static int relaunchJavapackager(String... args) throws Exception {
-
-        final String exe = (Platform.getPlatform() == Platform.WINDOWS) ? ".exe" : "";
+        final String exe = Platform.getPlatform() == Platform.WINDOWS ? ".exe" : "";
         String javaHome = System.getProperty("java.home");
         if (javaHome == null) {
-            throw new PackagerException("ERR_MissingJavaHome");
+            throw new PackagerException("Error: Java home directory is not known.");
         }
 
         final File java = new File(new File(javaHome), "bin/java" + exe);
@@ -223,7 +193,7 @@ public class Main {
         newArgs.add("--add-modules");
         newArgs.add("javafx.graphics");
         newArgs.add("-m");
-        newArgs.add("jdk.packager/com.sun.openjfx.tools.packager.Main");
+        newArgs.add("com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main");
 
         for (String arg : args) {
             if (arg.equalsIgnoreCase(CREATE_BSS_EXTERNAL)) {
@@ -237,16 +207,13 @@ public class Main {
 
         int ret = IOUtils.execute(newArgs);
         if (ret != 0) {
-            throw new PackagerException(
-                    "Error: Conversion of CSS files to binary form failed");
+            throw new PackagerException("Error: Conversion of CSS files to binary form failed");
         }
 
         return ret;
     }
 
-    @SuppressWarnings("deprecation")
     public static int run(String... args) throws Exception {
-
        for (String arg : args) {
             if (arg.equalsIgnoreCase(CREATE_BSS_EXTERNAL) ||
                 arg.equalsIgnoreCase(CREATE_JAR_EXTERNAL)) {
@@ -256,23 +223,21 @@ public class Main {
 
         BundleType bundleType = BundleType.NONE;
 
-        if (args.length == 0 || args.length == 1 && args[0].equals("-help")) {
-            Log.info(help);
-        } else if (args.length == 1 && args[0].equals("-version")) {
-            Log.info(version);
+        if (args.length == 0 || args.length == 1 && (args[0].equals("-help") || args[0].equals("--help"))) {
+            Log.info(HELP_MSG);
+        } else if (args.length == 1 && (args[0].equals("-version") || args[0].equals("--version"))) {
+            Log.info(VERSION);
         } else {
             PackagerLib packager = new PackagerLib();
             CreateJarParams createJarParams = new CreateJarParams();
             DeployParams deployParams = new DeployParams();
             CreateBSSParams createBssParams = new CreateBSSParams();
             SignJarParams signJarParams = new SignJarParams();
-            MakeAllParams makeAllParams = new MakeAllParams();
             String srcdir = null;
             String srcfiles = null;
 
             try {
                 if (args[0].equalsIgnoreCase(CREATE_JAR_INTERNAL)) {
-                    Log.info("Warning: -createjar has been deprecated and will be removed in a future release.");
                     for (int i = 1; i < args.length; i++) {
                         String arg = args[i];
                         if (arg.equalsIgnoreCase("-appclass")) {
@@ -283,13 +248,8 @@ public class Main {
                             createJarParams.setClasspath(nextArg(args, i++));
                         } else if (arg.equalsIgnoreCase("-manifestAttrs")) {
                             createJarParams.setManifestAttrs(createAttrMap(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-noembedlauncher")) {
-                            Log.error("-noembedlauncher is deprecated");
                         } else if (arg.equalsIgnoreCase("-nocss2bin")) {
                             createJarParams.setCss2bin(false);
-                        } else if (arg.equalsIgnoreCase("-runtimeVersion")) {
-                            createJarParams.setFxVersion(nextArg(args, i++));
-                            Log.error("-runtimeVersion is deprecated");
                         } else if (arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
                             createJarParams.setVerbose(true);
                             verbose = true;
@@ -306,21 +266,13 @@ public class Main {
                         }  else if (arg.equalsIgnoreCase("-paramFile")) {
                             createJarParams.setParams(parseParams(nextArg(args, i++)));
                         } else {
-                            throw new PackagerException("ERR_UnknownArgument", arg);
+                            throw new PackagerException("Error: Unknown argument: {0}", arg);
                         }
                     }
 
                     addResources(createJarParams, srcdir, srcfiles);
                     packageAsJar = true;
                 } else if (args[0].equalsIgnoreCase("-deploy")) {
-                    File templateInFile = null;
-                    File templateOutFile = null;
-                    deployParams.setBundleType(BundleType.JNLP);
-                    deployParams.setTargetFormat("jnlp");
-
-                    //can only set it to true with command line, reset default
-                    deployParams.setEmbedJNLP(false);
-
                     for (int i = 1; i < args.length; i++) {
                         String arg = args[i];
                         if (arg.startsWith("-B")) {
@@ -350,8 +302,8 @@ public class Main {
                             deployParams.setVendor(nextArg(args, i++));
                         } else if (arg.equalsIgnoreCase("-native")) {
                             bundleType = BundleType.NATIVE;
-                            String format = null; //null means ANY
-                            if (i+1 < args.length && !args[i+1].startsWith("-")) {
+                            String format = null; // null means ANY
+                            if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
                                 String v = args[++i];
                                 com.sun.openjfx.tools.packager.bundlers.Bundler.Bundle bundle =
                                         com.sun.openjfx.tools.packager.bundlers.Bundler.stringToBundle(v);
@@ -382,22 +334,6 @@ public class Main {
                             deployParams.setHeight(Integer.parseInt(nextArg(args, i++)));
                         } else if (arg.equalsIgnoreCase("-name")) {
                             deployParams.setAppName(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-embedJNLP")) {
-                            deployParams.setEmbedJNLP(true);
-                        } else if (arg.equalsIgnoreCase("-embedCertificates")) {
-                            Log.error("-embedCertificates is deprecated");
-                        } else if (arg.equalsIgnoreCase("-allpermissions")) {
-                            deployParams.setAllPermissions(true);
-                        } else if (arg.equalsIgnoreCase("-updatemode")) {
-                            deployParams.setUpdateMode(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-isExtension")) {
-                            deployParams.setExtension(true);
-                        } else if (arg.equalsIgnoreCase("-callbacks")) {
-                            deployParams.setJSCallbacks(parseCallbacks(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-templateInFilename")) {
-                            templateInFile = new File(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-templateOutFilename")) {
-                            templateOutFile = new File(nextArg(args, i++));
                         } else if (arg.equalsIgnoreCase("-appId") || arg.equalsIgnoreCase("-templateId")) {
                             String appIdArg = nextArg(args, i++);
                             deployParams.setAppId(appIdArg);
@@ -405,8 +341,6 @@ public class Main {
                         } else if (arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
                             deployParams.setVerbose(true);
                             verbose = true;
-                        } else if (arg.equalsIgnoreCase("-includedt")) {
-                            deployParams.setIncludeDT(true);
                         } else if (arg.equalsIgnoreCase("-outdir")) {
                             deployParams.setOutdir(new File(nextArg(args, i++)));
                         } else if (arg.equalsIgnoreCase("-outfile")) {
@@ -445,15 +379,8 @@ public class Main {
                         } else if (arg.startsWith(J_XDEBUG)) {
                             deployParams.setDebug(arg.replace(J_XDEBUG, ""));
                         } else {
-                            throw new PackagerException("ERR_UnknownArgument", arg);
+                            throw new PackagerException("Error: Unknown argument: {0}", arg);
                         }
-                    }
-                    if (templateInFile != null) {
-                        deployParams.addTemplate(templateInFile, templateOutFile);
-                    }
-
-                    if (deployParams.validateForJNLP()) {
-                        genJNLP = true;
                     }
 
                     if (deployParams.validateForBundle()) {
@@ -462,7 +389,6 @@ public class Main {
 
                     addResources(deployParams, srcdir, srcfiles);
                 } else if (args[0].equalsIgnoreCase(CREATE_BSS_INTERNAL)) {
-                    Log.info("Warning: -createbss has been deprecated and will be removed in a future release.");
                     for (int i = 1; i < args.length; i++) {
                         String arg = args[i];
                         if (arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
@@ -475,14 +401,13 @@ public class Main {
                         } else if (arg.equalsIgnoreCase("-srcfiles")) {
                             srcfiles = nextArg(args, i++);
                         } else {
-                            throw new PackagerException("ERR_UnknownArgument", arg);
+                            throw new PackagerException("Error: Unknown argument: {0}", arg);
                         }
                     }
 
                     addResources(createBssParams, srcdir, srcfiles);
                     css2Bin = true;
                 } else if (args[0].equalsIgnoreCase("-signJar")) {
-                    Log.info("Warning: -signJar has been deprecated and will be removed in a future release.");
                     for (int i = 1; i < args.length; i++) {
                         String arg = args[i];
                         if (arg.equalsIgnoreCase("-keyStore")) {
@@ -505,41 +430,16 @@ public class Main {
                         } else if (arg.equalsIgnoreCase("-srcfiles")) {
                             srcfiles = nextArg(args, i++);
                         } else {
-                            throw new PackagerException("ERR_UnknownArgument", arg);
+                            throw new PackagerException("Error: Unknown argument: {0}", arg);
                         }
                     }
 
                     addResources(signJarParams, srcdir, srcfiles);
                     signJar = true;
-                } else if (args[0].equalsIgnoreCase("-makeall")) {
-                    Log.error("-makeall is deprecated");
-                    for (int i = 1; i < args.length; i++) {
-                        String arg = args[i];
-                        if (arg.equalsIgnoreCase("-appclass")) {
-                            makeAllParams.setAppClass(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-preloader")) {
-                            makeAllParams.setPreloader(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-classpath")) {
-                            makeAllParams.setClasspath(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-name")) {
-                            makeAllParams.setAppName(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-width")) {
-                            makeAllParams.setWidth(Integer.parseInt(nextArg(args, i++)));
-                        } else if(arg.equalsIgnoreCase("-height")) {
-                            makeAllParams.setHeight(Integer.parseInt(nextArg(args, i++)));
-                        } else if(arg.equalsIgnoreCase("-v")) {
-                            makeAllParams.setVerbose(true);
-                        } else {
-                            throw new PackagerException("ERR_UnknownArgument", arg);
-                        }
-                    }
-                    makeAll = true;
-                } else if (args[0].equalsIgnoreCase("-help")) {
+                } else if (args[0].equalsIgnoreCase("-help") || args[0].equalsIgnoreCase("--help")) {
                     showBundlerHelp(args[1], args.length > 2 && "-verbose".equals(args[2]));
                 } else {
-                    Log.error(MessageFormat.format(
-                                        bundle.getString("ERR_UnknownCommand"),
-                                        args[0]));
+                    Log.error(MessageFormat.format("Error: Unknown command: {0}", args[0]));
                     return -1;
                 }
 
@@ -559,11 +459,6 @@ public class Main {
                     createJarParams.validate();
                     packager.packageAsJar(createJarParams);
                 }
-                if (genJNLP) {
-                    deployParams.setBundleType(BundleType.JNLP);
-                    deployParams.validate();
-                    packager.generateDeploymentPackages(deployParams);
-                }
                 if (genPackages) {
                     deployParams.setBundleType(bundleType);
                     deployParams.validate();
@@ -572,7 +467,7 @@ public class Main {
                 if (signJar) {
                     signJarParams.validate();
                     if (signJarParams.storePass == null) {
-                        char[] passwd = System.console().readPassword(bundle.getString("MSG_EnterKeystorePassword"));
+                        char[] passwd = System.console().readPassword("Enter Passphrase for keystore:");
                         if (passwd == null) {
                             signJarParams.storePass = "";
                         } else {
@@ -580,7 +475,7 @@ public class Main {
                         }
                     }
                     if (signJarParams.keyPass == null) {
-                        char[] passwd = System.console().readPassword(bundle.getString("MSG_EnterKeyPassword"), signJarParams.alias);
+                        char[] passwd = System.console().readPassword("Enter key password for %s:", signJarParams.alias);
                         if (passwd == null) {
                             signJarParams.keyPass = "";
                         } else {
@@ -588,10 +483,6 @@ public class Main {
                         }
                     }
                     packager.signJar(signJarParams);
-                }
-                if (makeAll) {
-                    makeAllParams.validate();
-                    packager.makeAll(makeAllParams);
                 }
 
             } catch (Exception e) {
@@ -617,12 +508,10 @@ public class Main {
     private static final String ADD_MODULES = "--" + StandardBundlerParam.ADD_MODULES.getID();
     private static final String LIMIT_MODULES = "--" + StandardBundlerParam.LIMIT_MODULES.getID();
     private static final String STRIP_NATIVE_COMMANDS = "--" + StandardBundlerParam.STRIP_NATIVE_COMMANDS.getID();
-
     private static final String J_XDEBUG = JLinkBundlerHelper.DEBUG.getID() + ":";
     private static final String DETECT_MODULES = "--" + JLinkBundlerHelper.DETECT_MODULES.getID();
 
     public static void showBundlerHelp(String bundlerName, boolean verbose) {
-        //TODO I18N
         if ("bundlers".equals(bundlerName)) {
             // enumerate bundlers
             Log.info("Known Bundlers -- \n");
@@ -633,25 +522,14 @@ public class Main {
                     // don't list bundlers this platform cannot run
                     continue;
                 } catch (ConfigException ignore) {
-                    // but requiring more than an empty map is perfectly fine.
-                //} catch (RuntimeException re) {
-                //    re.printStackTrace();
                 }
 
                 if (verbose) {
-                    Log.infof(
-                            "%s - %s - %s\n\t%s\n",
-                            bundler.getID(),
-                            bundler.getName(),
-                            bundler.getBundleType(),
-                            bundler.getDescription()
+                    Log.infof("%s - %s - %s\n\t%s\n", bundler.getID(), bundler.getName(),
+                            bundler.getBundleType(), bundler.getDescription()
                     );
                 } else {
-                    Log.infof(
-                            "%s - %s - %s\n",
-                            bundler.getID(),
-                            bundler.getName(),
-                            bundler.getBundleType()
+                    Log.infof("%s - %s - %s\n", bundler.getID(), bundler.getName(), bundler.getBundleType()
                     );
                 }
             }
@@ -663,19 +541,11 @@ public class Main {
                     for (BundlerParamInfo bpi : bundler.getBundleParameters()) {
                         if (bpi.getStringConverter() == null) continue;
                         if (verbose) {
-                            Log.infof(
-                                    "%s - %s - %s\n\t%s\n",
-                                    bpi.getID(),
-                                    bpi.getName(),
-                                    bpi.getValueType().getSimpleName(),
-                                    bpi.getDescription()
+                            Log.infof("%s - %s - %s\n\t%s\n", bpi.getID(), bpi.getName(),
+                                    bpi.getValueType().getSimpleName(), bpi.getDescription()
                             );
                         } else {
-                            Log.infof(
-                                    "%s - %s - %s\n",
-                                    bpi.getID(),
-                                    bpi.getName(),
-                                    bpi.getValueType().getSimpleName()
+                            Log.infof("%s - %s - %s\n", bpi.getID(), bpi.getName(), bpi.getValueType().getSimpleName()
                             );
                         }
                     }
@@ -684,5 +554,9 @@ public class Main {
             }
             Log.infof("Sorry, no bundler matching the id %s was found.\n", bundlerName);
         }
+    }
+
+    private static String nextArg(String[] args, int i) {
+        return i == args.length - 1 ? "" : args[i + 1];
     }
 }

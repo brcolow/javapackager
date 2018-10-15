@@ -36,9 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.openjdk.tools.packager.Bundler;
-import com.openjdk.tools.packager.Bundlers;
-import com.openjdk.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.Bundler;
+import com.sun.openjfx.tools.packager.Bundlers;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.bundlers.BundleParams;
 
 public class Tester {

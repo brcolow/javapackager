@@ -28,8 +28,8 @@ package com.sun.openjfx.tools.packager;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.CodeSigner;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -40,10 +40,12 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.Timestamp;
 import java.security.cert.CertPath;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -60,9 +62,6 @@ import sun.security.x509.AlgorithmId;
 import sun.security.x509.X500Name;
 
 /**
- * (Source copied from:
- *      com.sun.deploy.security.JarSignature in Deploy workspace)
- *
  * This class is an abstraction of signature that is currently used
  * for implementation of jar signing as BLOBs.
  *
@@ -82,13 +81,13 @@ import sun.security.x509.X500Name;
  *   - use getCodeSigners() to get list of code signers used
  */
 public class JarSignature {
-    //name of jar manifest attribute that contains signature
+    // name of jar manifest attribute that contains signature
     public static final String BLOB_SIGNATURE = "META-INF/SIGNATURE.BSF";
 
     private final Signature sig;
     private final X509Certificate certChain[]; // for singing scenarios only
     private final CodeSigner codeSigners[];    // for validation only
-    private final SignerInfo signerInfos[];        // for validation only
+    private final SignerInfo signerInfos[];    // for validation only
 
     /**
      * Loads jar signature from given byte array.
@@ -121,8 +120,7 @@ public class JarSignature {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
      */
-    public static JarSignature create(
-                                PrivateKey privateKey, X509Certificate chain[])
+    public static JarSignature create(PrivateKey privateKey, X509Certificate[] chain)
             throws NoSuchAlgorithmException, InvalidKeyException
     {
         Signature signature = getSignature(privateKey.getAlgorithm());
@@ -130,7 +128,7 @@ public class JarSignature {
         return new JarSignature(signature, chain);
     }
 
-    private JarSignature(Signature signature, X509Certificate chain[]) {
+    private JarSignature(Signature signature, X509Certificate[] chain) {
         certChain = chain;
         signerInfos = null;
         codeSigners = null;
@@ -153,8 +151,7 @@ public class JarSignature {
      * from given key algorithm for use in encoding usage.
      */
     private static Signature getSignature(String keyAlgorithm)
-            throws NoSuchAlgorithmException
-    {
+            throws NoSuchAlgorithmException {
         if (keyAlgorithm.equalsIgnoreCase("DSA")) {
             return Signature.getInstance("SHA1withDSA");
         } else if (keyAlgorithm.equalsIgnoreCase("RSA")) {
@@ -162,15 +159,13 @@ public class JarSignature {
         } else if (keyAlgorithm.equalsIgnoreCase("EC")) {
             return Signature.getInstance("SHA256withECDSA");
         }
-        throw new IllegalArgumentException(
-                            "Key algorithm should be either DSA, RSA or EC");
+        throw new IllegalArgumentException("Key algorithm should be either DSA, RSA or EC");
     }
 
     /**
      * Derive Signature from signer info for use in validation.
      */
-    private static Signature getSignature(SignerInfo info)
-            throws NoSuchAlgorithmException
+    private static Signature getSignature(SignerInfo info) throws NoSuchAlgorithmException
     {
         String digestAlgorithm = info.getDigestAlgorithmId().getName();
         String keyAlgorithm = info.getDigestEncryptionAlgorithmId().getName();
@@ -234,11 +229,9 @@ public class JarSignature {
      * Returns encoded representation of signature.
      * @throws UnsupportedOperationException if called in validation mode.
      */
-    public byte[] getEncoded()
-            throws NoSuchAlgorithmException, SignatureException, IOException {
+    public byte[] getEncoded() throws NoSuchAlgorithmException, SignatureException, IOException {
         if (isValidationMode()) {
-            throw new UnsupportedOperationException(
-                    "Method is not for validation mode.");
+            throw new UnsupportedOperationException("Method is not for validation mode.");
         }
 
         AlgorithmId digestAlgId = getDigestAlgorithm();
@@ -260,10 +253,9 @@ public class JarSignature {
     }
 
     private class ValidationStream extends InputStream {
-        InputStream dataStream = null;
+        InputStream dataStream;
 
-        public ValidationStream(
-                InputStream is) {
+        public ValidationStream(InputStream is) {
             dataStream = is;
         }
 
@@ -294,7 +286,6 @@ public class JarSignature {
         public void close() throws IOException {
             dataStream.close();
         }
-
     }
 
     /**
@@ -304,13 +295,8 @@ public class JarSignature {
      *
      * @throws SignatureException
      */
-    public InputStream updateWithZipEntry(String name, InputStream is)
-            throws SignatureException {
-        try {
-            sig.update(name.getBytes("UTF-8"));
-        } catch(UnsupportedEncodingException e) {
-            throw new SignatureException(e);
-        }
+    public InputStream updateWithZipEntry(String name, InputStream is) throws SignatureException {
+        sig.update(name.getBytes(StandardCharsets.UTF_8));
         return new ValidationStream(is);
     }
 
@@ -336,28 +322,24 @@ public class JarSignature {
      * Implementation is mostly borrowed from
      *   sun.security.util.SignatureFileVerifier
      */
-    private static CodeSigner[] extractCodeSigners(SignerInfo infos[], PKCS7 block)
-            throws IOException, NoSuchAlgorithmException, SignatureException,
-            CertificateException {
-        ArrayList s = new ArrayList();
+    private static CodeSigner[] extractCodeSigners(SignerInfo[] infos, PKCS7 block)
+            throws IOException, NoSuchAlgorithmException, SignatureException, CertificateException {
+        List<CodeSigner> s = new ArrayList<>();
 
-        CertificateFactory certificateFactory =
-                                    CertificateFactory.getInstance("X509");
-        for (int i = 0; i < infos.length; i++) {
-            SignerInfo info = infos[i];
-            ArrayList chain = info.getCertificateChain(block);
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
+        for (SignerInfo info : infos) {
+            List<? extends Certificate> chain = info.getCertificateChain(block);
             CertPath certPath = certificateFactory.generateCertPath(chain);
             // Append the new code signer
             CodeSigner signer =
-                new CodeSigner(certPath, getTimestamp(info, certificateFactory));
+                    new CodeSigner(certPath, getTimestamp(info, certificateFactory));
 //                if (block.getCRLs() != null) {
-//                    SharedSecrets.getJavaSecurityCodeSignerAccess().setCRLs(
-//                            signer, block.getCRLs());
+//                    SharedSecrets.getJavaSecurityCodeSignerAccess().setCRLs(signer, block.getCRLs());
 //                }
             s.add(signer);
         }
 
-        return (CodeSigner[]) s.toArray(new CodeSigner[s.size()]);
+        return s.toArray(new CodeSigner[0]);
     }
 
     /*
@@ -380,37 +362,29 @@ public class JarSignature {
      * @throws CertificateException if an error is encountered while generating
      *         the TSA's certpath.
      */
-    private static Timestamp getTimestamp(SignerInfo info,
-            CertificateFactory certificateFactory) throws IOException,
-            NoSuchAlgorithmException, SignatureException, CertificateException
+    private static Timestamp getTimestamp(SignerInfo info, CertificateFactory certificateFactory)
+            throws IOException, NoSuchAlgorithmException, SignatureException, CertificateException
     {
         Timestamp timestamp = null;
 
         // Extract the signer's unsigned attributes
         PKCS9Attributes unsignedAttrs = info.getUnauthenticatedAttributes();
         if (unsignedAttrs != null) {
-            PKCS9Attribute timestampTokenAttr =
-                    unsignedAttrs.getAttribute("signatureTimestampToken");
+            PKCS9Attribute timestampTokenAttr = unsignedAttrs.getAttribute("signatureTimestampToken");
             if (timestampTokenAttr != null) {
-                PKCS7 timestampToken =
-                        new PKCS7((byte[]) timestampTokenAttr.getValue());
+                PKCS7 timestampToken = new PKCS7((byte[]) timestampTokenAttr.getValue());
                 // Extract the content (an encoded timestamp token info)
-                byte[] encodedTimestampTokenInfo =
-                        timestampToken.getContentInfo().getData();
+                byte[] encodedTimestampTokenInfo = timestampToken.getContentInfo().getData();
                 // Extract the signer (the Timestamping Authority)
                 // while verifying the content
-                SignerInfo[] tsa =
-                        timestampToken.verify(encodedTimestampTokenInfo);
+                SignerInfo[] tsa = timestampToken.verify(encodedTimestampTokenInfo);
                 // Expect only one signer
-                ArrayList chain = tsa[0].getCertificateChain(timestampToken);
-                CertPath tsaChain = certificateFactory.generateCertPath(
-                        chain);
+                List<? extends Certificate> chain = tsa[0].getCertificateChain(timestampToken);
+                CertPath tsaChain = certificateFactory.generateCertPath(chain);
                 // Create a timestamp token info object
-                TimestampToken timestampTokenInfo =
-                        new TimestampToken(encodedTimestampTokenInfo);
+                TimestampToken timestampTokenInfo = new TimestampToken(encodedTimestampTokenInfo);
                 // Create a timestamp object
-                timestamp =
-                        new Timestamp(timestampTokenInfo.getDate(), tsaChain);
+                timestamp = new Timestamp(timestampTokenInfo.getDate(), tsaChain);
             }
         }
         return timestamp;
@@ -421,25 +395,22 @@ public class JarSignature {
     }
 
     public void signJarAsBLOB(InputStreamSource input, ZipOutputStream jos)
-            throws IOException, SignatureException, NoSuchAlgorithmException
-    {
-        byte copyBuf[] = new byte[8000];
+            throws IOException, SignatureException, NoSuchAlgorithmException {
+        byte[] copyBuf = new byte[8000];
         int n;
         ZipEntry e;
         ZipInputStream jis = new ZipInputStream(input.getInputStream());
 
         try {
-            //calculate signature in the first pass
-            //consider all entries except directories and old signature file (if any)
+            // calculate signature in the first pass
+            // consider all entries except directories and old signature file (if any)
             boolean hasManifest = false;
             boolean hasMetaInf = false;
             while ((e = jis.getNextEntry()) != null) {
-                if (JarFile.MANIFEST_NAME.equals(
-                        e.getName().toUpperCase(Locale.ENGLISH))) {
+                if (JarFile.MANIFEST_NAME.equals(e.getName().toUpperCase(Locale.ENGLISH))) {
                     hasManifest = true;
                 }
-                if ("META-INF/".equals(
-                        e.getName().toUpperCase(Locale.ENGLISH))) {
+                if ("META-INF/".equals(e.getName().toUpperCase(Locale.ENGLISH))) {
                     hasMetaInf = true;
                 }
                 if (!BLOB_SIGNATURE.equals(e.getName()) &&
@@ -450,7 +421,7 @@ public class JarSignature {
 
             byte[] signature = getEncoded();
 
-            //2 pass: save manifest and other entries
+            // 2 pass: save manifest and other entries
 
             //reopen input file
             jis.close();
@@ -474,7 +445,6 @@ public class JarSignature {
                     addSignatureEntry(signature, jos);
                     hasManifest = true;
                 }
-
 
                 //copy entry unless it is old signature file
                 if (!BLOB_SIGNATURE.equals(name)) {
@@ -518,11 +488,10 @@ public class JarSignature {
         jos.putNextEntry(ze);
         jos.write(signature);
         jos.closeEntry();
-
     }
 
     private static void readFully(InputStream is) throws IOException {
-        byte buf[] = new byte[10000];
+        byte[] buf = new byte[10000];
         while (is.read(buf) != -1) {}
     }
 

@@ -18,10 +18,8 @@ alternative to an Ant task or building the applications in an IDE.
 * [OPTIONS FOR THE CREATEBSS COMMAND](#options-for-the-createbss-command)
 * [OPTIONS FOR THE CREATEJAR COMMAND](#options-for-the-createjar-command)
 * [OPTIONS FOR THE DEPLOY COMMAND](#options-for-the-deploy-command)
-* [OPTIONS FOR THE MAKEALL COMMAND](#options-for-the-makeall-command)
 * [OPTIONS FOR THE SIGNJAR COMMAND](#options-for-the-signjar-command)
 * [ARGUMENTS FOR SELF-CONTAINED APPLICATION BUNDLERS](#arguments-for-self-contained-application-bundlers)
-* [DEPRECATED OPTIONS](#deprecated-options)
 * [NOTES](#notes)
 * [EXAMPLES](#examples)
 
@@ -61,13 +59,6 @@ Produces a JAR archive according to other parameters.
 Assembles the application package for redistribution. By default, the deploy task generates the base application
 package, but it can also generate a self−contained application package if requested.
 
-−makeall
-
-Performs compilation, **createjar**, and **deploy** steps as one call, with most arguments predefined, and attempts to
-generate all applicable self−contained application packages. The source files must be located in a folder called
-**src**, and the resulting files (JAR, JNLP, HTML, and self−contained application packages) are put in a folder called
-**dist**. This command can only be configured in a minimal way and is as automated as possible.
-
 −signjar
 
 Signs JAR file(s) with a provided certificate.
@@ -94,10 +85,6 @@ OPTIONS FOR THE CREATEJAR COMMAND
 −appclass _app−class_
 
 Qualified name of the application class to be executed.
-
-−argument _arg_
-
-An unnamed argument to be inserted into the JNLP file as an **<fx:argument>** element.
 
 −classpath _files_
 
@@ -142,17 +129,9 @@ mandatory argument in this case) will be used. Files in the list must be separat
 OPTIONS FOR THE DEPLOY COMMAND
 ------------------------------
 
-−allpermissions
-
-If present, the application will require all security permissions in the JNLP file.
-
 −appclass _app−class_
 
 Qualified name of the application class to be executed.
-
-−argument _arg_
-
-An unnamed argument to be inserted into an **<fx:argument>** element in the JNLP file.
 
 −B_bundler−argument=value_
 
@@ -169,26 +148,6 @@ Specifies user callback methods in generated HTML. The format is the following:
 
 Description of the application.
 
-−embedCertificates
-
-If present, the certificates will be embedded in the JNLP file.
-
-−embedjnlp
-
-If present, the JNLP file will be embedded in the HTML document.
-
-−height _height_
-
-Height of the application.
-
-−htmlparamfile _file_
-
-Properties file with parameters for the resulting application when it is run in the browser.
-
-−isExtension
-
-If present, the **srcfiles** are treated as extensions.
-
 −name _name_
 
 Name of the application.
@@ -201,11 +160,13 @@ used.
 
 The following values are valid for _type_:
 
-• **all**: Runs all of the installers for the platform on which it is running, and creates a disk image for theapplication. This value is used if _type_ is not specified.
+• **all**: Runs all of the installers for the platform on which it is running, and creates a disk image for the
+application. This value is used if _type_ is not specified.
 
 • **installer**: Runs all of the installers for the platform on which it is running.
 
-• **image**: Creates a disk image for the application. On OS X, the image is the **.app** file. On Linux, the image is the directory that gets installed.
+• **image**: Creates a disk image for the application. On OS X, the image is the **.app** file. On Linux, the image is
+the directory that gets installed.
 
 • **dmg**: Generates a DMG file for OS X.
 
@@ -248,89 +209,6 @@ Base directory of the files to package.
 
 List of files in the directory specified by the **−srcdir** option. If omitted, all files in the directory (which is a
 mandatory argument in this case) will be used. Files in the list must be separated by spaces.
-
-−templateId
-
-Application ID of the application for template processing.
-
-−templateInFilename
-
-Name of the HTML template file. Placeholders are in the following form:
-
-**#XXXX.YYYY(APPID)#**
-
-Where APPID is the identifier of an application and XXX is one of following:
-
-• **DT.SCRIPT.URL**
-
-Location of dtjava.js in the Deployment Toolkit. By default, the location is
-
-http://java.com/js/dtjava.js
-
-• **DT.SCRIPT.CODE**
-
-Script element to include dtjava.js of the Deployment Toolkit.
-
-• **DT.EMBED.CODE.DYNAMIC**
-
-Code to embed the application into a given placeholder. It is expected that the code will be wrapped in the
-**function()** method.
-
-• **DT.EMBED.CODE.ONLOAD**
-
-All the code needed to embed the application into a web page using the **onload** hook (except inclusion of dtjava.js).
-
-• **DT.LAUNCH.CODE**
-
-Code needed to launch the application. It is expected that the code will be wrapped in the **function()** method.
-
-−templateOutFilename
-
-Name of the HTML file that will be generated from the template.
-
-−title _title_
-
-Title of the application.
-
-−vendor _vendor_
-
-Vendor of the application.
-
-−width _width_
-
-Width of the application.
-
-−updatemode _update−mode_
-
-Sets the update mode for the JNLP file.
-
-OPTIONS FOR THE MAKEALL COMMAND
--------------------------------
-
-−appclass _app−class_
-
-Qualified name of the application class to be executed.
-
-−classpath _files_
-
-List of dependent JAR file names.
-
-−height _height_
-
-Height of the application.
-
-−name _name_
-
-Name of the application.
-
-−preloader _preloader−class_
-
-Qualified name of the JavaFX preloader class to be executed. Use this option only for JavaFX applications. Do not use
-for Java applications, including headless applications.
-
-−width _width_
-
-Width of the application.
 
 OPTIONS FOR THE SIGNJAR COMMAND
 -------------------------------
@@ -595,19 +473,6 @@ vendor=_value_
 
 Corporation, organization, or individual providing the application.
 
-DEPRECATED OPTIONS
-------------------
-
-The following options are no longer used by the packaging tool and are ignored if present.
-
-−runtimeversion _version_
-
-Version of the required JavaFX Runtime. Deprecated.
-
-−noembedlauncher
-
-If present, the packager will not add the JavaFX launcher classes to the JAR file. Deprecated.
-
 NOTES
 -----
 
@@ -629,22 +494,9 @@ EXAMPLES
 Packages the contents of the **classes** directory to **outjar.jar**, sets the application class to
 **package.ClassName**.
 
-**Example 2:**   Using the −deploy Command
-
-`javapackager −deploy −outdir outdir −outfile outfile −width 34 −height 43
-−name AppName −appclass package.ClassName −v −srcdir compiled`
-
-Generates **outfile.jnlp** and the corresponding **outfile.html** files in **outdir** for application **AppName**, which
-is started by **package.ClassName** and has dimensions of 34 by 43 pixels.
-
-**Example 3:**   Using the −makeall Command
-
-`javapackager −makeall −appclass brickbreaker.Main −name BrickBreaker −width 600
-−height 600`
-
 Does all the packaging work including compilation, **createjar**, and **deploy**.
 
-**Example 4:**   Using the −signjar Command
+**Example 2:**   Using the −signjar Command
 
 `javapackager −signJar −−outdir dist −keyStore sampleKeystore.jks −storePass \*\*\*\*
 −alias duke −keypass \*\*\*\* −srcdir dist`
@@ -652,7 +504,7 @@ Does all the packaging work including compilation, **createjar**, and **deploy**
 Signs all of the JAR files in the **dist** directory, attaches a certificate with the specified alias, **keyStore** and
 **storePass**, and puts the signed JAR files back into the **dist** directory.
 
-**Example 5:**   Using the −deploy Command with Bundler Arguments
+**Example 3:**   Using the −deploy Command with Bundler Arguments
 
 ```
 javapackager −deploy −native deb −Bcategory=Education −BjvmOptions=−Xmx128m

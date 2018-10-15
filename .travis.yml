@@ -9,24 +9,26 @@ cache:
   directories:
     - $HOME/.gradle/caches/
 
+addons:
+    apt:
+        packages:
+        - rpm
+        - fakeroot
+
 matrix:
   fast_finish: true
   include:
     - os: linux
       dist: trusty
-      jdk: oraclejdk9
-      addons:
-        apt:
-          packages:
-            - oracle-java9-installer
-    - os: linux
-      dist: trusty
-      jdk: openjdk10
-    - os: linux
-      dist: trusty
       jdk: openjdk11
+    - os: linux
+      dist: trusty
+      jdk: oraclejdk11
     - os: osx
-      jdk: openjdk10
+      jdk: openjdk11
+      osx_image: xcode9.4
+    - os: osx
+      jdk: oraclejdk11
       osx_image: xcode9.4
     - os: osx
       jdk: openjdk11
@@ -39,11 +41,12 @@ before_script:
   - export PATH=$GRADLE_HOME/bin:$PATH
   - echo $JAVA_OPTS
   - echo $GRADLE_OPTS
+  - chmod +x gradlew
 
 # skip install stage.
 install: true
 
-script: gradle build  --no-daemon
+script: ./gradlew build --no-daemon
 
 notifications:
   email: false

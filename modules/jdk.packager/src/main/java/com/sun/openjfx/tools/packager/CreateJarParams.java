@@ -32,17 +32,15 @@ import java.util.List;
 import java.util.Map;
 
 public class CreateJarParams extends CommonParams {
-    public final List<PackagerResource> resources = new ArrayList<PackagerResource>();
+    public final List<PackagerResource> resources = new ArrayList<>();
 
     public String applicationClass;
     public String fallbackClass;
     public String preloader;
     public String classpath;
     public Map<String, String> manifestAttrs;
-    public boolean embedLauncher = true;
     public boolean css2bin = true;
     public String outfile;
-    public String fxVersion = PackagerLib.JAVAFX_VERSION;
     public Boolean allPermissions = false;
     public String codebase;
 
@@ -65,10 +63,6 @@ public class CreateJarParams extends CommonParams {
         this.preloader = preloader;
     }
 
-    public void setFallback(String fallback) {
-        this.fallbackClass = fallback;
-    }
-
     public void setClasspath(String classpath) {
         this.classpath = classpath;
     }
@@ -77,33 +71,12 @@ public class CreateJarParams extends CommonParams {
         this.css2bin = css2bin;
     }
 
-    /**
-     * In JKD8/FX8 launcher is never embedded,
-     * app must use main to call Application launcher()
-     * @param embedLauncher
-     */
-    public void setEmbedLauncher(boolean embedLauncher) {
-        this.embedLauncher = embedLauncher;
-    }
-
     public void setOutfile(String outfile) {
         this.outfile = outfile;
     }
 
     public void setManifestAttrs(Map<String, String> manifestAttrs) {
         this.manifestAttrs = manifestAttrs;
-    }
-
-    public void setFxVersion(String fxVersion) {
-        this.fxVersion = fxVersion;
-    }
-
-    public void setAllPermissions(Boolean allPermissions) {
-        this.allPermissions = allPermissions;
-    }
-
-    public void setCodebase(String codebase) {
-        this.codebase = codebase;
     }
 
     @Override
@@ -121,8 +94,8 @@ public class CreateJarParams extends CommonParams {
         return "CreateJarParams{" + "applicationClass=" + applicationClass
                 + " preloader=" + preloader + " classpath=" + classpath
                 + " manifestAttrs=" + manifestAttrs
-                + " embedLauncher=deprecated" + " css2bin=" + css2bin
-                + " outfile=" + outfile + " sdkHome=" + fxVersion + '}'
+                + " css2bin=" + css2bin
+                + " outfile=" + outfile + '}'
                 + "            CommonParams{" + "outdir=" + outdir
                 + " verbose=" + verbose + " resources=" + resources + '}';
     }
@@ -130,14 +103,14 @@ public class CreateJarParams extends CommonParams {
     @Override
     public void validate() throws PackagerException {
         if (outfile == null) {
-            throw new PackagerException("ERR_MissingArgument", "-outfile");
+            throw new PackagerException("Error: Missing argument: {0}", "-outfile");
         }
         if (resources.isEmpty()) {
-            throw new PackagerException("ERR_MissingArgument", "-srcfiles (-srcdir)");
+            throw new PackagerException("Error: Missing argument: {0}", "-srcfiles (-srcdir)");
         }
-        //otherwise it could be special case of "update jar"
+        // otherwise it could be special case of "update jar"
         if (resources.size() != 1 && applicationClass == null) {
-            throw new PackagerException("ERR_MissingArgument", "-appclass");
+            throw new PackagerException("Error: Missing argument: {0}", "-appclass");
         }
     }
 }

@@ -28,20 +28,18 @@ package com.sun.openjfx.tools.resource;
 import java.io.File;
 
 public class PackagerResource {
-    private static final ResourceFilter ACCEPT_ALL_FILTER =
-            new ResourceFilter() {
-                @Override
-                public boolean descent(final File file,
-                                       final String relativePath) {
-                    return true;
-                }
 
-                @Override
-                public boolean accept(final File file,
-                                      final String relativePath) {
-                    return true;
-                }
-            };
+    private static final ResourceFilter ACCEPT_ALL_FILTER = new ResourceFilter() {
+        @Override
+        public boolean descent(final File file, final String relativePath) {
+            return true;
+        }
+
+        @Override
+        public boolean accept(final File file, final String relativePath) {
+            return true;
+        }
+    };
 
     private final File baseDir;
     private final File file;
@@ -70,8 +68,7 @@ public class PackagerResource {
                 return;
             }
 
-            final StringBuilder relativePathBuilder =
-                    new StringBuilder(nrmFile.getName());
+            final StringBuilder relativePathBuilder = new StringBuilder(nrmFile.getName());
 
             File tempFile = nrmFile.getParentFile();
             while (tempFile != null) {
@@ -111,12 +108,9 @@ public class PackagerResource {
         return traverse(resourceTraversal, null);
     }
 
-    public final boolean traverse(final ResourceTraversal resourceTraversal,
-                                  final ResourceFilter resourceFilter) {
+    public final boolean traverse(final ResourceTraversal resourceTraversal, final ResourceFilter resourceFilter) {
         return new TraversalOperation((resourceFilter != null)
-                                              ? resourceFilter
-                                              : ACCEPT_ALL_FILTER,
-                                      resourceTraversal, this).execute();
+                ? resourceFilter : ACCEPT_ALL_FILTER, resourceTraversal, this).execute();
     }
 
     private static File normalizeFile(final File inputFile) {
@@ -128,8 +122,7 @@ public class PackagerResource {
             return inputFile;
         }
 
-        final File partiallyNormalizedFile =
-                normalizeFileImpl(inputFile.getParentFile());
+        final File partiallyNormalizedFile = normalizeFileImpl(inputFile.getParentFile());
 
         if (partiallyNormalizedFile == null) {
             // error
@@ -153,12 +146,8 @@ public class PackagerResource {
 
     private static File createFile(final File baseDir, final String path) {
         final File testFile = new File(path);
-        return testFile.isAbsolute()
-                   ? testFile
-                   : new File(baseDir == null
-                                  ? null
-                                  : baseDir.getAbsolutePath(),
-                              path);
+        return testFile.isAbsolute() ? testFile :
+                new File(baseDir == null ? null : baseDir.getAbsolutePath(), path);
     }
 
     private static final class TraversalOperation {
@@ -173,8 +162,7 @@ public class PackagerResource {
             this.resourceFilter = resourceFilter;
             this.resourceTraversal = resourceTraversal;
             this.rootResource = rootResource;
-            this.relativePathBuilder =
-                    new StringBuilder(rootResource.relativePath);
+            this.relativePathBuilder = new StringBuilder(rootResource.relativePath);
         }
 
         public boolean execute() {
@@ -184,8 +172,7 @@ public class PackagerResource {
         private boolean traverse(final File file) {
             final String relativePath = relativePathBuilder.toString();
             if (resourceFilter.accept(file, relativePath)
-                    && !resourceTraversal.traverse(rootResource, file,
-                                                   relativePath)) {
+                    && !resourceTraversal.traverse(rootResource, file, relativePath)) {
                 return false;
             }
 

@@ -25,13 +25,13 @@
 
 package hello;
 
-import com.openjdk.tools.packager.Bundler;
-import com.openjdk.tools.packager.Bundlers;
-import com.openjdk.tools.packager.ConfigException;
-import com.openjdk.tools.packager.Log;
-import com.openjdk.tools.packager.RelativeFileSet;
-import com.openjdk.tools.packager.StandardBundlerParam;
-import com.openjdk.tools.packager.UnsupportedPlatformException;
+import com.sun.openjfx.tools.packager.Bundler;
+import com.sun.openjfx.tools.packager.Bundlers;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,9 +45,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import static com.openjdk.tools.packager.StandardBundlerParam.*;
-import static com.openjdk.tools.packager.StandardBundlerParam.ICON;
-import static com.openjdk.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
 
 public class SimpleBundle {
 

@@ -86,25 +86,12 @@ if [[ ! -f ${JAVA_CMD} ]]; then
   fi
 fi
 
-
 if [ ! -x "$JAVA_CMD" ] ; then
   echo 'Error: JAVA_HOME is not defined, cannot find "java" command.'
   exit 1
 fi
 
-javafx_home=`dirname "$PRG"`/..
-
-classpath=".:$javafx_home/lib/ant-javafx.jar"
-
-if [ -e "$javafx_home/jre/lib/ext/jfxrt.jar" ] ; then
-  classpath="$classpath:$javafx_home/jre/lib/ext/jfxrt.jar"
-elif [ -e "$javafx_home/lib/jfxrt.jar" ] ; then
-  classpath="$classpath:$javafx_home/lib/jfxrt.jar"
-fi
-
 if $cygwin ; then
-    classpath=`cygpath --path --windows "$classpath"`
-    javafx_home=`cygpath --windows "$javafx_home"`
     JAVA_CMD=`cygpath --unix "$JAVA_CMD"`
 fi
 
@@ -112,4 +99,5 @@ fi
 # separated list to be passed as an argument to JAVA. This is similar to "$@"
 # except we had to strip out some arguments that we don't want to be passed
 # to the Java Packager.
-eval exec "$JAVA_CMD" ${DEBUG} ${MEMORY} ${JAVA_ARGS} "-Djavafx.home=$javafx_home" -classpath "$classpath" -m jdk.packager/com.sun.openjfx.tools.packager.Main $(IFS=$' '; echo "${ARGS[*]}")
+eval exec "$JAVA_CMD" ${DEBUG} ${MEMORY} ${JAVA_ARGS} \
+    --module-path ${JAVA_PACKAGER_PATH} --add-opens jdk.jlink/jdk.tools.jlink.internal.packager=com.brcolow.javapackager -m com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main $(IFS=$' '; echo "${ARGS[*]}")

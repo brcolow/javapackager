@@ -3,7 +3,7 @@ version: "{branch} {build}"
 image: Visual Studio 2017
 
 environment:
-  JAVA_HOME: C:\\jdk10
+  JAVA_HOME: C:\\jdk11
   VCINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
   APPVEYOR_CACHE_ENTRY_ZIP_ARGS: "-t7z -m0=lzma -mx=9"
 
@@ -11,7 +11,13 @@ shallow_clone: true
 
 build_script:
   - ps: |
-      choco install jdk10 -params 'installdir=c:\\jdk10'
+      $client = New-Object net.webclient
+      $client.DownloadFile('http://jdk.java.net/11/', 'C:\Users\appveyor\openjdk11.html')
+      $openJdk11 = cat C:\Users\appveyor\openjdk11.html | where { $_ -match "href.*https://download.java.net.*jdk11.*windows-x64.*zip\`"" } | %{ $_ -replace "^.*https:", "https:" } | %{ $_ -replace ".zip\`".*$", ".zip" }
+      echo "Download boot JDK from: $openJdk11"
+      $client.DownloadFile($openJdk11, 'C:\Users\appveyor\openjdk11.zip')
+      Expand-Archive -Path 'C:\Users\appveyor\openjdk11.zip' -DestinationPath 'C:\Users\appveyor\openjdk11'
+      Copy-Item -Path 'C:\Users\appveyor\openjdk11\*\' -Destination 'C:\jdk11' -Recurse -Force
       choco install gradle --version 4.10.2
       $msvcToolsVer = Get-Content "$env:VCINSTALLDIR\Microsoft.VCToolsVersion.default.txt"
       if ([string]::IsNullOrWhitespace($msvcToolsVer)) {
