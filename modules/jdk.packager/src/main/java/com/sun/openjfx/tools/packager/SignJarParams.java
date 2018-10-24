@@ -80,8 +80,7 @@ public class SignJarParams extends CommonParams {
     @Override
     public void validate() throws PackagerException {
         if (keyStore == null) {
-            throw new PackagerException("Error: Invalid keystore file: {0}",
-                    "null keystore");
+            throw new PackagerException("Error: Invalid keystore file: {0}", "null keystore");
         }
         if (!keyStore.isFile()) {
             throw new PackagerException("Error: Invalid keystore file: {0}", keyStore.getAbsolutePath());

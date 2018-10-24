@@ -388,6 +388,11 @@ public class PackagerLib {
         store.load(new FileInputStream(params.keyStore), params.storePass.toCharArray());
 
         Certificate[] chain = store.getCertificateChain(params.alias);
+        if (chain == null) {
+            throw new IllegalArgumentException("given alias: " + params.alias +
+                    " has no certificate chain for keystore: " + params.keyStore);
+        }
+
         X509Certificate[] certChain = new X509Certificate[chain.length];
         for (int i=0; i<chain.length; i++) {
             certChain[i] = (X509Certificate) chain[i];
