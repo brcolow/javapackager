@@ -51,7 +51,6 @@ import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.ADD_MODULES;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES;
@@ -183,7 +182,6 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_NAME.getID(), "Smoke Test");
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(LinuxRpmBundler.BUNDLE_NAME.getID(), "smokeybundlename");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
@@ -191,7 +189,6 @@ public class LinuxRpmBundlerTest {
                 new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(DROP_IN_RESOURCES_ROOT.getID(), "./src/main/resources/com/sun/openjfx/tools");
         bundleParams.put(LICENSE_FILE.getID(), Arrays.asList("LICENSE", "LICENSE2"));
         bundleParams.put(LICENSE_TYPE.getID(), "GPL2 + Classpath Exception");
         bundleParams.put(VERBOSE.getID(), true);
@@ -223,7 +220,6 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
 
         bundler.validate(bundleParams);
         File output = bundler.execute(bundleParams, new File(workDir, "BareMinimum"));
@@ -243,11 +239,9 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(APP_NAME.getID(), "хелловорлд");
         bundleParams.put(TITLE.getID(), "ХеллоВорлд аппликейшн");
         bundleParams.put(VENDOR.getID(), "Оракл девелопмент");
-        // bundleParams.put(DROP_IN_RESOURCES_ROOT.getID(), "./src/main/resources/com/sun/openjfx/tools");
         bundleParams.put(DESCRIPTION.getID(), "крайне большое описание со странными символами");
 
         // mandatory re-names
@@ -272,7 +266,6 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(APP_NAME.getID(), "хелловорлд");
 
         bundler.validate(bundleParams);
@@ -286,7 +279,6 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(LICENSE_FILE.getID(), "BOGUS_LICENSE");
 
         bundler.validate(bundleParams);
@@ -301,7 +293,6 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(APP_NAME.getID(), "EverythingAppName");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(ARGUMENTS.getID(), Arrays.asList("He Said", "She Said"));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(LINUX_RUNTIME.getID(), System.getProperty("java.home"));
@@ -314,7 +305,6 @@ public class LinuxRpmBundlerTest {
         bundleParams.put(PRELOADER_CLASS.getID(), "hello.HelloPreloader");
         bundleParams.put(USER_JVM_OPTIONS.getID(), "-Xmx=256M\n");
         bundleParams.put(VERSION.getID(), "1.2.3.4");
-        // bundleParams.put(DROP_IN_RESOURCES_ROOT.getID(), "./src/main/resources/com/sun/openjfx/tools");
         bundleParams.put(LinuxRpmBundler.BUNDLE_NAME.getID(), "everything-bundle-name");
         bundleParams.put(CATEGORY.getID(), "everything category");
         bundleParams.put(DESCRIPTION.getID(), "This is a description of everything");
@@ -374,7 +364,6 @@ public class LinuxRpmBundlerTest {
         bundleParams.put(RUN_AT_STARTUP.getID(), true);
         bundleParams.put(APP_NAME.getID(), "Java Packager Service Test");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloService");
         bundleParams.put(MAIN_JAR.getID(), "mainApp.jar");
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
@@ -395,7 +384,6 @@ public class LinuxRpmBundlerTest {
         assertTrue(result.exists());
     }
 
-
     /**
      * multiple launchers
      */
@@ -412,13 +400,11 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_NAME.getID(), "Two Launchers Test");
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
         bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
                 new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
-        // bundleParams.put(DROP_IN_RESOURCES_ROOT.getID(), "./src/main/resources/com/sun/openjfx/tools");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(VERBOSE.getID(), true);
 
@@ -527,11 +513,9 @@ public class LinuxRpmBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(APP_NAME.getID(), appName);
-        // bundleParams.put(ADD_MODULES.getID(), "java.base");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
                 new HashSet<>(Arrays.asList(fakeMainJar))));
-        // bundleParams.put(DROP_IN_RESOURCES_ROOT.getID(), "./src/main/resources/com/sun/openjfx/tools");
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(VERBOSE.getID(), true);

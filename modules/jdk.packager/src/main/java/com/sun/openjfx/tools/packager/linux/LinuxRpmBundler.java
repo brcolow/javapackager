@@ -59,7 +59,35 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_CDS_CACHE_MODE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CATEGORY;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ENABLE_APP_CDS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_CONTENT_TYPE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_EXTENSIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FILE_ASSOCIATIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_FILE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_TYPE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MENU_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MODULE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.RUN_AT_STARTUP;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SECONDARY_LAUNCHERS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SERVICE_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SHORTCUT_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.START_ON_INSTALL;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.STOP_ON_UNINSTALL;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SYSTEM_WIDE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.TITLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VENDOR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 import static com.sun.openjfx.tools.packager.linux.LinuxAppBundler.ICON_PNG;
 
 public class LinuxRpmBundler extends AbstractBundler {
@@ -160,7 +188,6 @@ public class LinuxRpmBundler extends AbstractBundler {
     private final static String DEFAULT_SPEC_TEMPLATE = "/packager/linux/template.spec";
     private final static String DEFAULT_DESKTOP_FILE_TEMPLATE = "/packager/linux/template.desktop";
     private final static String DEFAULT_INIT_SCRIPT_TEMPLATE = "/packager/linux/template.rpm.init.script";
-
     public final static String TOOL_RPMBUILD = "rpmbuild";
     public final static double TOOL_RPMBUILD_MIN_VERSION = 4.0d;
 
@@ -179,7 +206,7 @@ public class LinuxRpmBundler extends AbstractBundler {
 
             if (matcher.find()) {
                 String v = matcher.group(1);
-                double version = new Double(v);
+                double version = Double.valueOf(v);
                 return minVersion <= version;
             } else {
                return false;
@@ -193,12 +220,12 @@ public class LinuxRpmBundler extends AbstractBundler {
     @Override
     public boolean validate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
         try {
-            if (p == null) throw new ConfigException(
-                    "Parameters map is null.",
-                    "Pass in a non-null parameters map.");
+            if (p == null) {
+                throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
+            }
 
-            //run basic validation to ensure requirements are met
-            //we are not interested in return code, only possible exception
+            // run basic validation to ensure requirements are met
+            // we are not interested in return code, only possible exception
             APP_BUNDLER.fetchFrom(p).doValidate(p);
 
             // validate license file, if used, exists in the proper place
@@ -210,15 +237,14 @@ public class LinuxRpmBundler extends AbstractBundler {
                         found = found || appResources.contains(license);
                     }
                     if (!found) {
-                        throw new ConfigException(
-                                "Specified license file is missing.",
+                        throw new ConfigException("Specified license file is missing.",
                                 MessageFormat.format("Make sure that \"{0}\" references a file in the app resources, " +
-                                                "and that it is relative file reference.", license));
+                                        "and that it is relative file reference.", license));
                     }
                 }
             }
 
-            //validate presense of required tools
+            // validate presence of required tools
             if (!testTool(TOOL_RPMBUILD, TOOL_RPMBUILD_MIN_VERSION)){
                 throw new ConfigException(
                         MessageFormat.format("Can not find rpmbuild {0} or newer.", TOOL_RPMBUILD_MIN_VERSION),
@@ -226,7 +252,7 @@ public class LinuxRpmBundler extends AbstractBundler {
                                 TOOL_RPMBUILD_MIN_VERSION));
             }
 
-            //treat default null as "system wide install"
+            // treat default null as "system wide install"
             boolean systemWide = SYSTEM_WIDE.fetchFrom(p) == null || SYSTEM_WIDE.fetchFrom(p);
             boolean serviceHint = p.containsKey(SERVICE_HINT.getID()) && SERVICE_HINT.fetchFrom(p);
 
@@ -285,7 +311,6 @@ public class LinuxRpmBundler extends AbstractBundler {
 
         File imageDir = RPM_IMAGE_DIR.fetchFrom(p);
         try {
-
             imageDir.mkdirs();
 
             boolean menuShortcut = MENU_HINT.fetchFrom(p);
@@ -315,8 +340,8 @@ public class LinuxRpmBundler extends AbstractBundler {
                             imageDir.getAbsolutePath()));
                 }
             } catch (IOException ex) {
-                //noinspection ReturnInsideFinallyBlock
                 Log.debug(ex.getMessage());
+                // noinspection ReturnInsideFinallyBlock
                 return null;
             }
         }
@@ -338,7 +363,7 @@ public class LinuxRpmBundler extends AbstractBundler {
         }
     }
 
-    protected void saveConfigFiles(Map<String, ? super Object> params) {
+    private void saveConfigFiles(Map<String, ? super Object> params) {
         try {
             File configRoot = CONFIG_ROOT.fetchFrom(params);
             File rootDir = LinuxAppBundler.getRootDir(RPM_IMAGE_DIR.fetchFrom(params), params);
@@ -671,16 +696,16 @@ public class LinuxRpmBundler extends AbstractBundler {
 
         outdir.mkdirs();
 
-        //run rpmbuild
+        // run rpmbuild
         ProcessBuilder pb = new ProcessBuilder(
                 TOOL_RPMBUILD,
                 "-bb", getConfig_SpecFile(params).getAbsolutePath(),
-//                "--define", "%__jar_repack %{nil}",  //debug: improves build time (but will require unpack to install?)
+//                "--define", "%__jar_repack %{nil}",  // debug: improves build time (but will require unpack to install?)
                 "--define", "%_sourcedir "+ RPM_IMAGE_DIR.fetchFrom(params).getAbsolutePath(),
-                "--define", "%_rpmdir " + outdir.getAbsolutePath(), //save result to output dir
-                "--define", "%_topdir " + broot.getAbsolutePath() //do not use other system directories to build as current user
+                "--define", "%_rpmdir " + outdir.getAbsolutePath(), // save result to output dir
+                "--define", "%_topdir " + broot.getAbsolutePath() // do not use other system directories to build as current user
         );
-        pb = pb.directory(RPM_IMAGE_DIR.fetchFrom(params));
+        pb.directory(RPM_IMAGE_DIR.fetchFrom(params));
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
         if (!Log.isDebug()) {
@@ -735,9 +760,7 @@ public class LinuxRpmBundler extends AbstractBundler {
     }
 
     public static Collection<BundlerParamInfo<?>> getRpmBundleParameters() {
-        return Arrays.asList(
-                // ADD_MODULES,
-                BUNDLE_NAME,
+        return Arrays.asList(BUNDLE_NAME,
                 CATEGORY,
                 DESCRIPTION,
                 ICON_PNG,
@@ -745,8 +768,7 @@ public class LinuxRpmBundler extends AbstractBundler {
                 LICENSE_TYPE,
                 MODULE,
                 TITLE,
-                VENDOR
-        );
+                VENDOR);
     }
 
     @Override
@@ -754,8 +776,7 @@ public class LinuxRpmBundler extends AbstractBundler {
         return bundle(params, outputParentDir);
     }
 
-
-    public int getSquareSizeOfImage(File f) {
+    private int getSquareSizeOfImage(File f) {
         try {
             BufferedImage bi = ImageIO.read(f);
             if (bi.getWidth() == bi.getHeight()) {

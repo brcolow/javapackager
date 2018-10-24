@@ -77,7 +77,6 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
     private final Path root;
     private final Path appDir;
     private final Path runtimeDir;
-    private final Path mdir;
 
     private final Map<String, ? super Object> params;
 
@@ -117,26 +116,17 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
             },
             (s, p) -> new File(s));
 
-
-
     public WindowsAppImageBuilder(Map<String, Object> config, Path imageOutDir) throws IOException {
         super(config, imageOutDir.resolve(APP_FS_NAME.fetchFrom(config) + "/runtime"));
 
         Objects.requireNonNull(imageOutDir);
 
         this.params = config;
-        this.root = imageOutDir.resolve(APP_NAME.fetchFrom(params));
+        this.root = imageOutDir.resolve(APP_FS_NAME.fetchFrom(params));
         this.appDir = root.resolve("app");
         this.runtimeDir = root.resolve("runtime");
-        this.mdir = runtimeDir.resolve("lib");
         Files.createDirectories(appDir);
         Files.createDirectories(runtimeDir);
-    }
-
-    // This method is static for the sake of sharing with "installer" bundlers
-    // that may skip calls to validate/bundle in this class!
-    public static File getRootDir(File outDir, Map<String, ? super Object> p) {
-        return new File(outDir, APP_FS_NAME.fetchFrom(p));
     }
 
     private static String getLauncherName(Map<String, ? super Object> p) {
@@ -197,10 +187,9 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
             }
 
         } catch (IOException ex) {
-            Log.info("Exception: "+ex);
+            Log.info("Exception: " + ex);
             Log.debug(ex);
         } finally {
-
             if (VERBOSE.fetchFrom(params)) {
                 Log.info(MessageFormat.format("Config files are saved to {0}. Use them to customize package.",
                         getConfigRoot(params).getAbsolutePath()));
@@ -328,7 +317,6 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
 
         Path tool = Paths.get("./build/generated-resources/com/sun/openjfx/tools/packager/windows",
                 "javapackager.exe");
-        System.out.println("does javapackager.exe exist? " + Files.exists(tool));
         tool.toFile().setWritable(true);
         tool.toFile().setExecutable(true);
 

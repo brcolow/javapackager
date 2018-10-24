@@ -55,7 +55,6 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
     private final Path appDir;
     private final Path runtimeDir;
     private final Path resourcesDir;
-    private final Path mdir;
 
     private final Map<String, ? super Object> params;
 
@@ -84,7 +83,6 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
         this.appDir = root.resolve("app");
         this.runtimeDir = root.resolve("runtime");
         this.resourcesDir = root.resolve("resources");
-        this.mdir = runtimeDir.resolve("lib");
         this.params = new HashMap<>();
         config.entrySet().stream().forEach(e -> params.put(e.getKey(), e.getValue()));
         Files.createDirectories(appDir);

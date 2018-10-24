@@ -217,27 +217,20 @@ public class WinServiceBundlerTest {
      * Test that bundler doesn't support per-user services (RT-37985)
      */
     @Test(expected = ConfigException.class)
-    public void perUserExeServiceTest() throws UnsupportedPlatformException {
+    public void perUserExeServiceTest() throws UnsupportedPlatformException, ConfigException {
         assumeInnoSetupPresent();
 
-        try {
-            Bundler bundler = new WinExeBundler();
+        Bundler bundler = new WinExeBundler();
 
-            Map<String, Object> bundleParams = new HashMap<>();
+        Map<String, Object> bundleParams = new HashMap<>();
 
-            bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-            bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-            bundleParams.put(VERBOSE.getID(), true);
-            bundleParams.put(SERVICE_HINT.getID(), true);
-            bundleParams.put(SYSTEM_WIDE.getID(), false);
+        bundleParams.put(BUILD_ROOT.getID(), tmpBase);
+        bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
+        bundleParams.put(VERBOSE.getID(), true);
+        bundleParams.put(SERVICE_HINT.getID(), true);
+        bundleParams.put(SYSTEM_WIDE.getID(), false);
 
-            bundler.validate(bundleParams);
-
-            // if we get here we fail
-            assertTrue("ConfigException should have been thrown", false);
-        } catch (ConfigException ignore) {
-            // passes the test
-        }
+        bundler.validate(bundleParams);
     }
 
     @Test

@@ -72,7 +72,7 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 import static com.sun.openjfx.tools.packager.windows.WinAppBundler.ICON_ICO;
 import static com.sun.openjfx.tools.packager.windows.WindowsBundlerParam.WIN_RUNTIME;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -163,7 +163,6 @@ public class WinAppBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_NAME.getID(), "Smoke Test");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
@@ -178,7 +177,6 @@ public class WinAppBundlerTest {
         assertTrue(valid);
 
         File output = bundler.execute(bundleParams, new File(workDir, "smoke"));
-        System.out.println("WAB smoke test, output: " + output);
         validatePackageCfg(output, bundleParams);
     }
 
@@ -198,7 +196,6 @@ public class WinAppBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
 
         File output = bundler.execute(bundleParams, new File(workDir, "BareMinimum"));
@@ -229,8 +226,6 @@ public class WinAppBundlerTest {
     }
 
     public void validatePackageCfg(File root, Map<String, ? super Object> params) throws IOException {
-        System.out.println("validatePackageCfg, root = " + root);
-        System.out.println("Trying to open FIS for file: " + new File(root, WinAppBundler.getLauncherCfgName(params)));
         try (FileInputStream fis = new FileInputStream(new File(root, WinAppBundler.getLauncherCfgName(params)))) {
             Properties p = new Properties();
             p.load(fis);
@@ -245,7 +240,7 @@ public class WinAppBundlerTest {
             assertNotNull(p.getProperty("app.identifier"));
 
             // - make sure 'app.classpath=null' doesn't show up, prefer 'app.classpath='
-            assertFalse(p.getProperty("app.classpath").equals("null"));
+            assertNotEquals("null", p.getProperty("app.classpath"));
         }
     }
 
@@ -260,7 +255,6 @@ public class WinAppBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(VERBOSE.getID(), true);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(WIN_RUNTIME.getID(), APP_RESOURCES.fetchFrom(bundleParams));
 
@@ -278,7 +272,7 @@ public class WinAppBundlerTest {
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(ARGUMENTS.getID(), Arrays.asList("He Said", "She Said"));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
-        bundleParams.put(ICON_ICO.getID(), new File(appResourcesDir, "javalogo_white_48.ico"));
+        bundleParams.put(ICON_ICO.getID(), new File(".\\packager\\windows", "javalogo_white_48.ico"));
         bundleParams.put(JVM_OPTIONS.getID(), "-Xms128M");
         bundleParams.put(JVM_PROPERTIES.getID(), "everything.jvm.property=everything.jvm.property.value");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
@@ -295,13 +289,13 @@ public class WinAppBundlerTest {
         }
 
         // assert they are set
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             assertTrue("Bundle args should contain " + bi.getID(), bundleParams.containsKey(bi.getID()));
         }
 
         // and only those are set
         bundleParamLoop:
-        for (String s :bundleParams.keySet()) {
+        for (String s : bundleParams.keySet()) {
             for (BundlerParamInfo<?> bpi : parameters) {
                 if (s.equals(bpi.getID())) {
                     continue bundleParamLoop;
@@ -311,7 +305,7 @@ public class WinAppBundlerTest {
         }
 
         // assert they resolve
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             bi.fetchFrom(bundleParams);
         }
 
@@ -347,14 +341,11 @@ public class WinAppBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_NAME.getID(), "Two Launchers Test");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
-        bundleParams.put(MAIN_JAR.getID(),
-                new RelativeFileSet(fakeMainJar.getParentFile(),
-                        new HashSet<>(Arrays.asList(fakeMainJar)))
-        );
+        bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
+                new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(VERBOSE.getID(), true);
@@ -388,7 +379,6 @@ public class WinAppBundlerTest {
 
         // not part of the typical setup, for testing
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(WIN_RUNTIME.getID(), runtimeJre);
 

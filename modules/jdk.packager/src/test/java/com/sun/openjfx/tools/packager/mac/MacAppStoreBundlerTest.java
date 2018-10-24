@@ -315,10 +315,8 @@ public class MacAppStoreBundlerTest {
         bundleParams.put(APP_NAME.getID(), "Smoke Test");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
-        bundleParams.put(MAIN_JAR.getID(),
-                new RelativeFileSet(fakeMainJar.getParentFile(),
-                        new HashSet<>(Arrays.asList(fakeMainJar)))
-        );
+        bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
+                        new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(IDENTIFIER.getID(), "com.example.javapackager.hello.TestPackager");
         bundleParams.put(MacAppBundler.MAC_CATEGORY.getID(), "public.app-category.developer-tools");
@@ -340,7 +338,7 @@ public class MacAppStoreBundlerTest {
      * Request no signature, should be a validaiton error
      */
     @Test(expected = ConfigException.class)
-    public void invalidDoNotSign() throws IOException, ConfigException, UnsupportedPlatformException {
+    public void invalidDoNotSign() throws ConfigException, UnsupportedPlatformException {
         AbstractBundler bundler = new MacAppStoreBundler();
 
         Map<String, Object> bundleParams = new HashMap<>();

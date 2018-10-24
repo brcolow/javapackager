@@ -571,8 +571,8 @@ public class WinMsiBundler extends AbstractBundler {
                     cleanupConfigFiles(p);
                 }
             } catch (IOException ex) {
-                // noinspection ReturnInsideFinallyBlock
                 Log.debug(ex.getMessage());
+                // noinspection ReturnInsideFinallyBlock
                 return null;
             }
         }
@@ -1105,7 +1105,7 @@ public class WinMsiBundler extends AbstractBundler {
                 getConfig_ProjectFile(params).getAbsolutePath(),
                 "-ext", "WixUtilExtension",
                 "-out", candleOut.getAbsolutePath());
-        pb = pb.directory(WIN_APP_IMAGE.fetchFrom(params));
+        pb.directory(WIN_APP_IMAGE.fetchFrom(params));
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
         Log.verbose(MessageFormat.format("Generating MSI: {0}", msiOut.getAbsolutePath()));
@@ -1134,7 +1134,7 @@ public class WinMsiBundler extends AbstractBundler {
 
         // create .msi
         pb = new ProcessBuilder(commandLine);
-        pb = pb.directory(WIN_APP_IMAGE.fetchFrom(params));
+        pb.directory(WIN_APP_IMAGE.fetchFrom(params));
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
         candleOut.delete();

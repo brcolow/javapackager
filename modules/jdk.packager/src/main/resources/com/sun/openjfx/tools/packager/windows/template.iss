@@ -31,7 +31,7 @@ PrivilegesRequired=APPLICATION_INSTALL_PRIVILEGE
 UninstallDisplayIcon={app}\APPLICATION_NAME.ico
 UninstallDisplayName=APPLICATION_NAME
 WizardImageStretch=No
-WizardSmallImageFile=APPLICATION_NAME-setup-icon.bmp
+WizardSmallImageFile=APPLICATION_FS_NAME-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=ARCHITECTURE_BIT_MODE
 FILE_ASSOCIATIONS
 
@@ -39,8 +39,8 @@ FILE_ASSOCIATIONS
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "APPLICATION_NAME\APPLICATION_FS_NAME.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "APPLICATION_NAME\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "APPLICATION_FS_NAME\APPLICATION_FS_NAME.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "APPLICATION_FS_NAME\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_FS_NAME.exe"; IconFilename: "{app}\APPLICATION_FS_NAME.ico"; Check: APPLICATION_MENU_SHORTCUT()

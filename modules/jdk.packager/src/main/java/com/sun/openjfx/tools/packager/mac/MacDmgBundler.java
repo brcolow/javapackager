@@ -134,14 +134,14 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
                 }
             } catch (IOException ex) {
                 Log.debug(ex);
-                //noinspection ReturnInsideFinallyBlock
+                // noinspection ReturnInsideFinallyBlock
                 return null;
             }
         }
     }
 
     // remove
-    protected void cleanupConfigFiles(Map<String, ? super Object> params) {
+    private void cleanupConfigFiles(Map<String, ? super Object> params) {
         if (getConfig_VolumeBackground(params) != null) {
             getConfig_VolumeBackground(params).delete();
         }
