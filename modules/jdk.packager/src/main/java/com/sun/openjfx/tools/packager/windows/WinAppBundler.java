@@ -115,13 +115,14 @@ public class WinAppBundler extends AbstractImageBundler {
         imageBundleValidation(p);
 
         RelativeFileSet runtime = WIN_RUNTIME.fetchFrom(p);
-        /*
-        if (runtime != null && !runtime.contains("legal/java.base/LICENSE")) {
-            throw new ConfigException("The Java runtime specified (\"" + runtime + "\") does not seem to be" +
-                    "correct: ", "Either do not explicitly set the runtime and use the default JAVA_HOME or else" +
-                    "specify an actual Java runtime.");
+        if (runtime != null) {
+            if (!runtime.contains("legal\\java.base\\LICENSE")) {
+                throw new ConfigException("The Java runtime specified (\"" + runtime + "\") does not seem to be" +
+                        "correct: ", "Either do not explicitly set the runtime and use the default JAVA_HOME or else" +
+                        "specify an actual Java runtime.");
+            }
         }
-        */
+
         // Make sure that javapackager.exe exists.
         /*
         File tool = new File(System.getProperty("java.home") + "\\bin\\javapackager.exe");
@@ -161,7 +162,7 @@ public class WinAppBundler extends AbstractImageBundler {
     }
 
     public static String getLauncherCfgName(Map<String, ? super Object> p) {
-        return "app\\" + APP_FS_NAME.fetchFrom(p) +".cfg";
+        return "app\\" + APP_FS_NAME.fetchFrom(p) + ".cfg";
     }
 
     public boolean bundle(Map<String, ? super Object> p, File outputDirectory) {

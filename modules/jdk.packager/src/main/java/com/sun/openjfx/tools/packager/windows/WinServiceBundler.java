@@ -43,6 +43,7 @@ import com.sun.openjfx.tools.packager.IOUtils;
 import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.SYSTEM_WIDE;
@@ -81,7 +82,7 @@ public class WinServiceBundler extends AbstractBundler {
         return getServiceBundleParameters();
     }
 
-    public static Collection<BundlerParamInfo<?>> getServiceBundleParameters() {
+    private static Collection<BundlerParamInfo<?>> getServiceBundleParameters() {
         return Arrays.asList(APP_NAME, BUILD_ROOT);
     }
 
@@ -102,7 +103,7 @@ public class WinServiceBundler extends AbstractBundler {
         }
     }
 
-    boolean doValidate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
+    private boolean doValidate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
         if (Platform.getPlatform() != Platform.WINDOWS) {
             throw new UnsupportedPlatformException();
         }
@@ -116,7 +117,6 @@ public class WinServiceBundler extends AbstractBundler {
 
         // treat default null as "system wide install"
         boolean systemWide = SYSTEM_WIDE.fetchFrom(p) == null || SYSTEM_WIDE.fetchFrom(p);
-
         if (!systemWide) {
             throw new ConfigException("Bundler doesn't support per-user services.",
                     "Make sure that the system wide hint is set to true.");
@@ -130,12 +130,12 @@ public class WinServiceBundler extends AbstractBundler {
         return doBundle(params, outputParentDir, false);
     }
 
-    static String getAppName(Map<String, ? super Object>  p) {
-        return APP_NAME.fetchFrom(p);
+    private static String getAppName(Map<String, ? super Object> p) {
+        return APP_FS_NAME.fetchFrom(p);
     }
 
     static String getAppSvcName(Map<String, ? super Object>  p) {
-        return APP_NAME.fetchFrom(p) + "Svc";
+        return APP_FS_NAME.fetchFrom(p) + "Svc";
     }
 
     public static File getLauncherSvc(File outDir, Map<String, ? super Object> p) {

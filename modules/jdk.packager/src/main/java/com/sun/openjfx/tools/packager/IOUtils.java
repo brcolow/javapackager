@@ -175,7 +175,7 @@ public class IOUtils {
             throws IOException {
         if (paramFile != null && paramFile.exists()) {
             ProcessBuilder pb = new ProcessBuilder(launcher, paramFile.getName());
-            pb = pb.directory(paramFile.getParentFile());
+            pb.directory(paramFile.getParentFile());
             exec(pb, verbose);
         }
     }

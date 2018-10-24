@@ -202,15 +202,15 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
                             appImageDir.getAbsolutePath()));
                 }
                 if (!VERBOSE.fetchFrom(p)) {
-                    //cleanup
+                    // cleanup
                     cleanupConfigFiles(p);
                 } else {
                     Log.info(MessageFormat.format("Config files are saved to {0}. Use them to customize package.",
                             CONFIG_ROOT.fetchFrom(p).getAbsolutePath()));
                 }
             } catch (IOException ex) {
-                //noinspection ReturnInsideFinallyBlock
                 Log.debug(ex.getMessage());
+                // noinspection ReturnInsideFinallyBlock
                 return null;
             }
         }

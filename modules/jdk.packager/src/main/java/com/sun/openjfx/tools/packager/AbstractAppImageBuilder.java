@@ -37,7 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -62,11 +62,10 @@ public abstract class AbstractAppImageBuilder {
 
     // do not use file separator -
     // we use it for classpath lookup and there / are not platform specific
-    public final static String BUNDLER_PREFIX = "package/";
-
-    private Map<String, Object> properties;
-    private Path root;
-    private List<String> excludeFileList = new ArrayList<>();
+    protected final static String BUNDLER_PREFIX = "package/";
+    private final Map<String, Object> properties;
+    private final Path root;
+    private final List<String> excludeFileList = new ArrayList<>();
 
     public AbstractAppImageBuilder(Map<String, Object> properties, Path root) {
         this.properties = properties;
@@ -77,14 +76,14 @@ public abstract class AbstractAppImageBuilder {
     public abstract void prepareApplicationFiles() throws IOException;
 
     public Map<String, Object> getProperties() {
-        return this.properties;
+        return properties;
     }
 
     public Path getRoot() {
-        return this.root;
+        return root;
     }
 
-    public String getExcludeFileList() {
+    String getExcludeFileList() {
         StringBuilder result = new StringBuilder();
 
         for (String item : excludeFileList) {
@@ -186,11 +185,11 @@ public abstract class AbstractAppImageBuilder {
         }
     }
 
-    public void writeCfgFile(Map<String, ? super Object> params, File cfgFileName, String runtimeLocation)
+    protected void writeCfgFile(Map<String, ? super Object> params, File cfgFileName, String runtimeLocation)
             throws IOException {
         cfgFileName.delete();
 
-        boolean appCDEnabled = ENABLE_APP_CDS.fetchFrom(params);
+        boolean appCdsEnabled = ENABLE_APP_CDS.fetchFrom(params);
         String appCDSCacheMode = APP_CDS_CACHE_MODE.fetchFrom(params);
         File mainJar = JLinkBundlerHelper.getMainJar(params);
         Module.ModuleType mainJarType = Module.ModuleType.Unknown;
@@ -211,7 +210,9 @@ public abstract class AbstractAppImageBuilder {
         out.println("app.identifier=" + IDENTIFIER.fetchFrom(params));
         out.println("app.classpath=" + String.join(File.pathSeparator, CLASSPATH.fetchFrom(params).split("[ :;]")));
         out.println("app.application.instance=" + (SINGLETON.fetchFrom(params) ? "single" : "multiple"));
-
+        if (appCdsEnabled) {
+            out.println("app.appcds.cache=" + appCDSCacheMode.split("\\+")[0]);
+        }
         // The main app is required to be a jar, modular or unnamed.
         if (mainModule != null &&
                 (mainJarType == Module.ModuleType.Unknown ||
@@ -268,7 +269,7 @@ public abstract class AbstractAppImageBuilder {
                 out.println(arg.getKey().replaceAll("([\\=])", "\\\\$1") + "=" + arg.getValue());
             }
         }
-        if (appCDEnabled) {
+        if (appCdsEnabled) {
             prepareAppCDS(params, out);
         }
 
@@ -284,11 +285,10 @@ public abstract class AbstractAppImageBuilder {
             }
         }
 
-
         out.close();
     }
 
-    void prepareAppCDS(Map<String, ? super Object> params, PrintStream out) throws IOException {
+    private void prepareAppCDS(Map<String, ? super Object> params, PrintStream out) throws IOException {
         File tempDir = Files.createTempDirectory("javapackager").toFile();
         tempDir.deleteOnExit();
         File classList = new File(tempDir, APP_FS_NAME.fetchFrom(params)  + ".classlist");
@@ -301,7 +301,7 @@ public abstract class AbstractAppImageBuilder {
             }
         }
         APP_RESOURCES_LIST.fetchFrom(params).add(new RelativeFileSet(classList.getParentFile(),
-                Arrays.asList(classList)));
+                Collections.singletonList(classList)));
 
         out.println();
         out.println("[AppCDSJVMOptions]");
@@ -317,8 +317,7 @@ public abstract class AbstractAppImageBuilder {
             out.println("-XX:+TraceClassPaths");
             out.println("-XX:+UnlockDiagnosticVMOptions");
         }
-        out.println("");
-
+        out.println();
         out.println("[AppCDSGenerateCacheJVMOptions]");
         out.println("-XX:+UnlockCommercialFeatures");
         out.println("-Xshare:dump");

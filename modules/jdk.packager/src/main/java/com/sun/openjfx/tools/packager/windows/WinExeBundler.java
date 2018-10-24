@@ -195,8 +195,7 @@ public class WinExeBundler extends AbstractBundler {
     }
 
     public static Collection<BundlerParamInfo<?>> getExeBundleParameters() {
-        return Arrays.asList(
-                DESCRIPTION,
+        return Arrays.asList(DESCRIPTION,
                 COPYRIGHT,
                 LICENSE_FILE,
                 MENU_GROUP,
@@ -209,8 +208,7 @@ public class WinExeBundler extends AbstractBundler {
                 SYSTEM_WIDE,
                 TITLE,
                 VENDOR,
-                INSTALLDIR_CHOOSER
-        );
+                INSTALLDIR_CHOOSER);
     }
 
     @Override
@@ -221,7 +219,7 @@ public class WinExeBundler extends AbstractBundler {
     static class VersionExtractor extends PrintStream {
         double version = 0f;
 
-        public VersionExtractor() {
+        VersionExtractor() {
             super(new ByteArrayOutputStream());
         }
 
@@ -360,9 +358,7 @@ public class WinExeBundler extends AbstractBundler {
         if (SERVICE_HINT.fetchFrom(params)) {
             // copies the service launcher to the app root folder
             appOutputDir = SERVICE_BUNDLER.fetchFrom(params).doBundle(params, appOutputDir, true);
-            if (appOutputDir == null) {
-                return false;
-            }
+            return appOutputDir != null;
         }
         return true;
     }
@@ -428,19 +424,19 @@ public class WinExeBundler extends AbstractBundler {
                     Log.info(MessageFormat.format("Kept working directory for debug: {0}", imageDir.getAbsolutePath()));
                 }
             } catch (IOException ex) {
-                //noinspection ReturnInsideFinallyBlock
                 Log.debug(ex.getMessage());
+                // noinspection ReturnInsideFinallyBlock
                 return null;
             }
         }
     }
 
-    //name of post-image script
+    // name of post-image script
     private File getConfig_Script(Map<String, ? super Object> params) {
-        return new File(EXE_IMAGE_DIR.fetchFrom(params), APP_NAME.fetchFrom(params) + "-post-image.wsf");
+        return new File(EXE_IMAGE_DIR.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + "-post-image.wsf");
     }
 
-    protected void saveConfigFiles(Map<String, ? super Object> params) {
+    private void saveConfigFiles(Map<String, ? super Object> params) {
         try {
             File configRoot = CONFIG_ROOT.fetchFrom(params);
             if (getConfig_ExeProjectFile(params).exists()) {
@@ -455,7 +451,7 @@ public class WinExeBundler extends AbstractBundler {
                 IOUtils.copyFile(getConfig_SmallInnoSetupIcon(params),
                         new File(configRoot, getConfig_SmallInnoSetupIcon(params).getName()));
             }
-            Log.info(MessageFormat.format("  Config files are saved to {0}. Use them to customize package.",
+            Log.info(MessageFormat.format("Config files are saved to {0}. Use them to customize package.",
                     configRoot.getAbsolutePath()));
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -466,8 +462,9 @@ public class WinExeBundler extends AbstractBundler {
         String nm = IDENTIFIER.fetchFrom(params);
 
         // limitation of innosetup
-        if (nm.length() > 126)
+        if (nm.length() > 126) {
             nm = nm.substring(0, 126);
+        }
 
         return nm;
     }
@@ -498,7 +495,7 @@ public class WinExeBundler extends AbstractBundler {
         return value;
     }
 
-    boolean prepareMainProjectFile(Map<String, ? super Object> params) throws IOException {
+    private void prepareMainProjectFile(Map<String, ? super Object> params) throws IOException {
         Map<String, String> data = new HashMap<>();
         data.put("PRODUCT_APP_IDENTIFIER", innosetupEscape(getAppIdentifier(params)));
 
@@ -538,7 +535,7 @@ public class WinExeBundler extends AbstractBundler {
         if (SERVICE_HINT.fetchFrom(params)) {
             data.put("RUN_FILENAME", innosetupEscape(WinServiceBundler.getAppSvcName(params)));
         } else {
-            validateValueAndPut(data, "RUN_FILENAME", APP_NAME, params);
+            validateValueAndPut(data, "RUN_FILENAME", APP_FS_NAME, params);
         }
         validateValueAndPut(data, "APPLICATION_DESCRIPTION", DESCRIPTION, params);
         data.put("APPLICATION_SERVICE", SERVICE_HINT.fetchFrom(params) ? "returnTrue" : "returnFalse");
@@ -554,9 +551,9 @@ public class WinExeBundler extends AbstractBundler {
 
         StringBuilder secondaryLaunchersCfg = new StringBuilder();
         for (Map<String, ? super Object> launcher : SECONDARY_LAUNCHERS.fetchFrom(params)) {
-            String application_name = APP_NAME.fetchFrom(launcher);
+            String application_name = APP_FS_NAME.fetchFrom(launcher);
             if (MENU_HINT.fetchFrom(launcher)) {
-                //Name: "{group}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_NAME.exe"; IconFilename: "{app}\APPLICATION_NAME.ico"
+                //Name: "{group}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_FS_NAME.exe"; IconFilename: "{app}\APPLICATION_NAME.ico"
                 secondaryLaunchersCfg.append("Name: \"{group}\\");
                 secondaryLaunchersCfg.append(application_name);
                 secondaryLaunchersCfg.append("\"; Filename: \"{app}\\");
@@ -566,7 +563,7 @@ public class WinExeBundler extends AbstractBundler {
                 secondaryLaunchersCfg.append(".ico\"\r\n");
             }
             if (SHORTCUT_HINT.fetchFrom(launcher)) {
-                //Name: "{commondesktop}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_NAME.exe";  IconFilename: "{app}\APPLICATION_NAME.ico"
+                //Name: "{commondesktop}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_FS_NAME.exe";  IconFilename: "{app}\APPLICATION_NAME.ico"
                 secondaryLaunchersCfg.append("Name: \"{commondesktop}\\");
                 secondaryLaunchersCfg.append(application_name);
                 secondaryLaunchersCfg.append("\"; Filename: \"{app}\\");
@@ -696,7 +693,6 @@ public class WinExeBundler extends AbstractBundler {
                 DROP_IN_RESOURCES_ROOT.fetchFrom(params));
         w.write(content);
         w.close();
-        return true;
     }
 
     private final static String DEFAULT_INNO_SETUP_ICON = "packager/windows/icon_inno_setup.bmp";
@@ -724,7 +720,7 @@ public class WinExeBundler extends AbstractBundler {
 
     private File getConfig_SmallInnoSetupIcon(Map<String, ? super Object> params) {
         return new File(EXE_IMAGE_DIR.fetchFrom(params),
-                APP_NAME.fetchFrom(params) + "-setup-icon.bmp");
+                APP_FS_NAME.fetchFrom(params) + "-setup-icon.bmp");
     }
 
     private File getConfig_ExeProjectFile(Map<String, ? super Object> params) {
@@ -738,14 +734,12 @@ public class WinExeBundler extends AbstractBundler {
         outdir.mkdirs();
 
         // run candle
-        // System.out.println("CONTENTS:");
-        // Files.readAllLines(getConfig_ExeProjectFile(params).toPath()).forEach(System.out::println);
-        ProcessBuilder pb = new ProcessBuilder(
-                TOOL_INNO_SETUP_COMPILER_EXECUTABLE.fetchFrom(params),
-                "/o" + outdir.getAbsolutePath(),
-                getConfig_ExeProjectFile(params).exists() ? getConfig_ExeProjectFile(params).getAbsolutePath() :
-                        Paths.get("./src/main/resources/com/sun/openjfx/tools/ " + DEFAULT_EXE_PROJECT_TEMPLATE).toAbsolutePath().toString());
-        pb = pb.directory(EXE_IMAGE_DIR.fetchFrom(params));
+        ProcessBuilder pb = new ProcessBuilder(TOOL_INNO_SETUP_COMPILER_EXECUTABLE.fetchFrom(params),
+                "/o" + outdir.getAbsolutePath(), getConfig_ExeProjectFile(params).exists() ?
+                getConfig_ExeProjectFile(params).getAbsolutePath() :
+                Paths.get("./src/main/resources/com/sun/openjfx/tools/ " + DEFAULT_EXE_PROJECT_TEMPLATE)
+                        .toAbsolutePath().toString());
+        pb.directory(EXE_IMAGE_DIR.fetchFrom(params));
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
         Log.info(MessageFormat.format("Installer (.exe) saved to: {0}", outdir.getAbsolutePath()));

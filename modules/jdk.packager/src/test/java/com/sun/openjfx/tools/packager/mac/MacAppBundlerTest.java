@@ -102,8 +102,8 @@ public class MacAppBundlerTest {
     }
 
     @Before
-    public void createTmpDir() throws IOException {
-        if (retain) {
+    public void createTmpDir() {
+            if (retain) {
             tmpBase = new File("build/tmp/tests/macapp");
         } else {
             tmpBase = BUILD_ROOT.fetchFrom(new TreeMap<>());
@@ -117,7 +117,7 @@ public class MacAppBundlerTest {
         config.getParentFile().mkdirs();
         try {
             // create the config file holding the key config
-            Files.write(config.toPath(), Arrays.<String>asList("[ codesign ]",
+            Files.write(config.toPath(), Arrays.asList("[ codesign ]",
                     "keyUsage=critical,digitalSignature",
                     "basicConstraints=critical,CA:false",
                     "extendedKeyUsage=critical,codeSigning"));
@@ -638,13 +638,13 @@ public class MacAppBundlerTest {
         bundleParams.put(VERSION.getID(), "1.2.3.4");
 
         // assert they are set
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             assertTrue("Bundle args should contain " + bi.getID(), bundleParams.containsKey(bi.getID()));
         }
 
         // and only those are set
         bundleParamLoop:
-        for (String s :bundleParams.keySet()) {
+        for (String s : bundleParams.keySet()) {
             for (BundlerParamInfo<?> bpi : parameters) {
                 if (s.equals(bpi.getID())) {
                     continue bundleParamLoop;
@@ -654,7 +654,7 @@ public class MacAppBundlerTest {
         }
 
         // assert they resolve
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             bi.fetchFrom(bundleParams);
         }
 

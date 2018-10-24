@@ -397,8 +397,8 @@ public class LinuxDebBundler extends AbstractBundler {
                     Log.info(MessageFormat.format("Kept working directory for debug: {0}", imageDir.getAbsolutePath()));
                 }
             } catch (IOException ex) {
-                //noinspection ReturnInsideFinallyBlock
                 Log.debug(ex.getMessage());
+                // noinspection ReturnInsideFinallyBlock
                 return null;
             }
         }
@@ -884,7 +884,7 @@ public class LinuxDebBundler extends AbstractBundler {
         ProcessBuilder pb = new ProcessBuilder(
                 "fakeroot", TOOL_DPKG, "-b",  FULL_PACKAGE_NAME.fetchFrom(params),
                 outFile.getAbsolutePath());
-        pb = pb.directory(DEB_IMAGE_DIR.fetchFrom(params).getParentFile());
+        pb.directory(DEB_IMAGE_DIR.fetchFrom(params).getParentFile());
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
         Log.info(MessageFormat.format("Package (.deb) saved to: {0}", outFile.getAbsolutePath()));

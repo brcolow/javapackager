@@ -442,13 +442,13 @@ public class MacDmgBundlerTest {
         bundleParams.put(SYSTEM_WIDE.getID(), true);
 
         // assert they are set
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             assertNotNull("Bundle args Contains " + bi.getID(), bundleParams.containsKey(bi.getID()));
         }
 
         // and only those are set
         bundleParamLoop:
-        for (String s :bundleParams.keySet()) {
+        for (String s : bundleParams.keySet()) {
             for (BundlerParamInfo<?> bpi : parameters) {
                 if (s.equals(bpi.getID())) {
                     continue bundleParamLoop;
@@ -458,7 +458,7 @@ public class MacDmgBundlerTest {
         }
 
         // assert they resolve
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             bi.fetchFrom(bundleParams);
         }
 

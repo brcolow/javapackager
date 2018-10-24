@@ -99,14 +99,13 @@ public class MacPkgBundlerTest {
 
         appResources = new HashSet<>(Arrays.asList(fakeMainJar,
                 new File(appResourcesDir, "LICENSE"),
-                new File(appResourcesDir, "LICENSE2")
-        ));
+                new File(appResourcesDir, "LICENSE2")));
 
         signingKeysPresent = DEVELOPER_ID_INSTALLER_SIGNING_KEY.fetchFrom(new TreeMap<>()) != null;
     }
 
     @Before
-    public void createTmpDir() throws IOException {
+    public void createTmpDir() {
         if (retain) {
             tmpBase = new File("build/tmp/tests/macpkg");
         } else {
@@ -120,7 +119,7 @@ public class MacPkgBundlerTest {
         config.getParentFile().mkdirs();
         try {
             // create the config file holding the key config
-            Files.write(config.toPath(), Arrays.<String>asList("[ codesign ]",
+            Files.write(config.toPath(), Arrays.asList("[ codesign ]",
                     "keyUsage=critical,digitalSignature",
                     "basicConstraints=critical,CA:false",
                     "extendedKeyUsage=critical,codeSigning",
@@ -611,13 +610,13 @@ public class MacPkgBundlerTest {
         //bundleParams.put(SERVICE_HINT.getID(), false);
 
         // assert they are set
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             assertNotNull("Bundle args Contains " + bi.getID(), bundleParams.containsKey(bi.getID()));
         }
 
         // and only those are set
         bundleParamLoop:
-        for (String s :bundleParams.keySet()) {
+        for (String s : bundleParams.keySet()) {
             for (BundlerParamInfo<?> bpi : parameters) {
                 if (s.equals(bpi.getID())) {
                     continue bundleParamLoop;
@@ -627,7 +626,7 @@ public class MacPkgBundlerTest {
         }
 
         // assert they resolve
-        for (BundlerParamInfo bi :parameters) {
+        for (BundlerParamInfo bi : parameters) {
             bi.fetchFrom(bundleParams);
         }
 
