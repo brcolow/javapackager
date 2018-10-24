@@ -39,7 +39,7 @@ try {
     String v
     while ((v = inStream2.readLine()) != null) {
         v = v.trim()
-        if (v.startsWith("javafx.base")) { 
+        if (v.startsWith("javafx.base")) {
             ext.HAS_JAVAFX_MODULES = true
         }
     }
@@ -350,8 +350,8 @@ project(":fxpackager") {
                     '--add-modules', 'javafx.graphics',
                     "--add-exports=java.base/sun.security.timestamp=${project.ext.moduleName}",
                     "--add-exports=java.base/sun.security.x509=${project.ext.moduleName}",
-                    "--add-exports=jdk.jlink/jdk.tools.jlink.internal.packager=${project.ext.moduleName}",
                     "--add-exports=java.base/sun.security.pkcs=${project.ext.moduleName}",
+                    "--add-exports=jdk.jlink/jdk.tools.jlink.internal.packager=${project.ext.moduleName}",
                     "--add-exports=java.logging/java.util.logging=${project.ext.moduleName}",
             ]
             classpath = files()
@@ -384,14 +384,14 @@ project(":fxpackager") {
                             "CONF"       : "/$CONF", // TODO does this mean the generated properties must be reset when in a different configuration?
                             "VCARCH"     : IS_64 ? "amd64" : "x86",
                             "SDKARCH"    : IS_64 ? "/x64" : "/x86",
-                    ]);
-                    commandLine("cmd", "/q", "/c", "genVSproperties.bat")
+                    ])
+                    commandLine("cmd", "/q", "/c", "buildSrc\\genVSproperties.bat")
                     setStandardOutput(results)
-                });
+                })
                 BufferedReader reader = new BufferedReader(new StringReader(results.toString().trim()))
                 reader.readLine()
                 reader.readLine()
-                String line;
+                String line
                 while ((line = reader.readLine()) != null && !line.startsWith("######")) {
                     line = line.replace("\\", "/").replace("/@@ENDOFLINE@@", "").replace("@@ENDOFLINE@@", "").replace("//", "/").replace("windows.vs.", "WINDOWS_VS_")
                     propFile << line << "\r\n"
@@ -424,7 +424,7 @@ project(":fxpackager") {
         def winVsVer = Integer.parseInt(WINDOWS_VS_VER)
         if (WINDOWS_SDK_DIR == null || WINDOWS_SDK_DIR == "") {
             // Skip so IDEs can configure project.
-            // throw new GradleException("FAIL: WINSDK_DIR not defined");
+            // throw new GradleException("FAIL: WINSDK_DIR not defined")
         }
 
         def msvcVer = System.getenv("MSVC_VER") ?: "14.10.25017"
@@ -453,7 +453,7 @@ project(":fxpackager") {
                 "LIB"                  : WINDOWS_VS_LIB,
                 "LIBPATH"              : WINDOWS_VS_LIBPATH,
                 "DXSDK_DIR"            : WINDOWS_DXSDK_DIR
-        ];
+        ]
 
         def winSdkBinDir = "$WINDOWS_SDK_DIR/Bin"
         if (WINDOWS_VS_VER != "100") {
@@ -507,13 +507,13 @@ project(":fxpackager") {
                 "/d", "\"JFX_FVER=${rcVerFile}\"",
                 "/d", "\"JFX_FTYPE=0x2L\"",
                 "/nologo"
-        ];
+        ]
 
         ext.WIN = [:]
         WIN.launcher = [:]
         WIN.launcher.ccFlags = ["/nologo", "/W3", "/MT", "/EHsc", "/D_WINDOWS", "/DUNICODE", "/D_UNICODE", "/DWIN32",
                                 "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN", "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
-                                ccDebugFlags].flatten();
+                                ccDebugFlags].flatten()
         WIN.launcher.linkFlags = ["/link", "/nologo", "/WX", "/SUBSYSTEM:WINDOWS", "user32.lib", "shell32.lib", "advapi32.lib"]
         if (IS_DEBUG_NATIVE) WIN.launcher.linkFlags.add("/debug")
 
@@ -522,7 +522,7 @@ project(":fxpackager") {
                                        // "/WX",
                                        "/EHsc", "/c", "/D_WINDOWS", "/DUNICODE", "/D_UNICODE", "/DWIN32",
                                        "/D_LITTLE_ENDIAN", "/DWIN32_LEAN_AND_MEAN", "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
-                                       ccDebugFlags].flatten();
+                                       ccDebugFlags].flatten()
         WIN.launcherlibrary.linkFlags = ["/nologo", "/WX", "/DLL", "/SUBSYSTEM:WINDOWS", "user32.lib", "shell32.lib", "advapi32.lib", "ole32.lib"]
         if (IS_DEBUG_NATIVE) WIN.launcherlibrary.linkFlags.add("/debug")
 
@@ -533,7 +533,7 @@ project(":fxpackager") {
                             "/D_WIN32_WINDOWS=0X0500", "/D_WIN32_WINNT=0X0500",
                             "/I$JDK_HOME/include", "/I$JDK_HOME/include/win32",
                             "/O2", "-c"]
-        WIN.fxpackager.linkFlags = ["/nologo", "/SUBSYSTEM:CONSOLE", "/opt:REF", "/incremental:no", "/manifest", "kernel32.lib", "advapi32.lib"];
+        WIN.fxpackager.linkFlags = ["/nologo", "/SUBSYSTEM:CONSOLE", "/opt:REF", "/incremental:no", "/manifest", "kernel32.lib", "advapi32.lib"]
         WIN.fxpackager.rcSource = file("src/main/native/javapackager/win/javapackager.rc")
         WIN.fxpackager.rcCompiler = rcCompiler
         WIN.fxpackager.rcFlags = [
@@ -954,6 +954,9 @@ project(":fxpackager") {
         doFirst {
             jvmArgs = [
                     '--module-path', classpath.asPath,
+                    "--add-exports", "java.base/sun.security.timestamp=${project.ext.moduleName}",
+                    "--add-exports", "java.base/sun.security.x509=${project.ext.moduleName}",
+                    "--add-exports", "java.base/sun.security.pkcs=${project.ext.moduleName}",
                     '--add-exports', "${project.ext.moduleName}/com.sun.openjfx.tools.packager.windows=junit",
                     '--add-exports', "${project.ext.moduleName}/com.sun.openjfx.tools.packager.mac=junit",
                     '--add-exports', "${project.ext.moduleName}/com.sun.openjfx.tools.packager.linux=junit",
