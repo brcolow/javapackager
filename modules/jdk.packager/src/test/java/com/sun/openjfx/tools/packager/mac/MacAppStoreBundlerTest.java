@@ -74,36 +74,26 @@ public class MacAppStoreBundlerTest {
     static boolean retain = false;
 
     @BeforeClass
-    public static void prepareApp() throws IOException {
+    public static void prepareApp() {
         // only run on mac
         Assume.assumeTrue(System.getProperty("os.name").toLowerCase().contains("os x"));
-
-        runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
-        runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
-
-        // and only if we have the correct JRE settings
-        String jre = System.getProperty("java.home").toLowerCase();
-        Assume.assumeTrue(runtimeJdk != null || jre.endsWith("/contents/home/jre") || jre.endsWith("/contents/home/jre"));
+        runtimeJdk = System.getProperty("java.home").toLowerCase();
 
         // make sure we have a default signing key
         String signingKeyName = MacAppStoreBundler.MAC_APP_STORE_APP_SIGNING_KEY.fetchFrom(new TreeMap<>());
-        Assume.assumeNotNull(signingKeyName);
+        Assume.assumeNotNull("macOS app store signing key not found - skipping tests", signingKeyName);
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); PrintStream ps = new PrintStream(baos)) {
             System.err.println("Checking for valid certificate");
-            ProcessBuilder pb = new ProcessBuilder(
-                    "security",
+            ProcessBuilder pb = new ProcessBuilder("security",
                     "find-certificate", "-c", signingKeyName);
-
             IOUtils.exec(pb, Log.isDebug(), false, ps);
-
             String commandOutput = baos.toString();
             Assume.assumeTrue(commandOutput.contains(signingKeyName));
             System.err.println("Valid certificate present");
         } catch (Throwable t) {
             System.err.println("Valid certificate not present, skipping test.");
-            Assume.assumeTrue(false);
+            Assume.assumeTrue("macOS app store certificate not found - skipping tests", false);
         }
-
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);
@@ -119,7 +109,7 @@ public class MacAppStoreBundlerTest {
     }
 
     @Before
-    public void createTmpDir() throws IOException {
+    public void createTmpDir() {
         if (retain) {
             tmpBase = new File("build/tmp/tests/macappstore");
         } else {
@@ -235,7 +225,7 @@ public class MacAppStoreBundlerTest {
         bundleParams.put(ARGUMENTS.getID(), Arrays.asList("He Said", "She Said"));
         bundleParams.put(BUNDLE_ID_SIGNING_PREFIX.getID(), "everything.signing.prefix.");
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
-        bundleParams.put(ICON_ICNS.getID(), hdpiIcon);
+        bundleParams.put(ICON_ICNS.getID(), new File("./packager/mac", "GenericAppHiDPI.icns"));
         bundleParams.put(INSTALLER_SUFFIX.getID(), "-MAS-TEST");
         bundleParams.put(JVM_OPTIONS.getID(), "-Xms128M");
         bundleParams.put(JVM_PROPERTIES.getID(), "everything.jvm.property=everything.jvm.property.value");

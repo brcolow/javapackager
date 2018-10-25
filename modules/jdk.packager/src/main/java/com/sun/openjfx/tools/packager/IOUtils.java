@@ -194,7 +194,7 @@ public class IOUtils {
                             boolean testForPresenseOnly, PrintStream consumer) throws IOException {
         pb.redirectErrorStream(true);
         Log.verbose("Running " + Arrays.toString(pb.command().toArray(new String[0]))
-                                + (pb.directory() != null ? (" in " + pb.directory()) : ""));
+                + (pb.directory() != null ? (" in " + pb.directory()) : ""));
         Process p = pb.start();
         InputStreamReader isr = new InputStreamReader(p.getInputStream());
         BufferedReader br = new BufferedReader(isr);

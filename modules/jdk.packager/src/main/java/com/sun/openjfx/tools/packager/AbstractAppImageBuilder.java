@@ -62,7 +62,7 @@ public abstract class AbstractAppImageBuilder {
 
     // do not use file separator -
     // we use it for classpath lookup and there / are not platform specific
-    protected final static String BUNDLER_PREFIX = "package/";
+    protected static final String BUNDLER_PREFIX = "package/";
     private final Map<String, Object> properties;
     private final Path root;
     private final List<String> excludeFileList = new ArrayList<>();

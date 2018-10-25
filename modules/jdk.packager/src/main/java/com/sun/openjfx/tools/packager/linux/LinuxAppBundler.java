@@ -114,8 +114,7 @@ public class LinuxAppBundler extends AbstractImageBundler {
                     Rule.prefixNeg("/lib/desktop"),
                     Rule.substrNeg("libnpjp2.so")
             },
-            (s, p) ->  null
-    );
+            (s, p) ->  null);
 
     public static final BundlerParamInfo<RelativeFileSet> LINUX_RUNTIME = new StandardBundlerParam<>(
             "JRE",

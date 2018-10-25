@@ -32,14 +32,14 @@ import java.io.PrintWriter;
 
 public class Log {
 
-    private static Logger delegate = null;
+    private static Logger delegate;
     public static boolean debug = Boolean.getBoolean("javapackager.debug");
 
     public static class Logger {
 
         private boolean verbose;
-        private PrintWriter out = null;
-        private PrintWriter err = null;
+        private PrintWriter out;
+        private PrintWriter err;
 
         public Logger(boolean v) {
             verbose = v;
@@ -132,13 +132,13 @@ public class Log {
 
     public static void info(String msg) {
         if (delegate != null) {
-           delegate.info(msg);
+            delegate.info(msg);
         }
     }
 
     public static void infof(String format, Object... args) {
         if (delegate != null) {
-           delegate.infof(format, args);
+            delegate.infof(format, args);
         }
     }
 
@@ -150,19 +150,19 @@ public class Log {
 
     public static void verbose(String msg) {
         if (delegate != null) {
-           delegate.verbose(msg);
+            delegate.verbose(msg);
         }
     }
 
     public static void verbose(Throwable t) {
         if (delegate != null) {
-           delegate.verbose(t);
+            delegate.verbose(t);
         }
     }
 
     public static void debug(String msg) {
         if (delegate != null) {
-           delegate.debug(msg);
+            delegate.debug(msg);
         }
     }
 

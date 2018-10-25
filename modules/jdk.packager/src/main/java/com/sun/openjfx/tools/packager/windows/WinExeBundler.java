@@ -669,13 +669,13 @@ public class WinExeBundler extends AbstractBundler {
                 registryEntries.append("Root: HKCR; Subkey: \"")
                         .append(entryName)
                         .append("\\shell\\open\\command\"; ValueType: string; ValueName: \"\"; ValueData: \"\"\"{app}\\")
-                        .append(APP_NAME.fetchFrom(params))
+                        .append(APP_FS_NAME.fetchFrom(params))
                         .append("\"\" \"\"%1\"\"\"\r\n");
             } else {
                 registryEntries.append("Root: HKCU; Subkey: \"Software\\Classes\\")
                         .append(entryName)
                         .append("\\shell\\open\\command\"; ValueType: string; ValueName: \"\"; ValueData: \"\"\"{app}\\")
-                        .append(APP_NAME.fetchFrom(params))
+                        .append(APP_FS_NAME.fetchFrom(params))
                         .append("\"\" \"\"%1\"\"\"\r\n");
             }
         }

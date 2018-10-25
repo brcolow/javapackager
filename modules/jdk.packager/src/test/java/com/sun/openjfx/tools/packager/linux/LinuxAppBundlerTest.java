@@ -29,6 +29,7 @@ import com.sun.openjfx.tools.packager.Bundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 import org.junit.After;
@@ -93,7 +94,7 @@ public class LinuxAppBundlerTest {
     @BeforeClass
     public static void prepareApp() throws IOException {
         // only run on linux
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("linux"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.LINUX);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
@@ -107,7 +108,6 @@ public class LinuxAppBundlerTest {
         appResourcesDir = new File("build/tmp/tests", "appResources");
         Files.write(appResourcesDir.toPath().resolve("module-info.class"), new byte[] {}, StandardOpenOption.CREATE);
         fakeMainJar = new File(appResourcesDir, "mainApp.jar");
-
         appResources = new HashSet<>(Arrays.asList(fakeMainJar));
     }
 

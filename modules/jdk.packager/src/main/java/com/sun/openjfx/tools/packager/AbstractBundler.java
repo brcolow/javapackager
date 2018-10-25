@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.Map;
 
@@ -48,11 +49,11 @@ public abstract class AbstractBundler implements Bundler {
             params -> new File(StandardBundlerParam.BUILD_ROOT.fetchFrom(params), "images"),
             (s, p) -> null);
 
-    //do not use file separator -
+    // do not use file separator -
     // we use it for classpath lookup and there / are not platform specific
-    public final static String BUNDLER_PREFIX = "packager/";
+    public static final String BUNDLER_PREFIX = "packager/";
 
-    protected Class baseResourceLoader = null;
+    protected Class baseResourceLoader;
 
     protected void fetchResource(
             String publicName, String category,
@@ -60,7 +61,7 @@ public abstract class AbstractBundler implements Bundler {
             throws IOException {
         InputStream is = streamResource(publicName, category, defaultName, verbose, publicRoot);
         if (is != null) {
-            Files.copy(is, result.toPath());
+            Files.copy(is, result.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } else {
             if (verbose) {
                 Log.info(MessageFormat.format(

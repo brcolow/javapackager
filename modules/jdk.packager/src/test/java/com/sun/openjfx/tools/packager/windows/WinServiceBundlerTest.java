@@ -25,6 +25,7 @@
 
 package com.sun.openjfx.tools.packager.windows;
 
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 
 import org.junit.After;
@@ -89,7 +90,7 @@ public class WinServiceBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on windows
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("win"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.WINDOWS);
 
         Log.setLogger(new Log.Logger(true));
 
@@ -101,8 +102,7 @@ public class WinServiceBundlerTest {
 
         appResources = new HashSet<>(Arrays.asList(fakeMainJar,
                 new File(appResourcesDir, "LICENSE"),
-                new File(appResourcesDir, "LICENSE2")
-        ));
+                new File(appResourcesDir, "LICENSE2")));
     }
 
     @Before

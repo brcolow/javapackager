@@ -48,9 +48,9 @@ import jdk.tools.jlink.internal.packager.AppRuntimeImageBuilder;
 public final class JLinkBundlerHelper {
 
     private static final String JRE_MODULES_FILENAME =
-            "com/sun/openjfx/tools/legacy/jre.list";
+            "com/sun/openjfx/tools/jre.list";
     private static final String SERVER_JRE_MODULES_FILENAME =
-            "com/sun/openjfx/tools/legacy/server.jre.list";
+            "com/sun/openjfx/tools/server.jre.list";
 
     private JLinkBundlerHelper() {}
 

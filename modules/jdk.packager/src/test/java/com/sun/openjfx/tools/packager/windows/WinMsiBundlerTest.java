@@ -30,6 +30,7 @@ import com.sun.openjfx.tools.packager.Bundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
@@ -40,7 +41,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,7 +83,12 @@ import static com.sun.openjfx.tools.packager.windows.WinMsiBundler.PRODUCT_VERSI
 import static com.sun.openjfx.tools.packager.windows.WindowsBundlerParam.WIN_RUNTIME;
 import static com.sun.openjfx.tools.packager.windows.WindowsBundlerParam.MENU_GROUP;
 import static com.sun.openjfx.tools.packager.windows.WindowsBundlerParam.INSTALLDIR_CHOOSER;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class WinMsiBundlerTest {
 
@@ -99,7 +104,7 @@ public class WinMsiBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on windows
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("win"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.WINDOWS);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
@@ -118,8 +123,7 @@ public class WinMsiBundlerTest {
 
         appResources = new HashSet<>(Arrays.asList(fakeMainJar,
                 new File(appResourcesDir, "LICENSE-RTF.rtf"),
-                new File(appResourcesDir, "LICENSE")
-        ));
+                new File(appResourcesDir, "LICENSE")));
     }
 
     @Before
@@ -178,10 +182,8 @@ public class WinMsiBundlerTest {
         bundleParams.put(APP_NAME.getID(), "Smoke Test");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
-        bundleParams.put(MAIN_JAR.getID(),
-                new RelativeFileSet(fakeMainJar.getParentFile(),
-                        new HashSet<>(Arrays.asList(fakeMainJar)))
-        );
+        bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
+                new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(LICENSE_FILE.getID(), Arrays.asList("LICENSE", "LICENSE-RTF.rtf"));
@@ -212,7 +214,6 @@ public class WinMsiBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
 
         File output = bundler.execute(bundleParams, new File(workDir, "BareMinimum"));
@@ -232,9 +233,7 @@ public class WinMsiBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(VERBOSE.getID(), true);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-
         bundleParams.put(WinMsiBundler.TOOL_LIGHT_EXECUTABLE.getID(), "c:\\MissingTool.exe");
 
         File output = bundler.execute(bundleParams, new File(workDir, "BadLight"));
@@ -252,9 +251,7 @@ public class WinMsiBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(VERBOSE.getID(), true);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-
         bundleParams.put(WinMsiBundler.TOOL_LIGHT_EXECUTABLE.getID(), null);
 
         File output = bundler.execute(bundleParams, new File(workDir, "NullLight"));
@@ -272,9 +269,7 @@ public class WinMsiBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(VERBOSE.getID(), true);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-
         bundleParams.put(WinMsiBundler.TOOL_CANDLE_EXECUTABLE.getID(), "c:\\MissingTool.exe");
 
         File output = bundler.execute(bundleParams, new File(workDir, "BadCandle"));
@@ -292,9 +287,7 @@ public class WinMsiBundlerTest {
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
         bundleParams.put(VERBOSE.getID(), true);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
-
         bundleParams.put(WinMsiBundler.TOOL_CANDLE_EXECUTABLE.getID(), null);
 
         File output = bundler.execute(bundleParams, new File(workDir, "NullCandle"));
@@ -308,7 +301,6 @@ public class WinMsiBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(LICENSE_FILE.getID(), "BOGUS_LICENSE");
 
@@ -321,13 +313,11 @@ public class WinMsiBundlerTest {
         String[] invalidVersions = {"alpha", "1.0-alpha", "10.300", "300", "10.10.100000"};
 
         for(String v: validVersions) {
-            assertTrue("Expect to be valid ["+v+"]",
-                    com.sun.openjfx.tools.packager.windows.WinMsiBundler.isVersionStringValid(v));
+            assertTrue("Expect to be valid ["+v+"]", WinMsiBundler.isVersionStringValid(v));
         }
 
         for(String v: invalidVersions) {
-            assertFalse("Expect to be invalid ["+v+"]",
-                    com.sun.openjfx.tools.packager.windows.WinMsiBundler.isVersionStringValid(v));
+            assertFalse("Expect to be invalid ["+v+"]", WinMsiBundler.isVersionStringValid(v));
         }
     }
 
@@ -534,13 +524,10 @@ public class WinMsiBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_NAME.getID(), appName);
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
-        bundleParams.put(MAIN_JAR.getID(),
-                new RelativeFileSet(fakeMainJar.getParentFile(),
-                        new HashSet<>(Arrays.asList(fakeMainJar)))
-        );
+        bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
+                new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(VERBOSE.getID(), true);

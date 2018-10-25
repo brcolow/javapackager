@@ -35,7 +35,7 @@ public class JreUtils {
         String regex;
         boolean includeRule;
         Type type;
-        enum Type {SUFFIX, PREFIX, SUBSTR, REGEX}
+        enum Type { SUFFIX, PREFIX, SUBSTR, REGEX }
 
         private Rule(String regex, boolean includeRule, Type type) {
             this.regex = regex;
@@ -56,11 +56,14 @@ public class JreUtils {
             return str.matches(regex);
         }
 
-        boolean treatAsAccept() {return includeRule;}
+        boolean treatAsAccept() {
+            return includeRule;
+        }
 
         public static Rule suffix(String s) {
             return new Rule(s, true, Type.SUFFIX);
         }
+
         public static Rule suffixNeg(String s) {
             return new Rule(s, false, Type.SUFFIX);
         }
@@ -78,7 +81,7 @@ public class JreUtils {
         }
     }
 
-    private static boolean shouldExclude(File baseDir, File f, Rule ruleset[]) {
+    private static boolean shouldExclude(File baseDir, File f, Rule[] ruleset) {
         if (ruleset == null) {
             return false;
         }
@@ -86,7 +89,7 @@ public class JreUtils {
         String fname = f.getAbsolutePath().toLowerCase().substring(
                 baseDir.getAbsolutePath().length());
         // first rule match defines the answer
-        for (Rule r: ruleset) {
+        for (Rule r : ruleset) {
             if (r.match(fname)) {
                 return !r.treatAsAccept();
             }
@@ -124,7 +127,9 @@ public class JreUtils {
 
     public static RelativeFileSet extractJreAsRelativeFileSet(
             String root, JreUtils.Rule[] ruleset, boolean acceptSymlinks) {
-        if (root.isEmpty()) return null;
+        if (root.isEmpty()) {
+            return null;
+        }
 
         File baseDir = new File(root);
 
