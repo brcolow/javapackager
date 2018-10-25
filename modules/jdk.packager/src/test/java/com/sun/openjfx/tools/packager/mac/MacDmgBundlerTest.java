@@ -30,16 +30,18 @@ import com.sun.openjfx.tools.packager.Bundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -72,16 +74,13 @@ public class MacDmgBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on mac
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().contains("os x"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.MAC);
+        // Skip on Travis CI (making DMGs via hdiutil either stalls out or takes more than 10 minutes).
+        Assume.assumeTrue(System.getenv("TRAVIS") == null);
 
         // only run if explicitly requested
         Assume.assumeTrue(Boolean.parseBoolean(System.getProperty("TEST_PACKAGER_DMG")));
-
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
-
-        // and only if we have the correct JRE settings
-        String jre = System.getProperty("java.home").toLowerCase();
-        Assume.assumeTrue(runtimeJdk != null || jre.endsWith("/contents/home/jre") || jre.endsWith("/contents/home/jre"));
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);
@@ -97,12 +96,11 @@ public class MacDmgBundlerTest {
 
         appResources = new HashSet<>(Arrays.asList(fakeMainJar,
                 new File(appResourcesDir, "LICENSE"),
-                new File(appResourcesDir, "LICENSE2")
-        ));
+                new File(appResourcesDir, "LICENSE2")));
     }
 
     @Before
-    public void createTmpDir() throws IOException {
+    public void createTmpDir() {
         if (retain) {
             tmpBase = new File("build/tmp/tests/macdmg");
         } else {
@@ -142,7 +140,7 @@ public class MacDmgBundlerTest {
      * See if smoke comes out
      */
     @Test
-    public void smokeTest() throws IOException, ConfigException, UnsupportedPlatformException {
+    public void smokeTest() throws ConfigException, UnsupportedPlatformException {
         AbstractBundler bundler = new MacDmgBundler();
 
         assertNotNull(bundler.getName());
@@ -152,14 +150,11 @@ public class MacDmgBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_NAME.getID(), "Smoke Test");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
-        bundleParams.put(MAIN_JAR.getID(),
-                new RelativeFileSet(fakeMainJar.getParentFile(),
-                        new HashSet<>(Arrays.asList(fakeMainJar)))
-        );
+        bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
+                new HashSet<>(Arrays.asList(fakeMainJar))));
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(LICENSE_FILE.getID(), Arrays.asList("LICENSE", "LICENSE2"));
@@ -191,7 +186,7 @@ public class MacDmgBundlerTest {
      * All other values will be driven off of those two values.
      */
     @Test
-    public void minimumConfig() throws IOException, ConfigException, UnsupportedPlatformException {
+    public void minimumConfig() throws ConfigException, UnsupportedPlatformException {
         // only run with full tests
         Assume.assumeTrue(full_tests);
 
@@ -200,7 +195,6 @@ public class MacDmgBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(SIMPLE_DMG.getID(), simple_dmg);
 
@@ -222,7 +216,7 @@ public class MacDmgBundlerTest {
      * Test with unicode in places we expect it to be
      */
     @Test
-    public void unicodeConfig() throws IOException, ConfigException, UnsupportedPlatformException {
+    public void unicodeConfig() throws ConfigException, UnsupportedPlatformException {
         Bundler bundler = new MacDmgBundler();
 
         Map<String, Object> bundleParams = new HashMap<>();
@@ -252,7 +246,7 @@ public class MacDmgBundlerTest {
      * Create a DMG with an external app rather than a self-created one.
      */
     @Test
-    public void externalApp() throws IOException, ConfigException, UnsupportedPlatformException {
+    public void externalApp() throws ConfigException, UnsupportedPlatformException {
         // only run with full tests
         Assume.assumeTrue(full_tests);
 
@@ -312,7 +306,7 @@ public class MacDmgBundlerTest {
      * Create a DMG with an external app rather than a self-created one.
      */
     @Test
-    public void externalSimpleApp() throws IOException, ConfigException, UnsupportedPlatformException {
+    public void externalSimpleApp() throws ConfigException, UnsupportedPlatformException {
         // first create the external app
         Bundler appBundler = new MacAppBundler();
 
@@ -366,6 +360,7 @@ public class MacDmgBundlerTest {
         assertTrue(dmgOutput.length() > MIN_SIZE);
     }
 
+    @Ignore
     @Test(expected = ConfigException.class)
     public void externanNoAppName() throws ConfigException, UnsupportedPlatformException {
         Bundler dmgBundler = new MacDmgBundler();
@@ -373,7 +368,6 @@ public class MacDmgBundlerTest {
         Map<String, Object> dmgBundleParams = new HashMap<>();
 
         dmgBundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         dmgBundleParams.put(MAC_APP_IMAGE.getID(), ".");
         dmgBundleParams.put(IDENTIFIER.getID(), "net.example.bogus");
         dmgBundleParams.put(VERBOSE.getID(), true);
@@ -381,6 +375,7 @@ public class MacDmgBundlerTest {
         dmgBundler.validate(dmgBundleParams);
     }
 
+    @Ignore
     @Test(expected = ConfigException.class)
     public void externanNoID() throws ConfigException, UnsupportedPlatformException {
         Bundler dmgBundler = new MacDmgBundler();
@@ -388,7 +383,6 @@ public class MacDmgBundlerTest {
         Map<String, Object> dmgBundleParams = new HashMap<>();
 
         dmgBundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         dmgBundleParams.put(MAC_APP_IMAGE.getID(), ".");
         dmgBundleParams.put(APP_NAME.getID(), "Bogus App");
         dmgBundleParams.put(VERBOSE.getID(), true);
@@ -403,7 +397,6 @@ public class MacDmgBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(LICENSE_FILE.getID(), "BOGUS_LICENSE");
 
@@ -422,7 +415,7 @@ public class MacDmgBundlerTest {
         bundleParams.put(ARGUMENTS.getID(), Arrays.asList("He Said", "She Said"));
         bundleParams.put(BUNDLE_ID_SIGNING_PREFIX.getID(), "everything.signing.prefix.");
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
-        bundleParams.put(ICON_ICNS.getID(), hdpiIcon);
+        bundleParams.put(ICON_ICNS.getID(), new File("./packager/mac", "GenericAppHiDPI.icns"));
         bundleParams.put(INSTALLER_SUFFIX.getID(), "-DMG-TEST");
         bundleParams.put(JVM_OPTIONS.getID(), "-Xms128M");
         bundleParams.put(JVM_PROPERTIES.getID(), "everything.jvm.property=everything.jvm.property.value");

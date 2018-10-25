@@ -140,10 +140,8 @@ public class SimpleBundle {
 
             bundleParams.put(APP_NAME.getID(), "DevTest");
             bundleParams.put(MAIN_CLASS.getID(), "hello.TestPackager");
-            bundleParams.put(MAIN_JAR.getID(),
-                    new RelativeFileSet(fakeMainJar.getParentFile(),
-                            new HashSet<>(Arrays.asList(fakeMainJar)))
-            );
+            bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
+                    new HashSet<>(Arrays.asList(fakeMainJar))));
             bundleParams.put(CLASSPATH.getID(), fakeMainJar.getName());
             bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
             bundleParams.put(VERBOSE.getID(), true);

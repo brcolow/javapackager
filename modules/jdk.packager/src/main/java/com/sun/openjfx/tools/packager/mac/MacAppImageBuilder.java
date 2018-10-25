@@ -65,6 +65,7 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -353,22 +354,21 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
 
         // Copy icon to Resources folder
         File icon = ICON_ICNS.fetchFrom(params);
-        InputStream in = locateResource("packager/mac/" + APP_NAME.fetchFrom(params) + ".icns",
+        InputStream in = locateResource(APP_FS_NAME.fetchFrom(params) + ".icns",
                 "icon",
                 DEFAULT_ICNS_ICON.fetchFrom(params),
                 icon,
                 VERBOSE.fetchFrom(params),
                 DROP_IN_RESOURCES_ROOT.fetchFrom(params));
-        Files.copy(in, resourcesDir.resolve(APP_NAME.fetchFrom(params) + ".icns"));
+        Files.copy(in, resourcesDir.resolve(APP_FS_NAME.fetchFrom(params) + ".icns"));
 
         // copy file association icons
         for (Map<String, ? super Object> fa : FILE_ASSOCIATIONS.fetchFrom(params)) {
             file = FA_ICON.fetchFrom(fa);
             if (file != null && file.exists()) {
                 try (InputStream in2 = new FileInputStream(file)) {
-                    Files.copy(in2, resourcesDir.resolve(file.getName()));
+                    Files.copy(in2, resourcesDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
                 }
-
             }
         }
 
@@ -399,15 +399,15 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
 
 
     private String getLauncherName(Map<String, ? super Object> params) {
-        if (APP_NAME.fetchFrom(params) != null) {
-            return APP_NAME.fetchFrom(params);
+        if (APP_FS_NAME.fetchFrom(params) != null) {
+            return APP_FS_NAME.fetchFrom(params);
         } else {
             return MAIN_CLASS.fetchFrom(params);
         }
     }
 
     private static String getLauncherCfgName(Map<String, ? super Object> p) {
-        return "Contents/Java/" + APP_NAME.fetchFrom(p) + ".cfg";
+        return "Contents/Java/" + APP_FS_NAME.fetchFrom(p) + ".cfg";
     }
 
     private void copyClassPathEntries(Path javaDirectory) throws IOException {
@@ -432,8 +432,8 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                         "For a better Mac experience consider shortening it.", MAC_CF_BUNDLE_NAME.getID(), bn));
             }
             return MAC_CF_BUNDLE_NAME.fetchFrom(params);
-        } else if (APP_NAME.fetchFrom(params) != null) {
-            return APP_NAME.fetchFrom(params);
+        } else if (APP_FS_NAME.fetchFrom(params) != null) {
+            return APP_FS_NAME.fetchFrom(params);
         } else {
             String nm = MAIN_CLASS.fetchFrom(params);
             if (nm.length() > 16) {
@@ -467,7 +467,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         //prepare config for exe
         //Note: do not need CFBundleDisplayName if we do not support localization
         Map<String, String> data = new HashMap<>();
-        data.put("DEPLOY_ICON_FILE", APP_NAME.fetchFrom(params) + ".icns");
+        data.put("DEPLOY_ICON_FILE", APP_FS_NAME.fetchFrom(params) + ".icns");
         data.put("DEPLOY_BUNDLE_IDENTIFIER",
                 MAC_CF_BUNDLE_IDENTIFIER.fetchFrom(params));
         data.put("DEPLOY_BUNDLE_NAME",
@@ -769,7 +769,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
 
     public static void signAppBundle(Map<String, ? super Object> params, Path appLocation, String signingIdentity, String identifierPrefix, String entitlementsFile, String inheritedEntitlements) throws IOException {
         AtomicReference<IOException> toThrow = new AtomicReference<>();
-        String appExecutable = "/Contents/MacOS/" + APP_NAME.fetchFrom(params);
+        String appExecutable = "/Contents/MacOS/" + APP_FS_NAME.fetchFrom(params);
         String keyChain = SIGNING_KEYCHAIN.fetchFrom(params);
 
         // sign all dylibs and jars

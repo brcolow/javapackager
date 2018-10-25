@@ -295,6 +295,8 @@ project(":fxpackagerservices") {
 
 project(":fxpackager") {
     apply plugin: 'java'
+    // apply plugin: 'checkstyle'
+
     project.ext.buildModule = true
     project.ext.moduleName = "com.brcolow.javapackager"
     project.ext.moduleSourcePath = defaultModuleSourcePath
@@ -318,6 +320,22 @@ project(":fxpackager") {
     jar {
         from "$buildDir/generated-resources"
     }
+
+//    checkstyle {
+//        configFile = rootProject.file("gradle/check/checkstyle.xml")
+//        showViolations = true
+//        ignoreFailures = false
+//        toolVersion = "8.13"
+//    }
+//
+//    // Decrease verbosity (printing of XSL style sheets, etc.)
+//    [checkstyleMain, checkstyleTest].each { task ->
+//        task.logging.setLevel(LogLevel.LIFECYCLE)
+//    }
+//
+//    // exclude module info files for Java 9
+//    checkstyleMain.exclude "**/module-info.java"
+//    checkstyleTest.exclude "**/module-info.java"
 
     commonModuleSetup(project, [ 'fxpackagerservices', 'fxpackager' ])
 
@@ -1168,7 +1186,7 @@ project(":fxpackager") {
 
     task copyRedistributableFiles(type: Copy) {
         def sourceDir = "src/tools/java/legacy"
-        def resourceDir = "com/sun/openjfx/legacy"
+        def resourceDir = "src/main/resources/com/sun/openjfx"
 
         from "$sourceDir/jre.list"
         into project.file("$resourceDir")

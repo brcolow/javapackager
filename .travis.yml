@@ -35,19 +35,17 @@ matrix:
       osx_image: xcode10
 
 before_script:
-  - wget https://services.gradle.org/distributions/gradle-4.10.2-bin.zip
-  - unzip gradle-4.10.2-bin.zip
-  - export GRADLE_HOME=$PWD/gradle-4.10.2
-  - export PATH=$GRADLE_HOME/bin:$PATH
-  - echo $JAVA_OPTS
-  - echo $GRADLE_OPTS
-  - chmod +x gradlew
+  - |
+    if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+      brew upgrade openssl@1.1
+      export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
+      openssl version
+    fi
 
 # skip install stage.
 install: true
 
-script: ./gradlew build --no-daemon
+script: ./gradlew build --no-daemon -Pjavapackager.debug=true -PTEST_PACKAGER_DMG=false
 
 notifications:
   email: false
-

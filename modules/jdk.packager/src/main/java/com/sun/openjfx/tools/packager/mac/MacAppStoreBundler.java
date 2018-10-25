@@ -49,9 +49,9 @@ import static com.sun.openjfx.tools.packager.mac.MacAppBundler.*;
 
 public class MacAppStoreBundler extends MacBaseInstallerBundler {
 
-    private static final String TEMPLATE_BUNDLE_ICON_HIDPI = "GenericAppHiDPI.icns";
-    private final static String DEFAULT_ENTITLEMENTS = "MacAppStore.entitlements";
-    private final static String DEFAULT_INHERIT_ENTITLEMENTS = "MacAppStore_Inherit.entitlements";
+    private static final String TEMPLATE_BUNDLE_ICON_HIDPI = "/packager/mac/GenericAppHiDPI.icns";
+    private static final String DEFAULT_ENTITLEMENTS = "/packager/mac/MacAppStore.entitlements";
+    private static final String DEFAULT_INHERIT_ENTITLEMENTS = "/packager/mac/MacAppStore_Inherit.entitlements";
 
     public static final BundlerParamInfo<String> MAC_APP_STORE_APP_SIGNING_KEY = new StandardBundlerParam<>(
             "Application Signing Key",

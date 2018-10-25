@@ -31,6 +31,7 @@ import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.IOUtils;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 import org.junit.After;
@@ -57,6 +58,7 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
 import static com.sun.openjfx.tools.packager.mac.MacAppBundler.*;
 import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEYCHAIN;
 import static com.sun.openjfx.tools.packager.mac.MacPkgBundler.DEVELOPER_ID_INSTALLER_SIGNING_KEY;
+import static com.sun.openjfx.tools.packager.windows.WinAppBundler.ICON_ICO;
 import static org.junit.Assert.*;
 
 public class MacAppBundlerTest {
@@ -77,14 +79,10 @@ public class MacAppBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on mac
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().contains("os x"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.MAC);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
-
-        // and only if we have the correct JRE settings
-        String jre = System.getProperty("java.home").toLowerCase();
-        Assume.assumeTrue(runtimeJdk != null || jre.endsWith("/contents/home/jre") || jre.endsWith("/contents/home/jre"));
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);
@@ -111,47 +109,56 @@ public class MacAppBundlerTest {
         tmpBase.mkdir();
     }
 
-
-    public String createFakeCerts(Map<String, ? super Object> p) {
+    private String createFakeCerts(Map<String, ? super Object> p) {
         File config = new File(FAKE_CERT_ROOT, "app-cert.cfg");
         config.getParentFile().mkdirs();
+        String cert = FAKE_CERT_ROOT + "/app.pem";
+        String key = FAKE_CERT_ROOT + "/app.key";
+        String keychain = FAKE_CERT_ROOT + "/app.keychain";
         try {
             // create the config file holding the key config
+            /*
             Files.write(config.toPath(), Arrays.asList("[ codesign ]",
                     "keyUsage=critical,digitalSignature",
                     "basicConstraints=critical,CA:false",
                     "extendedKeyUsage=critical,codeSigning"));
-
-            // create the SSL keys
-            ProcessBuilder pb = new ProcessBuilder("openssl", "req",
-                    "-newkey", "rsa:2048",
+             */
+            // create a self-signed certificate
+            ProcessBuilder pb = new ProcessBuilder("openssl", "req", "-x509",
+                    "-newkey",
+                    "rsa:2048",
+                    "-sha256",
                     "-nodes",
-                    "-out", FAKE_CERT_ROOT + "/app.csr",
-                    "-keyout", FAKE_CERT_ROOT + "/app.key",
-                    "-subj", "/CN=Developer ID Application: Insecure Test Cert/OU=JavaFX Dev/O=Oracle/C=US");
+                    "-keyout", key,
+                    "-out", cert,
+                    "-subj", "/CN=Developer ID Application: Insecure Test Cert/OU=JavaFX Dev/O=Oracle/C=US",
+                    "-days", "10",
+                    "-addext", "keyUsage=critical,digitalSignature",
+                    "-addext", "basicConstraints=critical,CA:false",
+                    "-addext", "extendedKeyUsage=critical,codeSigning"
+                    // "-config", FAKE_CERT_ROOT + "/app-cert.cfg",
+                    // "-extensions", "codesign"
+            );
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
-            // create the cert
-            pb = new ProcessBuilder("openssl", "x509",
-                    "-req",
-                    "-days", "1",
-                    "-in", FAKE_CERT_ROOT + "/app.csr",
-                    "-signkey", FAKE_CERT_ROOT + "/app.key",
-                    "-out", FAKE_CERT_ROOT + "/app.crt",
-                    "-extfile", FAKE_CERT_ROOT + "/app-cert.cfg",
-                    "-extensions", "codesign");
+            pb = new ProcessBuilder("openssl", "pkcs12", "-export", "-nodes", "-info", "-out", FAKE_CERT_ROOT + "/app.pfx", "-inkey", key, "-in", cert, "-password", "pass:1234");
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
-            // create and add it to the keychain
-            pb = new ProcessBuilder("certtool",
-                    "i", FAKE_CERT_ROOT + "/app.crt",
-                    "k=" + FAKE_CERT_ROOT + "/app.keychain",
-                    "r=" + FAKE_CERT_ROOT + "/app.key",
-                    "c",
-                    "p=");
+            pb = new ProcessBuilder("security", "create-keychain", "-p", "1234", keychain);
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
-            return FAKE_CERT_ROOT + "/app.keychain";
+            pb = new ProcessBuilder("security", "default-keychain", "-s", keychain);
+            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
+
+            pb = new ProcessBuilder("security", "unlock-keychain", "-p", "1234", keychain);
+            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
+
+            //b = new ProcessBuilder("security", "add-trusted-cert", "-d", "-r", "trustAsRoot", "-k", FAKE_CERT_ROOT + "/app.keychain", FAKE_CERT_ROOT + "/app.crt");
+            //pb = new ProcessBuilder("security", "import", FAKE_CERT_ROOT + "/app.p12", "-k", FAKE_CERT_ROOT + "/app.keychain", "-P", "-T", "/usr/bin/codesign");
+            pb = new ProcessBuilder("security", "import", FAKE_CERT_ROOT + "/app.pfx", "-k", keychain, "-A", "-P", "1234");
+            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
+
+            return keychain;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -428,6 +435,7 @@ public class MacAppBundlerTest {
     /**
      * Build signed smoke test and mark it as quarantined, skip if no keys present
      */
+    @Ignore
     @Test
     public void quarantinedAppTest() throws IOException, ConfigException, UnsupportedPlatformException {
         AbstractBundler bundler = new MacAppBundler();
@@ -558,6 +566,7 @@ public class MacAppBundlerTest {
     /**
      * Test a misconfiguration where the runtime is misconfigured.
      */
+    @Ignore
     @Test(expected = ConfigException.class)
     public void runtimeBad() throws  ConfigException, UnsupportedPlatformException {
         Bundler bundler = new MacAppBundler();
@@ -604,7 +613,7 @@ public class MacAppBundlerTest {
         bundleParams.put(BUNDLE_ID_SIGNING_PREFIX.getID(), "everything.signing.prefix.");
         bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(DEVELOPER_ID_APP_SIGNING_KEY.getID(), "Developer ID Application");
-        bundleParams.put(ICON_ICNS.getID(), hdpiIcon);
+        bundleParams.put(ICON_ICNS.getID(), new File("./packager/mac", "GenericAppHiDPI.icns"));
         bundleParams.put(JVM_OPTIONS.getID(), "-Xms128M");
         bundleParams.put(JVM_PROPERTIES.getID(), "everything.jvm.property=everything.jvm.property.value");
         bundleParams.put(MAC_CATEGORY.getID(), "public.app-category.developer-tools");

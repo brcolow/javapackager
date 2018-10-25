@@ -149,7 +149,7 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
             "mac.installerName",
             String.class,
             params -> {
-                String nm = APP_NAME.fetchFrom(params);
+                String nm = APP_FS_NAME.fetchFrom(params);
                 if (nm == null) return null;
 
                 String version = VERSION.fetchFrom(params);
@@ -248,12 +248,14 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
             searchOptions.add(key);
             searchOptions.add("-a");
             if (keychainName != null && !keychainName.isEmpty()) {
-                searchOptions.add(keychainName);
+                // searchOptions.add(keychainName);
             }
 
             ProcessBuilder pb = new ProcessBuilder(searchOptions);
-
             IOUtils.exec(pb, verbose, false, ps);
+
+            System.out.println("Inside MacBaseInstallerBundler#findKey");
+            System.out.println("baos.toString(): " + baos.toString());
             Pattern p = Pattern.compile("\"alis\"<blob>=\"([^\"]+)\"");
             Matcher m = p.matcher(baos.toString());
             if (!m.find()) {

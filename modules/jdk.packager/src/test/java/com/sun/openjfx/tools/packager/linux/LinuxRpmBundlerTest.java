@@ -48,6 +48,7 @@ import com.sun.openjfx.tools.packager.Bundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
@@ -108,12 +109,14 @@ public class LinuxRpmBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on linux
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("linux"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.LINUX);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
 
-        Assume.assumeTrue(LinuxRpmBundler.testTool(LinuxRpmBundler.TOOL_RPMBUILD, LinuxRpmBundler.TOOL_RPMBUILD_MIN_VERSION));
+        Assume.assumeTrue("rpmbuild was not found - skipping RPM tests",
+                LinuxRpmBundler.testTool(LinuxRpmBundler.TOOL_RPMBUILD,
+                LinuxRpmBundler.TOOL_RPMBUILD_MIN_VERSION));
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);

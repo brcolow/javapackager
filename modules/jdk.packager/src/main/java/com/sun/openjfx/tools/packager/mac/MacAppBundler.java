@@ -24,18 +24,6 @@
  */
 package com.sun.openjfx.tools.packager.mac;
 
-import com.sun.openjfx.tools.packager.AbstractImageBundler;
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.EnumeratedBundlerParam;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.Platform;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-
-import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
-
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -46,16 +34,47 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
-import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.*;
 import com.sun.openjfx.tools.packager.AbstractAppImageBuilder;
+import com.sun.openjfx.tools.packager.AbstractImageBundler;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.EnumeratedBundlerParam;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ARGUMENTS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CATEGORY;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CLASSPATH;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_OPTIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_JAR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.PREFERENCES_ID;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.PRELOADER_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.USER_JVM_OPTIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
+import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEYCHAIN;
+import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEY_USER;
+import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.getPredefinedImage;
 
 public class MacAppBundler extends AbstractImageBundler {
 
-    public final static String MAC_BUNDLER_PREFIX =
+    public static final String MAC_BUNDLER_PREFIX =
             BUNDLER_PREFIX + "macosx" + File.separator;
 
-    private static final String TEMPLATE_BUNDLE_ICON = "GenericApp.icns";
+    private static final String TEMPLATE_BUNDLE_ICON = "/packager/mac/GenericApp.icns";
 
     private static Map<String, String> getMacCategories() {
         Map<String, String> map = new HashMap<>();
@@ -241,7 +260,7 @@ public class MacAppBundler extends AbstractImageBundler {
             return false;
         }
 
-        String p[] = v.split("\\.");
+        String[] p = v.split("\\.");
         if (p.length > 3 || p.length < 1) {
             Log.verbose("Version sting may have between 1 and 3 numbers: 1, 1.2, 1.2.3.");
             return false;
@@ -289,7 +308,7 @@ public class MacAppBundler extends AbstractImageBundler {
         }
     }
 
-    //to be used by chained bundlers, e.g. by EXE bundler to avoid
+    // to be used by chained bundlers, e.g. by EXE bundler to avoid
     // skipping validation if p.type does not include "image"
     public boolean doValidate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
         if (Platform.getPlatform() != Platform.MAC) {
@@ -304,8 +323,7 @@ public class MacAppBundler extends AbstractImageBundler {
 
         // validate short version
         if (!validCFBundleVersion(MAC_CF_BUNDLE_VERSION.fetchFrom(p))) {
-            throw new ConfigException(
-                    "Invalid CFBundleVersion - ''{0}''",
+            throw new ConfigException("Invalid CFBundleVersion - ''{0}''",
                     "Set a compatible 'appVersion' or set a 'mac.CFBundleVersion'.  Valid versions are one to three " +
                             "integers separated by dots.");
         }
@@ -314,8 +332,7 @@ public class MacAppBundler extends AbstractImageBundler {
         if (Optional.ofNullable(SIGN_BUNDLE.fetchFrom(p)).orElse(Boolean.FALSE)) {
             String signingIdentity = DEVELOPER_ID_APP_SIGNING_KEY.fetchFrom(p);
             if (signingIdentity == null) {
-                throw new ConfigException(
-                        "Signature explicitly requested but no signing certificate specified.",
+                throw new ConfigException("Signature explicitly requested but no signing certificate specified.",
                         "Either specify a valid cert in 'mac.signing-key-developer-id-app' or unset 'signBundle' or " +
                                 "set 'signBundle' to false.");
             }
@@ -329,9 +346,8 @@ public class MacAppBundler extends AbstractImageBundler {
     }
 
     private File getConfig_Icon(Map<String, ? super Object> params) {
-        return new File(CONFIG_ROOT.fetchFrom(params), APP_NAME.fetchFrom(params) + ".icns");
+        return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + ".icns");
     }
-
 
     File doBundle(Map<String, ? super Object> p, File outputDirectory, boolean dependentTask) {
         try {
@@ -345,7 +361,7 @@ public class MacAppBundler extends AbstractImageBundler {
             }
 
             // Create directory structure
-            File rootDirectory = new File(outputDirectory, APP_NAME.fetchFrom(p) + ".app");
+            File rootDirectory = new File(outputDirectory, APP_FS_NAME.fetchFrom(p) + ".app");
             IOUtils.deleteRecursive(rootDirectory);
             rootDirectory.mkdirs();
 
@@ -365,7 +381,7 @@ public class MacAppBundler extends AbstractImageBundler {
             Log.verbose(ex);
             return null;
         } catch (Exception ex) {
-            Log.info("Exception: "+ex);
+            Log.info("Exception: " + ex);
             Log.debug(ex);
             return null;
         }
@@ -406,8 +422,7 @@ public class MacAppBundler extends AbstractImageBundler {
     }
 
     public static Collection<BundlerParamInfo<?>> getAppBundleParameters() {
-        return Arrays.asList(
-                APP_NAME,
+        return Arrays.asList(APP_NAME,
                 APP_RESOURCES,
                 ARGUMENTS,
                 BUNDLE_ID_SIGNING_PREFIX,
@@ -426,8 +441,7 @@ public class MacAppBundler extends AbstractImageBundler {
                 PRELOADER_CLASS,
                 SIGNING_KEYCHAIN,
                 USER_JVM_OPTIONS,
-                VERSION
-        );
+                VERSION);
     }
 
 

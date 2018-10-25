@@ -48,7 +48,7 @@ import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
 public class MacDaemonBundler extends AbstractBundler {
 
-    private static final String TEMPLATE_LAUNCHD_PLIST  = "launchd.plist.template";
+    private static final String TEMPLATE_LAUNCHD_PLIST  = "/packager/mac/launchd.plist.template";
 
     public final static String MAC_BUNDLER_PREFIX =
             BUNDLER_PREFIX + "macosx" + File.separator;
@@ -85,12 +85,12 @@ public class MacDaemonBundler extends AbstractBundler {
     }
 
     public String getAppName(Map<String, ? super Object> params) {
-        return APP_NAME.fetchFrom(params) + ".app";
+        return APP_FS_NAME.fetchFrom(params) + ".app";
     }
 
     private String getLauncherName(Map<String, ? super Object> params) {
-        if (APP_NAME.fetchFrom(params) != null) {
-            return APP_NAME.fetchFrom(params);
+        if (APP_FS_NAME.fetchFrom(params) != null) {
+            return APP_FS_NAME.fetchFrom(params);
         } else {
             return MAIN_CLASS.fetchFrom(params);
         }
@@ -148,7 +148,7 @@ public class MacDaemonBundler extends AbstractBundler {
                     outputDirectory.getAbsolutePath()));
         }
 
-        File rootDirectory = null;
+        File rootDirectory;
 
         try {
             //prepare config resources (we will copy them to the bundle later)
@@ -156,7 +156,7 @@ public class MacDaemonBundler extends AbstractBundler {
             prepareConfigFiles(params);
 
             // Create directory structure
-            rootDirectory = new File(outputDirectory, APP_NAME.fetchFrom(params) + ".daemon");
+            rootDirectory = new File(outputDirectory, APP_FS_NAME.fetchFrom(params) + ".daemon");
             IOUtils.deleteRecursive(rootDirectory);
             rootDirectory.mkdirs();
 

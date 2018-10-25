@@ -30,6 +30,7 @@ import com.sun.openjfx.tools.packager.Bundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 import org.junit.After;
@@ -104,7 +105,7 @@ public class WinExeBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on windows
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("win"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.WINDOWS);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");

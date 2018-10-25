@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -48,6 +49,7 @@ import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.BundlersTest;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
@@ -111,12 +113,13 @@ public class LinuxDebBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on linux
-        assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("linux"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.LINUX);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
 
-        assumeTrue(LinuxDebBundler.testTool(LinuxDebBundler.TOOL_DPKG, "1"));
+        assumeTrue("dpkg was not found - skipping PKG tests",
+                LinuxDebBundler.testTool(LinuxDebBundler.TOOL_DPKG, "1"));
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);
@@ -127,7 +130,6 @@ public class LinuxDebBundlerTest {
         appResourcesDir = Paths.get("./build/tmp/tests/appResources").toFile();
         fakeMainJar = new File("./build/tmp/tests/appResources", "mainApp.jar");
         appResources = new HashSet<>(Arrays.asList(fakeMainJar,
-                //new File(appResourcesDir, "template.desktop"),
                 new File(appResourcesDir, "LICENSE"),
                 new File(appResourcesDir, "LICENSE2")));
     }

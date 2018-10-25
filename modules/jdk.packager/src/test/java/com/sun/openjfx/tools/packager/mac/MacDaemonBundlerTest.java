@@ -40,6 +40,7 @@ import java.util.Map;
 import com.sun.openjfx.tools.packager.AbstractBundler;
 import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
 import org.junit.After;
@@ -62,13 +63,9 @@ public class MacDaemonBundlerTest {
     @BeforeClass
     public static void prepareApp() {
         // only run on mac
-        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().contains("os x"));
+        Assume.assumeTrue(Platform.getPlatform() == Platform.MAC);
 
         runtimeJdk = System.getenv("PACKAGER_JDK_ROOT");
-
-        // and only if we have the correct JRE settings
-        String jre = System.getProperty("java.home").toLowerCase();
-        Assume.assumeTrue(runtimeJdk != null || jre.endsWith("/contents/home/jre") || jre.endsWith("/contents/home/jre"));
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);

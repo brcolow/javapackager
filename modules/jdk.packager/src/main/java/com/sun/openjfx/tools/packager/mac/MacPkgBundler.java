@@ -25,15 +25,6 @@
 
 package com.sun.openjfx.tools.packager.mac;
 
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Platform;
-import com.sun.openjfx.tools.packager.RelativeFileSet;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -41,6 +32,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,12 +43,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_FILE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SERVICE_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 
 public class MacPkgBundler extends MacBaseInstallerBundler {
 
-    public final static String MAC_BUNDLER_PREFIX = BUNDLER_PREFIX + "mac" + File.separator;
-
+    private static final String MAC_BUNDLER_PREFIX = BUNDLER_PREFIX + "mac" + File.separator;
     private static final String DEFAULT_BACKGROUND_IMAGE = "/packager/mac/background_pkg.png";
     private static final String TEMPLATE_PREINSTALL_SCRIPT = "/packager/mac/preinstall.template";
     private static final String TEMPLATE_POSTINSTALL_SCRIPT = "/packager/mac/postinstall.template";
@@ -67,54 +77,54 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
                     "incorporated into final product package.",
             "mac.pkg.packagesRoot",
             File.class,
-            params -> {
-                File packagesRoot = new File(BUILD_ROOT.fetchFrom(params), "packages");
-                packagesRoot.mkdirs();
-                return packagesRoot;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File packagesRoot = new File(BUILD_ROOT.fetchFrom(params), "packages");
+            packagesRoot.mkdirs();
+            return packagesRoot;
+        },
+        (s, p) -> new File(s));
 
 
-    protected final BundlerParamInfo<File> SCRIPTS_DIR = new StandardBundlerParam<>(
+    private final BundlerParamInfo<File> SCRIPTS_DIR = new StandardBundlerParam<>(
             "",
             "This is temporary location for package scripts.",
             "mac.pkg.scriptsDir",
             File.class,
-            params -> {
-                File scriptsDir = new File(CONFIG_ROOT.fetchFrom(params), "scripts");
-                scriptsDir.mkdirs();
-                return scriptsDir;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File scriptsDir = new File(CONFIG_ROOT.fetchFrom(params), "scripts");
+            scriptsDir.mkdirs();
+            return scriptsDir;
+        },
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<String> DEVELOPER_ID_INSTALLER_SIGNING_KEY = new StandardBundlerParam<>(
             "Apple Developer ID Installer Signing Key",
             "The full name of the Apple Developer ID Installer signing key.",
             "mac.signing-key-developer-id-installer",
             String.class,
-            params -> {
-                    String result = MacBaseInstallerBundler.findKey(
-                            "Developer ID Installer: " + SIGNING_KEY_USER.fetchFrom(params),
-                            SIGNING_KEYCHAIN.fetchFrom(params), VERBOSE.fetchFrom(params));
-                    if (result != null) {
-                        MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
+        params -> {
+            String result = MacBaseInstallerBundler.findKey(
+                    "Developer ID Installer: " + SIGNING_KEY_USER.fetchFrom(params),
+                    SIGNING_KEYCHAIN.fetchFrom(params), VERBOSE.fetchFrom(params));
+            if (result != null) {
+                MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
 
-                        if (!certificate.isValid()) {
-                            Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
-                        }
-                    }
+                if (!certificate.isValid()) {
+                    Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
+                }
+            }
 
-                    return result;
-                },
-            (s, p) -> s);
+            return result;
+        },
+        (s, p) -> s);
 
-    public static final BundlerParamInfo<String> INSTALLER_SUFFIX = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> INSTALLER_SUFFIX = new StandardBundlerParam<>(
             "Installer Suffix",
             "The suffix for the installer name for this package.  <name><suffix>.pkg.",
             "mac.pkg.installerName.suffix",
             String.class,
-            params -> "",
-            (s, p) -> s);
+        params -> "",
+        (s, p) -> s);
 
     public MacPkgBundler() {
         super();
@@ -201,7 +211,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
     }
 
     private File getConfig_BackgroundImage(Map<String, ? super Object> params) {
-        return new File(CONFIG_ROOT.fetchFrom(params), APP_NAME.fetchFrom(params) + "-background.png");
+        return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + "-background.png");
     }
 
     private File getScripts_PreinstallFile(Map<String, ? super Object> params) {
@@ -285,7 +295,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
                 " file=\"" + getConfig_BackgroundImage(params).getName() + "\"" +
                 " mime-type=\"image/png\"" +
                 " alignment=\"bottomleft\" " +
-                " scaling=\"none\""+
+                " scaling=\"none\"" +
                 "/>");
 
         if (!LICENSE_FILE.fetchFrom(params).isEmpty()) {
@@ -342,7 +352,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
         out.println("</choice>");
         out.println("<pkg-ref id=\"" + appId + "\" version=\"" + VERSION.fetchFrom(params) +
                 "\" onConclusion=\"none\">" +
-                        URLEncoder.encode(getPackages_AppPackage(params).getName(), "UTF-8") + "</pkg-ref>");
+                        URLEncoder.encode(getPackages_AppPackage(params).getName(), StandardCharsets.UTF_8) + "</pkg-ref>");
 
         if (SERVICE_HINT.fetchFrom(params)) {
             out.println("<choice id=\"" + daemonId + "\" visible=\"false\">");
@@ -350,7 +360,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
             out.println("</choice>");
             out.println("<pkg-ref id=\"" + daemonId + "\" version=\"" + VERSION.fetchFrom(params) +
                     "\" onConclusion=\"none\">" +
-                    URLEncoder.encode(getPackages_DaemonPackage(params).getName(), "UTF-8") + "</pkg-ref>");
+                    URLEncoder.encode(getPackages_DaemonPackage(params).getName(), StandardCharsets.UTF_8) + "</pkg-ref>");
         }
 
         out.println("</installer-gui-script>");
@@ -381,7 +391,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
 
     // name of post-image script
     private File getConfig_Script(Map<String, ? super Object> params) {
-        return new File(CONFIG_ROOT.fetchFrom(params), APP_NAME.fetchFrom(params) + "-post-image.sh");
+        return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + "-post-image.sh");
     }
 
     private File createPKG(Map<String, ? super Object> params, File outdir, File appLocation) {
@@ -393,10 +403,11 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
                 Log.info("Warning: For signing PKG, you might need to set \"Always Trust\" for your certificate " +
                         "using \"Keychain Access\" tool.");
             }
-            String daemonLocation = DAEMON_IMAGE_BUILD_ROOT.fetchFrom(params) + "/" + APP_NAME.fetchFrom(params) + ".daemon";
+            String daemonLocation = DAEMON_IMAGE_BUILD_ROOT.fetchFrom(params) + "/" +
+                    APP_FS_NAME.fetchFrom(params) + ".daemon";
 
-            File appPKG = getPackages_AppPackage(params);
-            File daemonPKG = getPackages_DaemonPackage(params);
+            File appPkg = getPackages_AppPackage(params);
+            File daemonPkg = getPackages_DaemonPackage(params);
 
             // build application package
             ProcessBuilder pb = new ProcessBuilder("pkgbuild",
@@ -404,7 +415,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
                     appLocation.toString(),
                     "--install-location",
                     "/Applications",
-                    appPKG.getAbsolutePath());
+                    appPkg.getAbsolutePath());
             IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
             // build daemon package if requested
@@ -413,19 +424,16 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
 
                 pb = new ProcessBuilder("pkgbuild",
                         "--identifier",
-                        APP_NAME.fetchFrom(params) + ".daemon",
+                        APP_FS_NAME.fetchFrom(params) + ".daemon",
                         "--root",
                         daemonLocation,
                         "--scripts",
                         SCRIPTS_DIR.fetchFrom(params).getAbsolutePath(),
-                        daemonPKG.getAbsolutePath());
+                        daemonPkg.getAbsolutePath());
                 IOUtils.exec(pb, VERBOSE.fetchFrom(params));
             }
 
             // build final package
-            File finalPKG = new File(outdir, INSTALLER_NAME.fetchFrom(params)
-                    + INSTALLER_SUFFIX.fetchFrom(params)
-                    + ".pkg");
             outdir.mkdirs();
 
             List<String> commandLine = new ArrayList<>();
@@ -454,14 +462,16 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
             commandLine.add("--package-path");
             commandLine.add(PACKAGES_ROOT.fetchFrom(params).getAbsolutePath());
 
-            commandLine.add(finalPKG.getAbsolutePath());
+            File finalPkg = new File(outdir, INSTALLER_NAME.fetchFrom(params) +
+                    INSTALLER_SUFFIX.fetchFrom(params) + ".pkg");
+            commandLine.add(finalPkg.getAbsolutePath());
 
             pb = new ProcessBuilder(commandLine);
             IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
-            return finalPKG;
-        } catch (Exception ignored) {
-            Log.verbose(ignored);
+            return finalPkg;
+        } catch (Exception ex) {
+            Log.verbose(ex);
             return null;
         } finally {
             if (!VERBOSE.fetchFrom(params)) {
@@ -516,9 +526,9 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
     @Override
     public boolean validate(Map<String, ? super Object> params) throws UnsupportedPlatformException, ConfigException {
         try {
-            if (params == null) throw new ConfigException(
-                    "Parameters map is null.",
-                    "Pass in a non-null parameters map.");
+            if (params == null) {
+                throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
+            }
 
             //run basic validation to ensure requirements are met
             //we are not interested in return code, only possible exception

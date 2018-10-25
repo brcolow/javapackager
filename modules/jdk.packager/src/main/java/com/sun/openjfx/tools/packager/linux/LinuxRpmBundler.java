@@ -184,12 +184,12 @@ public class LinuxRpmBundler extends AbstractBundler {
             },
             (s, p) -> s);
 
-    private final static String DEFAULT_ICON = "/packager/linux/javalogo_white_32.png";
-    private final static String DEFAULT_SPEC_TEMPLATE = "/packager/linux/template.spec";
-    private final static String DEFAULT_DESKTOP_FILE_TEMPLATE = "/packager/linux/template.desktop";
-    private final static String DEFAULT_INIT_SCRIPT_TEMPLATE = "/packager/linux/template.rpm.init.script";
-    public final static String TOOL_RPMBUILD = "rpmbuild";
-    public final static double TOOL_RPMBUILD_MIN_VERSION = 4.0d;
+    private static final String DEFAULT_ICON = "/packager/linux/javalogo_white_32.png";
+    private static final String DEFAULT_SPEC_TEMPLATE = "/packager/linux/template.spec";
+    private static final String DEFAULT_DESKTOP_FILE_TEMPLATE = "/packager/linux/template.desktop";
+    private static final String DEFAULT_INIT_SCRIPT_TEMPLATE = "/packager/linux/template.rpm.init.script";
+    public static final String TOOL_RPMBUILD = "rpmbuild";
+    public static final double TOOL_RPMBUILD_MIN_VERSION = 4.0d;
 
     public LinuxRpmBundler() {
         super();
@@ -199,7 +199,7 @@ public class LinuxRpmBundler extends AbstractBundler {
     public static boolean testTool(String toolName, double minVersion) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); PrintStream ps = new PrintStream(baos)) {
             ProcessBuilder pb = new ProcessBuilder(toolName, "--version");
-            IOUtils.exec(pb, Log.isDebug(), false, ps); //not interested in the output
+            IOUtils.exec(pb, Log.isDebug(), false, ps); // not interested in the output
             String content = new String(baos.toByteArray());
             Pattern pattern = Pattern.compile(" (\\d+\\.\\d+)");
             Matcher matcher = pattern.matcher(content);
