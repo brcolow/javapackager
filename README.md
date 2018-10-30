@@ -7,7 +7,7 @@
 
 This is a stand-alone version of the javapackager tool. The Java
 Packager tool can be used to compile, package, sign, and deploy
-Java and JavaFX applications from the command line. 
+Java and JavaFX applications from the command line.
 
 ## Docs
 
@@ -15,7 +15,6 @@ Java and JavaFX applications from the command line.
 * [SYNOPSIS](#synopsis)
 * [COMMANDS](#commands)
 * [OPTIONS FOR THE CREATEBSS COMMAND](#options-for-the-createbss-command)
-* [OPTIONS FOR THE CREATEJAR COMMAND](#options-for-the-createjar-command)
 * [OPTIONS FOR THE DEPLOY COMMAND](#options-for-the-deploy-command)
 * [OPTIONS FOR THE SIGNJAR COMMAND](#options-for-the-signjar-command)
 * [ARGUMENTS FOR SELF-CONTAINED APPLICATION BUNDLERS](#arguments-for-self-contained-application-bundlers)
@@ -49,10 +48,6 @@ You can specify one of the following commands. After the command, specify the op
 
 Converts CSS files into binary form.
 
-−createjar
-
-Produces a JAR archive according to other parameters.
-
 −deploy
 
 Assembles the application package for redistribution. By default, the deploy task generates the base application
@@ -68,53 +63,6 @@ OPTIONS FOR THE CREATEBSS COMMAND
 −outdir _dir_
 
 Name of the directory that will receive generated output files.
-
-−srcdir _dir_
-
-Base directory of the files to package.
-
-−srcfiles _files_
-
-List of files in the directory specified by the **−srcdir** option. If omitted, all files in the directory (which is a
-mandatory argument in this case) will be used. Files in the list must be separated by spaces.
-
-OPTIONS FOR THE CREATEJAR COMMAND
----------------------------------
-
-−appclass _app−class_
-
-Qualified name of the application class to be executed.
-
-−classpath _files_
-
-List of dependent JAR file names.
-
-−manifestAttrs _manifest−attributes_
-
-List of names and values for additional manifest attributes. Syntax:
-
-**"name1=value1,name2=value2,name3=value3"**
-
-−nocss2bin
-
-The packager will not convert CSS files to binary form before copying to JAR.
-
-−outdir _dir_
-
-Name of the directory that will receive generated output files.
-
-−outfile _filename_
-
-Name (without the extension) of the file that will be generated.
-
-−paramfile _file_
-
-A properties file with default named application parameters.
-
-−preloader _preloader−class_
-
-Qualified name of the JavaFX preloader class to be executed. Use this option only for JavaFX applications. Do not use
-for Java applications, including headless applications.
 
 −srcdir _dir_
 
@@ -485,17 +433,7 @@ executed is used.
 EXAMPLES
 --------
 
-**Example 1:**   Using the −createjar Command
-
-`javapackager −createjar −appclass package.ClassName
-−srcdir classes −outdir out −outfile outjar −v`
-
-Packages the contents of the **classes** directory to **outjar.jar**, sets the application class to
-**package.ClassName**.
-
-Does all the packaging work including compilation, **createjar**, and **deploy**.
-
-**Example 2:**   Using the −signjar Command
+**Example 1:**   Using the −signjar Command
 
 `javapackager −signJar −−outdir dist −keyStore sampleKeystore.jks −storePass \*\*\*\*
 −alias duke −keypass \*\*\*\* −srcdir dist`
@@ -503,7 +441,7 @@ Does all the packaging work including compilation, **createjar**, and **deploy**
 Signs all of the JAR files in the **dist** directory, attaches a certificate with the specified alias, **keyStore** and
 **storePass**, and puts the signed JAR files back into the **dist** directory.
 
-**Example 3:**   Using the −deploy Command with Bundler Arguments
+**Example 2:**   Using the −deploy Command with Bundler Arguments
 
 ```
 javapackager −deploy −native deb −Bcategory=Education −BjvmOptions=−Xmx128m

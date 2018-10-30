@@ -37,9 +37,9 @@ import java.util.Map;
 
 import com.sun.openjfx.tools.packager.AbstractBundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
@@ -50,11 +50,10 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.SYSTEM_WIDE;
 
 public class WinServiceBundler extends AbstractBundler {
 
-    private final static String EXECUTABLE_SVC_NAME = "WinLauncherSvc.exe";
+    private static final String EXECUTABLE_SVC_NAME = "WinLauncherSvc.exe";
 
     public WinServiceBundler() {
         super();
-        baseResourceLoader = WinResources.class;
     }
 
     @Override
@@ -87,11 +86,11 @@ public class WinServiceBundler extends AbstractBundler {
     }
 
     @Override
-    public boolean validate(Map<String, ? super Object> params) throws UnsupportedPlatformException, ConfigException
-    {
+    public boolean validate(Map<String, ? super Object> params) throws UnsupportedPlatformException, ConfigException {
         try {
-            if (params == null) throw new ConfigException("Parameters map is null.",
-                    "Pass in a non-null parameters map.");
+            if (params == null) {
+                throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
+            }
 
             return doValidate(params);
         } catch (RuntimeException re) {
@@ -176,7 +175,7 @@ public class WinServiceBundler extends AbstractBundler {
 
             return outputDirectory;
         } catch (IOException ex) {
-            Log.info("Exception: "+ex);
+            Log.info("Exception: " + ex);
             Log.debug(ex);
             return null;
         }

@@ -24,18 +24,6 @@
  */
 package com.sun.openjfx.tools.packager.windows;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.COPYRIGHT;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.DESCRIPTION;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.VENDOR;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -61,17 +49,29 @@ import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.StandardBundlerParam;
 
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.COPYRIGHT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VENDOR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
+
 public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
 
-    protected static final String WINDOWS_BUNDLER_PREFIX =
+    private static final String WINDOWS_BUNDLER_PREFIX =
             BUNDLER_PREFIX + "windows" + File.separator;
 
-    private final static String EXECUTABLE_NAME = "WinLauncher.exe";
-    private final static String LIBRARY_NAME = "packager.dll";
-    private final static String[] VS_VERS = {"100", "110", "120", "140"};
-    private final static String REDIST_MSVCR = "vcruntimeVS_VER.dll";
-    private final static String REDIST_MSVCP = "msvcpVS_VER.dll";
-    private final static String TEMPLATE_APP_ICON = "packager/windows/javalogo_white_48.ico";
+    private static final String EXECUTABLE_NAME = "WinLauncher.exe";
+    private static final String LIBRARY_NAME = "packager.dll";
+    private static final String[] VS_VERS = {"100", "110", "120", "140"};
+    private static final String REDIST_MSVCR = "vcruntimeVS_VER.dll";
+    private static final String REDIST_MSVCP = "msvcpVS_VER.dll";
+    private static final String TEMPLATE_APP_ICON = "packager/windows/javalogo_white_48.ico";
     private static final String EXECUTABLE_PROPERTIES_TEMPLATE = "packager/windows/WinLauncher.properties";
 
     private final Path root;
@@ -85,36 +85,36 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
             "",
             "configRoot",
             File.class,
-            params -> {
-                File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "windows");
-                imagesRoot.mkdirs();
-                return imagesRoot;
-            },
-            (s, p) -> null);
+        params -> {
+            File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "windows");
+            imagesRoot.mkdirs();
+            return imagesRoot;
+        },
+        (s, p) -> null);
 
     public static final BundlerParamInfo<Boolean> REBRAND_EXECUTABLE = new WindowsBundlerParam<>(
             "Rebrand Launcher",
             "Update the launcher with the application icon and update ownership information.",
             "win.launcher.rebrand",
             Boolean.class,
-            params -> Boolean.TRUE,
-            (s, p) -> Boolean.valueOf(s));
+        params -> Boolean.TRUE,
+        (s, p) -> Boolean.valueOf(s));
 
     public static final BundlerParamInfo<File> ICON_ICO = new StandardBundlerParam<>(
             ".ico Icon",
             "Icon for the application, in ICO format.",
             "icon.ico",
             File.class,
-            params -> {
-                File f = ICON.fetchFrom(params);
-                if (f != null && !f.getName().toLowerCase().endsWith(".ico")) {
-                    Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICO file and will not be " +
-                            "used.  The default icon will be used in it's place.", f));
-                    return null;
-                }
-                return f;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File f = ICON.fetchFrom(params);
+            if (f != null && !f.getName().toLowerCase().endsWith(".ico")) {
+                Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICO file and will not be " +
+                        "used.  The default icon will be used in it's place.", f));
+                return null;
+            }
+            return f;
+        },
+        (s, p) -> new File(s));
 
     public WindowsAppImageBuilder(Map<String, Object> config, Path imageOutDir) throws IOException {
         super(config, imageOutDir.resolve(APP_FS_NAME.fetchFrom(config) + "/runtime"));
@@ -134,7 +134,7 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
     }
 
     private static String getLauncherCfgName(Map<String, ? super Object> p) {
-        return "app/" + APP_FS_NAME.fetchFrom(p) +".cfg";
+        return "app/" + APP_FS_NAME.fetchFrom(p) + ".cfg";
     }
 
     private File getConfig_AppIcon(Map<String, ? super Object> params) {
@@ -234,17 +234,15 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
         }
     }
 
-    private boolean copyMSVCDLLs(String VS_VER) throws IOException {
-        final InputStream REDIST_MSVCR_URL = WinResources.class.getResourceAsStream(
-                REDIST_MSVCR.replaceAll("VS_VER", VS_VER));
-        final InputStream REDIST_MSVCP_URL = WinResources.class.getResourceAsStream(
-                REDIST_MSVCP.replaceAll("VS_VER", VS_VER));
+    private boolean copyMSVCDLLs(String vsVer) throws IOException {
+        final InputStream redistMsvcrUrl = WindowsAppImageBuilder.class.getResourceAsStream(
+                REDIST_MSVCR.replaceAll("VS_VER", vsVer));
+        final InputStream redistMsvcpUrl = WindowsAppImageBuilder.class.getResourceAsStream(
+                REDIST_MSVCP.replaceAll("VS_VER", vsVer));
 
-        if (REDIST_MSVCR_URL != null && REDIST_MSVCP_URL != null) {
-            Files.copy(REDIST_MSVCR_URL,
-                    root.resolve(REDIST_MSVCR.replaceAll("VS_VER", VS_VER)));
-            Files.copy(REDIST_MSVCP_URL,
-                    root.resolve(REDIST_MSVCP.replaceAll("VS_VER", VS_VER)));
+        if (redistMsvcrUrl != null && redistMsvcpUrl != null) {
+            Files.copy(redistMsvcrUrl, root.resolve(REDIST_MSVCR.replaceAll("VS_VER", vsVer)));
+            Files.copy(redistMsvcpUrl, root.resolve(REDIST_MSVCP.replaceAll("VS_VER", vsVer)));
             return true;
         }
 
@@ -352,8 +350,7 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
                             launcher.getAbsolutePath());
                     IOUtils.exec(pb, VERBOSE.fetchFrom(p));
                 }
-            }
-            finally {
+            } finally {
                 executableFile.toFile().setReadOnly();
             }
         }

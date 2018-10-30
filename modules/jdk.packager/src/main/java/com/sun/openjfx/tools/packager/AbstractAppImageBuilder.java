@@ -189,7 +189,6 @@ public abstract class AbstractAppImageBuilder {
             throws IOException {
         cfgFileName.delete();
 
-        boolean appCdsEnabled = ENABLE_APP_CDS.fetchFrom(params);
         String appCDSCacheMode = APP_CDS_CACHE_MODE.fetchFrom(params);
         File mainJar = JLinkBundlerHelper.getMainJar(params);
         Module.ModuleType mainJarType = Module.ModuleType.Unknown;
@@ -197,8 +196,6 @@ public abstract class AbstractAppImageBuilder {
         if (mainJar != null) {
             mainJarType = new Module(mainJar).getModuleType();
         }
-
-        String mainModule = StandardBundlerParam.MODULE.fetchFrom(params);
 
         PrintStream out = new PrintStream(cfgFileName);
 
@@ -210,9 +207,12 @@ public abstract class AbstractAppImageBuilder {
         out.println("app.identifier=" + IDENTIFIER.fetchFrom(params));
         out.println("app.classpath=" + String.join(File.pathSeparator, CLASSPATH.fetchFrom(params).split("[ :;]")));
         out.println("app.application.instance=" + (SINGLETON.fetchFrom(params) ? "single" : "multiple"));
+        boolean appCdsEnabled = ENABLE_APP_CDS.fetchFrom(params);
         if (appCdsEnabled) {
             out.println("app.appcds.cache=" + appCDSCacheMode.split("\\+")[0]);
         }
+
+        String mainModule = StandardBundlerParam.MODULE.fetchFrom(params);
         // The main app is required to be a jar, modular or unnamed.
         if (mainModule != null &&
                 (mainJarType == Module.ModuleType.Unknown ||
@@ -256,13 +256,13 @@ public abstract class AbstractAppImageBuilder {
         }
         String preloader = PRELOADER_CLASS.fetchFrom(params);
         if (preloader != null) {
-            out.println("-Djavafx.preloader="+preloader);
+            out.println("-Djavafx.preloader=" + preloader);
         }
 
         out.println();
         out.println("[JVMUserOptions]");
         Map<String, String> overridableJVMOptions = USER_JVM_OPTIONS.fetchFrom(params);
-        for (Map.Entry<String, String> arg: overridableJVMOptions.entrySet()) {
+        for (Map.Entry<String, String> arg : overridableJVMOptions.entrySet()) {
             if (arg.getKey() == null || arg.getValue() == null) {
                 Log.info("WARNING: a jvmuserarg has a null name or value.");
             } else {

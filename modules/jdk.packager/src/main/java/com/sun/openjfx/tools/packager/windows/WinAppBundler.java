@@ -66,11 +66,10 @@ import static com.sun.openjfx.tools.packager.windows.WindowsBundlerParam.WIN_RUN
 
 public class WinAppBundler extends AbstractImageBundler {
 
-    public final static String WIN_BUNDLER_PREFIX = BUNDLER_PREFIX + "windows/";
+    public static final String WIN_BUNDLER_PREFIX = BUNDLER_PREFIX + "windows/";
 
     public WinAppBundler() {
         super();
-        baseResourceLoader = WinResources.class;
     }
 
     public static final BundlerParamInfo<File> ICON_ICO = new StandardBundlerParam<>(
@@ -78,16 +77,16 @@ public class WinAppBundler extends AbstractImageBundler {
             "Icon for the application, in ICO format.",
             "icon.ico",
             File.class,
-            params -> {
-                File file = ICON.fetchFrom(params);
-                if (file != null && !file.getName().toLowerCase().endsWith(".ico")) {
-                    Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICO file and will not be " +
-                            "used. The default icon will be used in it's place.", file));
-                    return null;
-                }
-                return file;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File file = ICON.fetchFrom(params);
+            if (file != null && !file.getName().toLowerCase().endsWith(".ico")) {
+                Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICO file and will not be " +
+                        "used. The default icon will be used in it's place.", file));
+                return null;
+            }
+            return file;
+        },
+        (s, p) -> new File(s));
 
     @Override
     public boolean validate(Map<String, ? super Object> params) throws UnsupportedPlatformException, ConfigException {

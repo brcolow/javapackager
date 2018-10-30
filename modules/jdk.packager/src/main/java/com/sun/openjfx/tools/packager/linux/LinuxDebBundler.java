@@ -80,150 +80,152 @@ public class LinuxDebBundler extends AbstractBundler {
     private static final Pattern DEB_BUNDLE_NAME_PATTERN =
             Pattern.compile("^[a-z][a-z\\d\\+\\-\\.]+");
 
-    public static final BundlerParamInfo<String> BUNDLE_NAME = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> BUNDLE_NAME = new StandardBundlerParam<>(
             "",
             "",
             "linux.bundleName",
             String.class,
-            params -> {
-                String nm = APP_NAME.fetchFrom(params);
+        params -> {
+            String nm = APP_NAME.fetchFrom(params);
 
-                if (nm == null) return null;
+            if (nm == null) return null;
 
-                // make sure to lower case and spaces/underscores become dashes
-                nm = nm.toLowerCase().replaceAll("[ _]", "-");
-                return nm;
-            },
-            (s, p) -> {
-                if (!DEB_BUNDLE_NAME_PATTERN.matcher(s).matches()) {
-                    throw new IllegalArgumentException(new ConfigException(
-                            MessageFormat.format("Invalid value \"{0}\" for the package name.", s),
-                            "Set the \"linux.bundleName\" parameter to a valid Debian " +
-                                    "package name. Note that the package names must consist " +
-                                    "only of lower case letters (a-z), digits (0-9), plus " +
-                                    "(+) and minus (-) signs, and periods (.). They must be " +
-                                    "at least two characters long and must start with an " +
-                                    "alphanumeric character."));
-                }
+            // make sure to lower case and spaces/underscores become dashes
+            nm = nm.toLowerCase().replaceAll("[ _]", "-");
+            return nm;
+        },
+        (s, p) -> {
+            if (!DEB_BUNDLE_NAME_PATTERN.matcher(s).matches()) {
+                throw new IllegalArgumentException(new ConfigException(
+                        MessageFormat.format("Invalid value \"{0}\" for the package name.", s),
+                        "Set the \"linux.bundleName\" parameter to a valid Debian " +
+                                "package name. Note that the package names must consist " +
+                                "only of lower case letters (a-z), digits (0-9), plus " +
+                                "(+) and minus (-) signs, and periods (.). They must be " +
+                                "at least two characters long and must start with an " +
+                                "alphanumeric character."));
+            }
 
-                return s;
-            });
+            return s;
+        });
 
-    public static final BundlerParamInfo<String> FULL_PACKAGE_NAME = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> FULL_PACKAGE_NAME = new StandardBundlerParam<>(
             "",
             "",
             "linux.deb.fullPackageName",
             String.class,
-            params -> BUNDLE_NAME.fetchFrom(params) + "-" + VERSION.fetchFrom(params),
-            (s, p) -> s);
+        params -> BUNDLE_NAME.fetchFrom(params) + "-" + VERSION.fetchFrom(params),
+        (s, p) -> s);
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new StandardBundlerParam<>(
             "",
             "",
             "configRoot",
             File.class,
-            params ->  new File(BUILD_ROOT.fetchFrom(params), "linux"),
-            (s, p) -> new File(s));
+        params ->  new File(BUILD_ROOT.fetchFrom(params), "linux"),
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<File> DEB_IMAGE_DIR = new StandardBundlerParam<>(
             "",
             "",
             "linux.deb.imageDir",
             File.class,
-            params -> {
-                File imagesRoot = IMAGES_ROOT.fetchFrom(params);
-                if (!imagesRoot.exists()) imagesRoot.mkdirs();
-                return new File(new File(imagesRoot, "linux-deb.image"), FULL_PACKAGE_NAME.fetchFrom(params));
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File imagesRoot = IMAGES_ROOT.fetchFrom(params);
+            if (!imagesRoot.exists()) {
+                imagesRoot.mkdirs();
+            }
+            return new File(new File(imagesRoot, "linux-deb.image"), FULL_PACKAGE_NAME.fetchFrom(params));
+        },
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<File> APP_IMAGE_ROOT = new StandardBundlerParam<>(
             "",
             "",
             "linux.deb.imageRoot",
             File.class,
-            params -> {
-                File imageDir = DEB_IMAGE_DIR.fetchFrom(params);
-                return new File(imageDir, "opt");
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File imageDir = DEB_IMAGE_DIR.fetchFrom(params);
+            return new File(imageDir, "opt");
+        },
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<File> CONFIG_DIR = new StandardBundlerParam<>(
             "",
             "",
             "linux.deb.configDir",
             File.class,
-            params ->  new File(DEB_IMAGE_DIR.fetchFrom(params), "DEBIAN"),
-            (s, p) -> new File(s));
+        params ->  new File(DEB_IMAGE_DIR.fetchFrom(params), "DEBIAN"),
+        (s, p) -> new File(s));
 
-    public static final BundlerParamInfo<String> EMAIL = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> EMAIL = new StandardBundlerParam<>(
             "",
             "",
             BundleParams.PARAM_EMAIL,
             String.class,
-            params -> "Unknown",
-            (s, p) -> s);
+        params -> "Unknown",
+        (s, p) -> s);
 
-    public static final BundlerParamInfo<String> MAINTAINER = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> MAINTAINER = new StandardBundlerParam<>(
             "",
             "",
             "linux.deb.maintainer",
             String.class,
-            params -> VENDOR.fetchFrom(params) + " <" + EMAIL.fetchFrom(params) + ">",
-            (s, p) -> s);
+        params -> VENDOR.fetchFrom(params) + " <" + EMAIL.fetchFrom(params) + ">",
+        (s, p) -> s);
 
-    public static final BundlerParamInfo<String> LICENSE_TEXT = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> LICENSE_TEXT = new StandardBundlerParam<>(
             "",
             "",
             "linux.deb.licenseText",
             String.class,
-            params -> {
-                try {
-                    List<String> licenseFiles = LICENSE_FILE.fetchFrom(params);
+        params -> {
+            try {
+                List<String> licenseFiles = LICENSE_FILE.fetchFrom(params);
 
-                    //need to copy license file to the root of linux-app.image
-                    if (licenseFiles.size() > 0) {
-                        String licFileStr = licenseFiles.get(0);
+                //need to copy license file to the root of linux-app.image
+                if (licenseFiles.size() > 0) {
+                    String licFileStr = licenseFiles.get(0);
 
-                        for (RelativeFileSet rfs : APP_RESOURCES_LIST.fetchFrom(params)) {
-                            if (rfs.contains(licFileStr)) {
-                                return new String(IOUtils.readFully(new File(rfs.getBaseDirectory(), licFileStr)));
-                            }
+                    for (RelativeFileSet rfs : APP_RESOURCES_LIST.fetchFrom(params)) {
+                        if (rfs.contains(licFileStr)) {
+                            return new String(IOUtils.readFully(new File(rfs.getBaseDirectory(), licFileStr)));
                         }
                     }
-                } catch (Exception e) {
-                    if (Log.isDebug()) {
-                        e.printStackTrace();
-                    }
                 }
-                return LICENSE_TYPE.fetchFrom(params);
-            },
-            (s, p) -> s);
+            } catch (Exception e) {
+                if (Log.isDebug()) {
+                    e.printStackTrace();
+                }
+            }
+            return LICENSE_TYPE.fetchFrom(params);
+        },
+        (s, p) -> s);
 
-    public static final BundlerParamInfo<String> XDG_FILE_PREFIX = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> XDG_FILE_PREFIX = new StandardBundlerParam<>(
             "Prefix for XDG files (mime, desktop)",
             "Prefix for XDG MimeInfo and Desktop Files.  Defaults to <vendor>-<appName>, with spaces dropped.",
             "linux.xdg-prefix",
             String.class,
-            params -> {
-                try {
-                    String vendor;
-                    if (params.containsKey(VENDOR.getID())) {
-                        vendor = VENDOR.fetchFrom(params);
-                    } else {
-                        vendor = "javapackager";
-                    }
-                    String appName = APP_FS_NAME.fetchFrom(params);
-
-                    return (vendor + "-" + appName).replaceAll("\\s", "");
-                } catch (Exception e) {
-                    if (Log.isDebug()) {
-                        e.printStackTrace();
-                    }
+        params -> {
+            try {
+                String vendor;
+                if (params.containsKey(VENDOR.getID())) {
+                    vendor = VENDOR.fetchFrom(params);
+                } else {
+                    vendor = "javapackager";
                 }
-                return "unknown-MimeInfo.xml";
-            },
-            (s, p) -> s);
+                String appName = APP_FS_NAME.fetchFrom(params);
+
+                return (vendor + "-" + appName).replaceAll("\\s", "");
+            } catch (Exception e) {
+                if (Log.isDebug()) {
+                    e.printStackTrace();
+                }
+            }
+            return "unknown-MimeInfo.xml";
+        },
+        (s, p) -> s);
 
     private final static String DEFAULT_ICON = "/packager/linux/javalogo_white_32.png";
     private final static String DEFAULT_CONTROL_TEMPLATE = "/packager/linux/template.control";
@@ -239,7 +241,6 @@ public class LinuxDebBundler extends AbstractBundler {
 
     public LinuxDebBundler() {
         super();
-        baseResourceLoader = LinuxResources.class;
     }
 
     public static boolean testTool(String toolName, String minVersion) {

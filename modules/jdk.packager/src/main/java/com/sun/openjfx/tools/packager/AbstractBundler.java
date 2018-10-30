@@ -25,8 +25,6 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.sun.openjfx.tools.packager.windows.WindowsBundlerParam;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +37,8 @@ import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.Map;
 
+import com.sun.openjfx.tools.packager.windows.WindowsBundlerParam;
+
 public abstract class AbstractBundler implements Bundler {
 
     public static final BundlerParamInfo<File> IMAGES_ROOT = new WindowsBundlerParam<>(
@@ -46,19 +46,15 @@ public abstract class AbstractBundler implements Bundler {
             "",
             "imagesRoot",
             File.class,
-            params -> new File(StandardBundlerParam.BUILD_ROOT.fetchFrom(params), "images"),
-            (s, p) -> null);
+        params -> new File(StandardBundlerParam.BUILD_ROOT.fetchFrom(params), "images"),
+        (s, p) -> null);
 
     // do not use file separator -
     // we use it for classpath lookup and there / are not platform specific
     public static final String BUNDLER_PREFIX = "packager/";
 
-    protected Class baseResourceLoader;
-
-    protected void fetchResource(
-            String publicName, String category,
-            String defaultName, File result, boolean verbose, File publicRoot)
-            throws IOException {
+    protected void fetchResource(String publicName, String category,
+                                 String defaultName, File result, boolean verbose, File publicRoot) throws IOException {
         InputStream is = streamResource(publicName, category, defaultName, verbose, publicRoot);
         if (is != null) {
             Files.copy(is, result.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -71,10 +67,8 @@ public abstract class AbstractBundler implements Bundler {
         }
     }
 
-    protected void fetchResource(
-            String publicName, String category,
-            File defaultFile, File result, boolean verbose, File publicRoot)
-            throws IOException {
+    protected void fetchResource(String publicName, String category, File defaultFile, File result,
+                                 boolean verbose, File publicRoot) throws IOException {
         InputStream is = streamResource(publicName, category, null, verbose, publicRoot);
         if (is != null) {
             Files.copy(is, result.toPath());

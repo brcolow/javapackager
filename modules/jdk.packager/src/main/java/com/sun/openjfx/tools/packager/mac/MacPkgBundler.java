@@ -128,7 +128,6 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
 
     public MacPkgBundler() {
         super();
-        baseResourceLoader = MacResources.class;
     }
 
     public File bundle(Map<String, ? super Object> params, File outdir) {

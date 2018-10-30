@@ -193,7 +193,6 @@ public class LinuxRpmBundler extends AbstractBundler {
 
     public LinuxRpmBundler() {
         super();
-        baseResourceLoader = LinuxResources.class;
     }
 
     public static boolean testTool(String toolName, double minVersion) {
