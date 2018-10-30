@@ -111,106 +111,16 @@ public class MacPkgBundlerTest {
         tmpBase.mkdir();
     }
 
-    public String createFakeCerts(Map<String, ? super Object> p) {
+    private String createFakeCerts(Map<String, ? super Object> p) {
         File config = new File(FAKE_CERT_ROOT, "pkg-cert.cfg");
         config.getParentFile().mkdirs();
 
-        String cert = FAKE_CERT_ROOT + "/pkg.pem";
-        String key = FAKE_CERT_ROOT + "/pkg.key";
         String keychain = FAKE_CERT_ROOT + "/pkg.keychain";
         try {
-            // create the config file holding the key config
-            /*
-            Files.write(config.toPath(), Arrays.asList("[ codesign ]",
-                    "keyUsage=critical,digitalSignature",
-                    "basicConstraints=critical,CA:false",
-                    "extendedKeyUsage=critical,codeSigning",
-                    "[ productbuild ]",
-                    "basicConstraints=critical,CA:false",
-                    "keyUsage=critical,digitalSignature",
-                    "extendedKeyUsage=critical,1.2.840.113635.100.4.13",
-                    "1.2.840.113635.100.6.1.14=critical,DER:0500"));
+            X509Certificates.generateTestCertificate("pkg", FAKE_CERT_ROOT.toPath());
 
-            // create the SSL keys
-            ProcessBuilder pb = new ProcessBuilder("openssl", "req",
-                    "-newkey", "rsa:2048",
-                    "-nodes",
-                    "-out", FAKE_CERT_ROOT + "/pkg-app.csr",
-                    "-keyout", FAKE_CERT_ROOT + "/pkg-app.key",
-                    "-subj", "/CN=Developer ID Application: Insecure Test Cert/OU=JavaFX Dev/O=Oracle/C=US");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            // first, for the app
-            // create the cert
-            pb = new ProcessBuilder("openssl", "x509",
-                    "-req",
-                    "-days", "10",
-                    "-in", FAKE_CERT_ROOT + "/pkg-app.csr",
-                    "-signkey", FAKE_CERT_ROOT + "/pkg-app.key",
-                    "-out", FAKE_CERT_ROOT + "/pkg-app.crt",
-                    "-extfile", FAKE_CERT_ROOT + "/pkg-cert.cfg",
-                    "-extensions", "codesign");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            // create and add it to the keychain
-            pb = new ProcessBuilder("certtool",
-                    "i", FAKE_CERT_ROOT + "/pkg-app.crt",
-                    "k=" + FAKE_CERT_ROOT + "/pkg.keychain",
-                    "r=" + FAKE_CERT_ROOT + "/pkg-app.key",
-                    "c",
-                    "p=");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            // create the pkg SSL keys
-            pb = new ProcessBuilder("openssl", "req",
-                    "-newkey", "rsa:2048",
-                    "-nodes",
-                    "-out", FAKE_CERT_ROOT + "/pkg-pkg.csr",
-                    "-keyout", FAKE_CERT_ROOT + "/pkg-pkg.key",
-                    "-subj", "/CN=Developer ID Installer: Insecure Test Cert/OU=JavaFX Dev/O=Oracle/C=US");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            // create the pkg cert
-            pb = new ProcessBuilder("openssl", "x509",
-                        "-req",
-                        "-days", "10",
-                        "-in", FAKE_CERT_ROOT + "/pkg-pkg.csr",
-                        "-signkey", FAKE_CERT_ROOT + "/pkg-pkg.key",
-                        "-out", FAKE_CERT_ROOT + "/pkg-pkg.crt",
-                        "-extfile",FAKE_CERT_ROOT + "/pkg-cert.cfg",
-                        "-extensions", "productbuild");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            // create and add it to the keychain
-            pb = new ProcessBuilder("certtool",
-                    "i", FAKE_CERT_ROOT + "/pkg-pkg.crt",
-                    "k=" + FAKE_CERT_ROOT + "/pkg.keychain",
-                    "r=" + FAKE_CERT_ROOT + "/pkg-pkg.key");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-            */
-            // create a self-signed certificate
-            ProcessBuilder pb = new ProcessBuilder("openssl", "req", "-x509",
-                    "-newkey",
-                    "rsa:2048",
-                    "-sha256",
-                    "-nodes",
-                    "-keyout", key,
-                    "-out", cert,
-                    "-subj", "/CN=Developer ID Application: Insecure Test Cert/OU=JavaFX Dev/O=Oracle/C=US",
-                    "-days", "10",
-                    "-addext", "keyUsage=critical,digitalSignature",
-                    "-addext", "basicConstraints=critical,CA:false",
-                    "-addext", "extendedKeyUsage=critical,codeSigning"
-                    // "-config", FAKE_CERT_ROOT + "/app-cert.cfg",
-                    // "-extensions", "codesign"
-            );
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            pb = new ProcessBuilder("openssl", "pkcs12", "-export", "-nodes", "-info", "-out", FAKE_CERT_ROOT + "/pkg.pfx", "-inkey", key, "-in", cert, "-password", "pass:1234");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            // create and add it to the keychain
-            pb = new ProcessBuilder("security", "create-keychain", "-p", "1234", keychain);
+            // Create a keychain and add X509 certificate.
+            ProcessBuilder pb = new ProcessBuilder("security", "create-keychain", "-p", "1234", keychain);
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
             pb = new ProcessBuilder("security", "default-keychain", "-s", keychain);

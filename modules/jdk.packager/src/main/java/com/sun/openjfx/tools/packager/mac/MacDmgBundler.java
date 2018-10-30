@@ -374,7 +374,6 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
         }
         ProcessBuilder pb = new ProcessBuilder(HDIUTIL,
                 "create",
-                "-debug",
                 protoDmg.getAbsolutePath(),
                 "-srcfolder", srcFolder.getAbsolutePath(),
                 "-volname", APP_FS_NAME.fetchFrom(p),
@@ -391,29 +390,10 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
         System.out.println("imagesRoot: " + imagesRoot.getAbsolutePath());
         System.out.println("imagesRoot exists: " + imagesRoot.exists());
 
-        System.out.println("HDIUTIL imageinfo:");
-        pb = new ProcessBuilder(HDIUTIL,
-                "imageinfo",
-                protoDmg.getAbsolutePath(),
-                "-debug");
-        IOUtils.exec(pb, VERBOSE.fetchFrom(p), true);
-
-        System.out.println("HDIUTIL pmap: ");
-        pb = new ProcessBuilder(HDIUTIL,
-                "pmap",
-                protoDmg.getAbsolutePath(),
-                "-debug");
-        IOUtils.exec(pb, VERBOSE.fetchFrom(p), true);
-
-        System.out.println("diskutil list:");
-        pb = new ProcessBuilder("diskutil", "list");
-        IOUtils.exec(pb, VERBOSE.fetchFrom(p), true);
-
         // mount temp image
         pb = new ProcessBuilder(HDIUTIL,
                 "attach",
                 protoDmg.getAbsolutePath(),
-                "-debug",
                 "-mountroot", imagesRoot.getAbsolutePath(),
                 "-noverify");
         IOUtils.exec(pb, VERBOSE.fetchFrom(p), true);
@@ -462,7 +442,6 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
         // Detach the temporary image
         pb = new ProcessBuilder(HDIUTIL,
                 "detach",
-                "-debug",
                 mountedRoot.getAbsolutePath());
         IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
@@ -470,7 +449,6 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
         pb = new ProcessBuilder(HDIUTIL,
                 "convert",
                 protoDmg.getAbsolutePath(),
-                "-debug",
                 "-format", "UDZO",
                 "-o", finalDmg.getAbsolutePath());
         IOUtils.exec(pb, VERBOSE.fetchFrom(p));
@@ -480,8 +458,7 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
             // HDIUTIL unflatten your_image_file.dmg
             pb = new ProcessBuilder(HDIUTIL,
                     "unflatten",
-                    finalDmg.getAbsolutePath(),
-                    "-debug");
+                    finalDmg.getAbsolutePath());
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
             // add license
@@ -489,15 +466,13 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
                     "udifrez",
                     finalDmg.getAbsolutePath(),
                     "-xml",
-                    getConfig_LicenseFile(p).getAbsolutePath(),
-                    "-debug");
+                    getConfig_LicenseFile(p).getAbsolutePath());
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
             // HDIUTIL flatten your_image_file.dmg
             pb = new ProcessBuilder(HDIUTIL,
                     "flatten",
-                    finalDmg.getAbsolutePath(),
-                    "-debug");
+                    finalDmg.getAbsolutePath());
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
         }
 
