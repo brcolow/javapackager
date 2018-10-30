@@ -43,7 +43,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +57,6 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
 import static com.sun.openjfx.tools.packager.mac.MacAppBundler.*;
 import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEYCHAIN;
 import static com.sun.openjfx.tools.packager.mac.MacPkgBundler.DEVELOPER_ID_INSTALLER_SIGNING_KEY;
-import static com.sun.openjfx.tools.packager.windows.WinAppBundler.ICON_ICO;
 import static org.junit.Assert.*;
 
 public class MacAppBundlerTest {
@@ -112,39 +110,12 @@ public class MacAppBundlerTest {
     private String createFakeCerts(Map<String, ? super Object> p) {
         File config = new File(FAKE_CERT_ROOT, "app-cert.cfg");
         config.getParentFile().mkdirs();
-        String cert = FAKE_CERT_ROOT + "/app.pem";
-        String key = FAKE_CERT_ROOT + "/app.key";
         String keychain = FAKE_CERT_ROOT + "/app.keychain";
         try {
-            // create the config file holding the key config
-            /*
-            Files.write(config.toPath(), Arrays.asList("[ codesign ]",
-                    "keyUsage=critical,digitalSignature",
-                    "basicConstraints=critical,CA:false",
-                    "extendedKeyUsage=critical,codeSigning"));
-             */
-            // create a self-signed certificate
-            ProcessBuilder pb = new ProcessBuilder("openssl", "req", "-x509",
-                    "-newkey",
-                    "rsa:2048",
-                    "-sha256",
-                    "-nodes",
-                    "-keyout", key,
-                    "-out", cert,
-                    "-subj", "/CN=Developer ID Application: Insecure Test Cert/OU=JavaFX Dev/O=Oracle/C=US",
-                    "-days", "10",
-                    "-addext", "keyUsage=critical,digitalSignature",
-                    "-addext", "basicConstraints=critical,CA:false",
-                    "-addext", "extendedKeyUsage=critical,codeSigning"
-                    // "-config", FAKE_CERT_ROOT + "/app-cert.cfg",
-                    // "-extensions", "codesign"
-            );
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
+            X509Certificates.generateTestCertificate("app", FAKE_CERT_ROOT.toPath());
 
-            pb = new ProcessBuilder("openssl", "pkcs12", "-export", "-nodes", "-info", "-out", FAKE_CERT_ROOT + "/app.pfx", "-inkey", key, "-in", cert, "-password", "pass:1234");
-            IOUtils.exec(pb, VERBOSE.fetchFrom(p));
-
-            pb = new ProcessBuilder("security", "create-keychain", "-p", "1234", keychain);
+            // Create a keychain and add X509 certificate.
+            ProcessBuilder pb = new ProcessBuilder("security", "create-keychain", "-p", "1234", keychain);
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
             pb = new ProcessBuilder("security", "default-keychain", "-s", keychain);
@@ -153,8 +124,6 @@ public class MacAppBundlerTest {
             pb = new ProcessBuilder("security", "unlock-keychain", "-p", "1234", keychain);
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 
-            //b = new ProcessBuilder("security", "add-trusted-cert", "-d", "-r", "trustAsRoot", "-k", FAKE_CERT_ROOT + "/app.keychain", FAKE_CERT_ROOT + "/app.crt");
-            //pb = new ProcessBuilder("security", "import", FAKE_CERT_ROOT + "/app.p12", "-k", FAKE_CERT_ROOT + "/app.keychain", "-P", "-T", "/usr/bin/codesign");
             pb = new ProcessBuilder("security", "import", FAKE_CERT_ROOT + "/app.pfx", "-k", keychain, "-A", "-P", "1234");
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
 

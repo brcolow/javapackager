@@ -44,6 +44,8 @@ module com.brcolow.javapackager {
     requires javafx.controls;
     requires javafx.graphics;
     requires jdk.jlink;
+    requires org.bouncycastle.provider;
+    requires org.bouncycastle.pkix;
 
     exports com.sun.openjfx.tools.packager;
     exports com.sun.openjfx.tools.packager.bundlers;
