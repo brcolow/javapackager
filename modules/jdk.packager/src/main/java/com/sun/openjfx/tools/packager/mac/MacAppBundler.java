@@ -243,7 +243,6 @@ public class MacAppBundler extends AbstractImageBundler {
 
     public MacAppBundler() {
         super();
-        baseResourceLoader = MacResources.class;
     }
 
     public static boolean validCFBundleVersion(String v) {

@@ -387,7 +387,6 @@ project(":fxpackager") {
         from "src/main/man"
         into "$buildDir/man"
         exclude "**/*.html"
-        if (IS_MAC) exclude "**/ja_JP.UTF-8/**"
     }
 
     processResources.dependsOn man

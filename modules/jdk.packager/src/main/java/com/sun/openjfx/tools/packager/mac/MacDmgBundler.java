@@ -75,7 +75,6 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
 
     public MacDmgBundler() {
         super();
-        baseResourceLoader = MacResources.class;
     }
 
     public static final BundlerParamInfo<Boolean> SIMPLE_DMG = new StandardBundlerParam<>(

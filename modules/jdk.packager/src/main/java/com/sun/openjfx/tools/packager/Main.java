@@ -49,15 +49,12 @@ public class Main {
 
     private static final String CREATE_BSS_INTERNAL = "-createbss_internal";
     private static final String CREATE_BSS_EXTERNAL = "-createbss";
-    private static final String CREATE_JAR_INTERNAL = "-createjar_internal";
-    private static final String CREATE_JAR_EXTERNAL = "-createjar";
     private static final String VERSION = "Java Packager version " + PackagerLib.JAVAFX_VERSION + "\n";
 
-    private static boolean verbose = false;
-    private static boolean packageAsJar = false;
-    private static boolean genPackages = false;
-    private static boolean css2Bin = false;
-    private static boolean signJar = false;
+    private static boolean verbose;
+    private static boolean genPackages;
+    private static boolean css2Bin;
+    private static boolean signJar;
 
     private static void addResources(CommonParams commonParams, String srcdir, String srcfiles)
             throws PackagerException {
@@ -97,29 +94,6 @@ public class Main {
             list.add(argument);
             deployParams.setArguments(list);
         }
-    }
-
-    private static void addArgument(CreateJarParams deployParams, String argument) {
-        if (deployParams.arguments != null) {
-            deployParams.arguments.add(argument);
-        } else {
-            List<String> list = new LinkedList<>();
-            list.add(argument);
-            deployParams.setArguments(list);
-        }
-    }
-
-    private static Map<String, String> createAttrMap(String arg) {
-        Map<String, String> map = new HashMap<>();
-        if (arg == null || "".equals(arg)) {
-            return null;
-        }
-        String[] pairsArray = arg.split(",");
-        for (String pair: pairsArray) {
-            String[] attr = pair.split("=");
-            map.put(attr[0].trim(), attr[1].trim());
-        }
-        return map;
     }
 
     private static List<Param> parseParams(String filename) throws IOException {
@@ -198,8 +172,6 @@ public class Main {
         for (String arg : args) {
             if (arg.equalsIgnoreCase(CREATE_BSS_EXTERNAL)) {
                 newArgs.add(CREATE_BSS_INTERNAL);
-            } else if (arg.equalsIgnoreCase(CREATE_JAR_EXTERNAL)) {
-                newArgs.add(CREATE_JAR_INTERNAL);
             } else {
                 newArgs.add(arg);
             }
@@ -214,9 +186,8 @@ public class Main {
     }
 
     public static int run(String... args) throws Exception {
-       for (String arg : args) {
-            if (arg.equalsIgnoreCase(CREATE_BSS_EXTERNAL) ||
-                arg.equalsIgnoreCase(CREATE_JAR_EXTERNAL)) {
+        for (String arg : args) {
+            if (arg.equalsIgnoreCase(CREATE_BSS_EXTERNAL)) {
                 return relaunchJavapackager(args);
             }
         }
@@ -229,7 +200,6 @@ public class Main {
             Log.info(VERSION);
         } else {
             PackagerLib packager = new PackagerLib();
-            CreateJarParams createJarParams = new CreateJarParams();
             DeployParams deployParams = new DeployParams();
             CreateBSSParams createBssParams = new CreateBSSParams();
             SignJarParams signJarParams = new SignJarParams();
@@ -237,42 +207,7 @@ public class Main {
             String srcfiles = null;
 
             try {
-                if (args[0].equalsIgnoreCase(CREATE_JAR_INTERNAL)) {
-                    for (int i = 1; i < args.length; i++) {
-                        String arg = args[i];
-                        if (arg.equalsIgnoreCase("-appclass")) {
-                            createJarParams.setApplicationClass(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-preloader")) {
-                            createJarParams.setPreloader(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-classpath")) {
-                            createJarParams.setClasspath(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-manifestAttrs")) {
-                            createJarParams.setManifestAttrs(createAttrMap(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-nocss2bin")) {
-                            createJarParams.setCss2bin(false);
-                        } else if (arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
-                            createJarParams.setVerbose(true);
-                            verbose = true;
-                        } else if (arg.equalsIgnoreCase("-outdir")) {
-                            createJarParams.setOutdir(new File(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-outfile")) {
-                            createJarParams.setOutfile(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-" + StandardBundlerParam.SOURCE_DIR.getID())) {
-                            srcdir = nextArg(args, i++);
-                        } else if (arg.equalsIgnoreCase("-srcfiles")) {
-                            srcfiles = nextArg(args, i++);
-                        } else if (arg.equalsIgnoreCase("-argument")) {
-                            addArgument(createJarParams, nextArg(args, i++));
-                        }  else if (arg.equalsIgnoreCase("-paramFile")) {
-                            createJarParams.setParams(parseParams(nextArg(args, i++)));
-                        } else {
-                            throw new PackagerException("Error: Unknown argument: {0}", arg);
-                        }
-                    }
-
-                    addResources(createJarParams, srcdir, srcfiles);
-                    packageAsJar = true;
-                } else if (args[0].equalsIgnoreCase("-deploy")) {
+                if (args[0].equalsIgnoreCase("-deploy")) {
                     for (int i = 1; i < args.length; i++) {
                         String arg = args[i];
                         if (arg.startsWith("-B")) {
@@ -291,7 +226,7 @@ public class Main {
                                 }
                             } else if (keyStart < equals) {
                                 key = arg.substring(keyStart, equals);
-                                value = arg.substring(equals+1, len);
+                                value = arg.substring(equals + 1, len);
                             } else {
                                 continue;
                             }
@@ -314,13 +249,13 @@ public class Main {
                             deployParams.setTargetFormat(format);
                         } else if (arg.equalsIgnoreCase("-description")) {
                             deployParams.setDescription(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-appclass")) {
+                        } else if (arg.equalsIgnoreCase("-appclass")) {
                             deployParams.setApplicationClass(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-daemon")) {
+                        } else if (arg.equalsIgnoreCase("-daemon")) {
                             deployParams.setServiceHint(true);
-                        } else if(arg.equalsIgnoreCase("-singleton")) {
+                        } else if (arg.equalsIgnoreCase("-singleton")) {
                             deployParams.setSingleton(true);
-                        } else if(arg.equalsIgnoreCase("-installdirChooser")) {
+                        } else if (arg.equalsIgnoreCase("-installdirChooser")) {
                             deployParams.setInstalldirChooser(true);
                         } else if (arg.equalsIgnoreCase("-preloader")) {
                             deployParams.setPreloader(nextArg(args, i++));
@@ -365,7 +300,8 @@ public class Main {
                         } else if (arg.equals(STRIP_NATIVE_COMMANDS)) {
                             deployParams.setStripNativeCommands(Boolean.valueOf(nextArg(args, i++)));
                         } else if (arg.equals(STRIP_NATIVE_COMMANDS + "=")) {
-                            deployParams.setStripNativeCommands(Boolean.valueOf(arg.replace(STRIP_NATIVE_COMMANDS + "=", "")));
+                            deployParams.setStripNativeCommands(
+                                    Boolean.valueOf(arg.replace(STRIP_NATIVE_COMMANDS + "=", "")));
                         } else if (arg.equals(DETECT_MODULES)) {
                             deployParams.setDetectModules(true);
                         } else if (arg.equals(MODULE_PATH) || arg.equals(P)) {
@@ -412,15 +348,15 @@ public class Main {
                         String arg = args[i];
                         if (arg.equalsIgnoreCase("-keyStore")) {
                             signJarParams.setKeyStore(new File(nextArg(args, i++)));
-                        } else if(arg.equalsIgnoreCase("-alias")) {
+                        } else if (arg.equalsIgnoreCase("-alias")) {
                             signJarParams.setAlias(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-storePass")) {
+                        } else if (arg.equalsIgnoreCase("-storePass")) {
                             signJarParams.setStorePass(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-keyPass")) {
+                        } else if (arg.equalsIgnoreCase("-keyPass")) {
                             signJarParams.setKeyPass(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-storeType")) {
+                        } else if (arg.equalsIgnoreCase("-storeType")) {
                             signJarParams.setStoreType(nextArg(args, i++));
-                        } else if(arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
+                        } else if (arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
                             signJarParams.setVerbose(true);
                             verbose = true;
                         } else if (arg.equalsIgnoreCase("-outdir")) {
@@ -455,10 +391,6 @@ public class Main {
                     createBssParams.validate();
                     packager.generateBSS(createBssParams);
                 }
-                if (packageAsJar) {
-                    createJarParams.validate();
-                    packager.packageAsJar(createJarParams);
-                }
                 if (genPackages) {
                     deployParams.setBundleType(bundleType);
                     deployParams.validate();
@@ -475,7 +407,8 @@ public class Main {
                         }
                     }
                     if (signJarParams.keyPass == null) {
-                        char[] passwd = System.console().readPassword("Enter key password for %s:", signJarParams.alias);
+                        char[] passwd = System.console().readPassword(
+                                "Enter key password for %s:", signJarParams.alias);
                         if (passwd == null) {
                             signJarParams.keyPass = "";
                         } else {
@@ -511,7 +444,7 @@ public class Main {
     private static final String J_XDEBUG = JLinkBundlerHelper.DEBUG.getID() + ":";
     private static final String DETECT_MODULES = "--" + JLinkBundlerHelper.DETECT_MODULES.getID();
 
-    public static void showBundlerHelp(String bundlerName, boolean verbose) {
+    private static void showBundlerHelp(String bundlerName, boolean verbose) {
         if ("bundlers".equals(bundlerName)) {
             // enumerate bundlers
             Log.info("Known Bundlers -- \n");
@@ -526,11 +459,9 @@ public class Main {
 
                 if (verbose) {
                     Log.infof("%s - %s - %s\n\t%s\n", bundler.getID(), bundler.getName(),
-                            bundler.getBundleType(), bundler.getDescription()
-                    );
+                            bundler.getBundleType(), bundler.getDescription());
                 } else {
-                    Log.infof("%s - %s - %s\n", bundler.getID(), bundler.getName(), bundler.getBundleType()
-                    );
+                    Log.infof("%s - %s - %s\n", bundler.getID(), bundler.getName(), bundler.getBundleType());
                 }
             }
         } else {
@@ -539,14 +470,14 @@ public class Main {
                 if (bundler.getID().equals(bundlerName)) {
                     Log.infof("Bundler Parameters for %s (%s) --\n", bundler.getName(), bundler.getID());
                     for (BundlerParamInfo bpi : bundler.getBundleParameters()) {
-                        if (bpi.getStringConverter() == null) continue;
+                        if (bpi.getStringConverter() == null) {
+                            continue;
+                        }
                         if (verbose) {
                             Log.infof("%s - %s - %s\n\t%s\n", bpi.getID(), bpi.getName(),
-                                    bpi.getValueType().getSimpleName(), bpi.getDescription()
-                            );
+                                    bpi.getValueType().getSimpleName(), bpi.getDescription());
                         } else {
-                            Log.infof("%s - %s - %s\n", bpi.getID(), bpi.getName(), bpi.getValueType().getSimpleName()
-                            );
+                            Log.infof("%s - %s - %s\n", bpi.getID(), bpi.getName(), bpi.getValueType().getSimpleName());
                         }
                     }
                     return;

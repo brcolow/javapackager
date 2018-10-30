@@ -55,7 +55,9 @@ public class BasicBundlers implements Bundlers {
     }
 
     public Collection<Bundler> getBundlers(String type) {
-        if (type == null) return Collections.emptySet();
+        if (type == null) {
+            return Collections.emptySet();
+        }
         switch (type) {
             case "NONE":
                 return Collections.emptySet();

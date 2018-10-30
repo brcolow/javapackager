@@ -67,7 +67,6 @@ public class MacDaemonBundler extends AbstractBundler {
 
     public MacDaemonBundler() {
         super();
-        baseResourceLoader = MacResources.class;
     }
 
     private File getConfig_LaunchdPlist(Map<String, ? super Object> params) {

@@ -92,7 +92,6 @@ public class WinExeBundler extends AbstractBundler {
 
     public WinExeBundler() {
         super();
-        baseResourceLoader = WinResources.class;
     }
 
     public static final BundlerParamInfo<WinAppBundler> APP_BUNDLER = new WindowsBundlerParam<>(

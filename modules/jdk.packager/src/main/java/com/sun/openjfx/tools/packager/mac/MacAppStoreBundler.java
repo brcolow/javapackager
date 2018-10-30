@@ -112,7 +112,6 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
 
     public MacAppStoreBundler() {
         super();
-        baseResourceLoader = MacResources.class;
     }
 
     //@Override

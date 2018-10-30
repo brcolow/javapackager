@@ -25,20 +25,17 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.sun.openjfx.tools.resource.PackagerResource;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -46,19 +43,9 @@ import java.util.zip.ZipInputStream;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class PackagerLibTest {
 
@@ -89,145 +76,6 @@ public class PackagerLibTest {
             srcRoot = src.getRoot();
             destRoot = dest.getRoot();
         }
-    }
-
-    @Test(expected=IllegalArgumentException.class)
-    public void testPackageAsJar_null() throws PackagerException {
-        lib.packageAsJar(null);
-    }
-
-    private CreateJarParams defaultParams() {
-        CreateJarParams params = new CreateJarParams();
-        params.outdir = dest.getRoot();
-        params.outfile = "temp";
-        params.css2bin = false;
-        params.applicationClass = DUMMY_APP_MAIN;
-
-        return params;
-    }
-
-    @Test
-    public void testPackageAsJar_jarCreate() throws PackagerException {
-        lib.packageAsJar(defaultParams());
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        assertTrue(testFile.exists() && testFile.canRead());
-    }
-
-    @Test
-    public void testPackageAsJar_jarCreate2() throws PackagerException {
-        lib.packageAsJar(defaultParams());
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        assertTrue(testFile.exists() && testFile.canRead());
-    }
-
-    // longer than 56 characters (see RT-26553)
-    final private static String LONG_ARG_VALUE = "VERYLONGSTRINGVERYLONGSTRINGVERYLONGSTRINGVERYLONGST" +
-                                                 "RINGVERYLONGSTRINGVERYLONGSTRINGVERYLONGSTRINGVERYLO" +
-                                                 "NGSTRINGVERYLONGSTRINGVERYLONGSTRINGVERYLONGSTRINGVE" +
-                                                 "RYLONGSTRINGVERYLONGSTRING";
-
-    @Test
-    public void testPackageAsJar_longArgValue() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.manifestAttrs = new HashMap<>();
-        params.arguments = new ArrayList<>();
-
-        // added to manifest as JavaFX-Argument-1
-        // note that this value will be base64 encoded
-        params.arguments.add(LONG_ARG_VALUE);
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        JarFile jar = new JarFile(testFile);
-        Manifest m = jar.getManifest();
-
-        String argValue = m.getMainAttributes().getValue("JavaFX-Argument-1");
-        assertEquals(LONG_ARG_VALUE, new String(Base64.getDecoder().decode(argValue)));
-    }
-
-    @Test
-    public void testPackageAsJar_manifest() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.manifestAttrs = new HashMap<>();
-        params.manifestAttrs.put("testfoo", "bar");
-        params.applicationClass = "ham.eggs.Vikings";
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        JarFile jar = new JarFile(testFile);
-        Manifest m = jar.getManifest();
-        System.out.println("m.getMainAttributes(): " + m.getEntries());
-        assertEquals(5, m.getMainAttributes().size());
-        assertEquals("1.0",
-                m.getMainAttributes().get(Attributes.Name.MANIFEST_VERSION));
-        assertEquals("ham.eggs.Vikings",
-                m.getMainAttributes().get(Attributes.Name.MAIN_CLASS));
-        assertEquals("JavaFX Packager",
-                m.getMainAttributes().getValue("Created-By"));
-        assertEquals("bar", m.getMainAttributes().getValue("testfoo"));
-    }
-
-    @Test
-    public void testPackageAsJar_css2bss() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.resources.add(new PackagerResource(src.getRoot(), "."));
-        File css = src.newFile("hello.css");
-        new FileWriter(css).write(" .hello { -fx-color: red; }");
-        lib.packageAsJar(params);
-
-        //File testFile = new File(dest.getRoot(), "temp.jar");
-        //JarFile jar = new JarFile(testFile);
-
-        // NOTE: Test is incomplete.
-    }
-
-    @Test
-    public void testPackageAsJar_embedLauncher2() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.applicationClass = "FooBar";
-        params.preloader = "PreLoader";
-        params.resources.add(new PackagerResource(src.getRoot(), "."));
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        JarFile jar = new JarFile(testFile);
-        Manifest m = jar.getManifest();
-        assertEquals("PreLoader", m.getMainAttributes().getValue("JavaFX-Preloader-Class"));
-    }
-
-    @Test
-    public void testPackageAsJar_embedLauncher3() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.applicationClass = "FooBar";
-        params.classpath = "/a/b/c;d/e/f/";
-        params.resources.add(new PackagerResource(src.getRoot(), "."));
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        JarFile jar = new JarFile(testFile);
-        Manifest m = jar.getManifest();
-        // FIXME: assertEquals("/a/b/c d/e/f/", m.getMainAttributes().getValue("JavaFX-Class-Path"));
-        assertEquals(null, m.getMainAttributes().getValue("JavaFX-Class-Path"));
-
-    }
-
-    @Test
-    public void testPackageAsJar_embedLauncher4() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.applicationClass = "FooBar";
-        params.preloader = "PreLoader";
-        params.fallbackClass = "com.sun.Fallback";
-        params.resources.add(new PackagerResource(src.getRoot(), "."));
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        JarFile jar = new JarFile(testFile);
-        Manifest m = jar.getManifest();
-        //FIXME: assertEquals("com.sun.Fallback", m.getMainAttributes().getValue("JavaFX-Fallback-Class"));
-        assertEquals(null, m.getMainAttributes().getValue("JavaFX-Fallback-Class"));
-
     }
 
     void validateSignedJar(File jar) throws IOException {
@@ -295,7 +143,7 @@ public class PackagerLibTest {
                 new JarOutputStream(new FileOutputStream(res)) :
                 new JarOutputStream(new FileOutputStream(res), m);
 
-        byte content[] = "Dummy content".getBytes();
+        byte[] content = "Dummy content".getBytes();
         JarEntry entry = new JarEntry(entryName);
         entry.setTime(new Date().getTime());
         jos.putNextEntry(entry);
@@ -306,175 +154,4 @@ public class PackagerLibTest {
 
         return res;
     }
-
-    private static final String DUMMY_APP_MAIN = "DummyLauncherClass";
-
-    private void doTest_existingJar(Manifest inputManifest, CreateJarParams params)
-            throws PackagerException, IOException {
-        String dummyJarEntryName = DUMMY_APP_MAIN;
-        File inputJar = createTestJar(inputManifest, dummyJarEntryName);
-
-        if (params == null) {
-            params = defaultParams();
-        }
-
-        // common settings
-        params.outdir = dest.getRoot();
-        params.resources.add(new PackagerResource(inputJar.getParentFile(), inputJar));
-
-        lib.packageAsJar(params);
-
-        File testFile = new File(dest.getRoot(), "temp.jar");
-        assertTrue(testFile.exists() && testFile.canRead());
-
-        try (JarFile jar = new JarFile(testFile)) {
-            JarEntry je = jar.getJarEntry(dummyJarEntryName);
-            assertNotNull("Expect old jar content to be copied.", je);
-
-            Manifest m = jar.getManifest();
-            assertNotNull("Manifest should not be null", m);
-
-            Attributes attrs = m.getMainAttributes();
-            assertNotNull("Expect not null main attributes", attrs);
-
-            assertEquals("Manifest version is not 1.0",
-                    "1.0", attrs.get(Attributes.Name.MANIFEST_VERSION));
-            assertEquals("Main class should point to JavaFX launcher",
-                    DUMMY_APP_MAIN, attrs.get(Attributes.Name.MAIN_CLASS));
-            //assertNotNull("JavaFX version should be specified", attrs.getValue("JavaFX-Version"));
-            // assertNull("ClassPath entry should be reset", attrs.getValue(Attributes.Name.CLASS_PATH));
-            //assertEquals("Unexpected app main", DUMMY_APP_MAIN, attrs.getValue("JavaFX-Application-Class"));
-
-            assertEquals("Preloader value should match", params.preloader, attrs.getValue("JavaFX-Preloader-Class"));
-            assertEquals("Fallback class value should match", params.preloader, attrs.getValue("JavaFX-Fallback-Class"));
-
-            String mainClass = attrs.getValue("JavaFX-Application-Class");
-            //assertNotNull("JavaFX Main class must be present", mainClass);
-            //assertEquals("Expect main class to be the same as requested", params.applicationClass, mainClass);
-
-            //classpath should be based
-            String inputClasspath = null;
-            if (inputManifest != null && inputManifest.getMainAttributes() != null) {
-                inputClasspath = inputManifest.getMainAttributes().getValue(
-                        Attributes.Name.CLASS_PATH);
-            }
-            String resultClassPath = attrs.getValue("JavaFX-Class-Path");
-
-            if (params.classpath == null) {
-                assertEquals("Expect input classpath copied",
-                        inputClasspath, resultClassPath);
-            } else {
-                // assertEquals("Expect classpath to be set as in ant task", params.classpath, resultClassPath);
-            }
-
-            // check that custom entries from input manifest were preserved
-            if (inputManifest != null) {
-                for (Object k : inputManifest.getMainAttributes().keySet()) {
-                    if (k instanceof String && ((String) k).contains("Test")) {
-                        assertEquals("Expect main manifest atttribute to be copied",
-                                inputManifest.getMainAttributes().getValue((String) k),
-                                attrs.getValue((String) k));
-                    }
-                }
-            }
-
-        }
-        // TODO: validate that manifest entries for jar entries are copied
-    }
-
-    @Test
-    public void testPackageAsJar_existingJar_noManifestJar() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.applicationClass = DUMMY_APP_MAIN;
-        doTest_existingJar(null, params);
-    }
-
-    @Test
-    public void testPackageAsJar_existingJar_ExecutableJar_Overriden() throws PackagerException, IOException {
-        CreateJarParams params = defaultParams();
-        params.classpath = "c.jar";
-        Manifest m = new Manifest();
-        Attributes attr = m.getMainAttributes();
-        attr.put(Attributes.Name.MAIN_CLASS, "SomethingElse");
-        attr.put(Attributes.Name.CLASS_PATH, "a.jar:b.jar");
-
-        // expect explicit parameters to overwrite given
-        doTest_existingJar(m, params);
-    }
-
-    @Test
-    public void testPackageAsJar_existingJar_ExecutableJar() throws PackagerException, IOException {
-        System.err.println("Marker!");
-        CreateJarParams params = defaultParams();
-        params.applicationClass = null; //reset
-        Manifest m = new Manifest();
-        Attributes attr = m.getMainAttributes();
-        attr.put(Attributes.Name.MAIN_CLASS, DUMMY_APP_MAIN);
-        attr.put(Attributes.Name.CLASS_PATH, "a.jar:b.jar");
-        // parameters in jar should be ok
-        doTest_existingJar(m, params);
-    }
-
-    @Test
-    public void testPackageAsJar_existingJar_multipleInputs() throws PackagerException, IOException {
-        // We only "update" jar file if it is THE ONLY input
-        // Otherwise we silently add jar as "jar" entry
-
-        CreateJarParams params = defaultParams();
-        params.applicationClass = DUMMY_APP_MAIN;
-
-        File f = File.createTempFile("junk", "class");
-        String dummyEntry = "dummy";
-        params.resources.add(new PackagerResource(f.getParentFile(), f));
-
-        File inputJar = createTestJar(null, dummyEntry);
-
-        if (params == null) {
-            params = new CreateJarParams();
-        }
-
-        //common settings
-        params.outdir = dest.getRoot();
-        params.outfile = "temp";
-        params.css2bin = false;
-        params.resources.add(
-                new PackagerResource(inputJar.getParentFile(), inputJar));
-
-        lib.packageAsJar(params);
-
-        try (JarFile jar = new JarFile(new File(dest.getRoot(), "temp.jar"))) {
-            JarEntry je = jar.getJarEntry(dummyEntry);
-            assertNull("Do NOT expect jar content to be copied.", je);
-        }
-    }
-
-    @Test
-    public void testPackageAsJar_existingJar_sameJar() throws IOException, PackagerException {
-        String dummyJarEntryName = DUMMY_APP_MAIN;
-        File inputJar = createTestJar(null, dummyJarEntryName);
-
-        CreateJarParams params = defaultParams();
-
-        // common settings
-        params.outdir = inputJar.getParentFile();
-        params.outfile = inputJar.getName();
-        params.resources.add(
-                new PackagerResource(inputJar.getParentFile(), inputJar));
-
-        lib.packageAsJar(params);
-
-        // validate have launcher class and original content
-        JarFile jar = new JarFile(inputJar);
-
-        try (jar) {
-            Attributes attrs = jar.getManifest().getMainAttributes();
-            assertEquals("Main class should point to JavaFX launcher",
-                    DUMMY_APP_MAIN, attrs.get(Attributes.Name.MAIN_CLASS));
-            // assertEquals("Unexpected app main", DUMMY_APP_MAIN, attrs.getValue("JavaFX-Application-Class"));
-            JarEntry je = jar.getJarEntry(dummyJarEntryName);
-            assertNotNull("Do NOT expect jar content to be copied.", je);
-        }
-
-    }
-
 }
