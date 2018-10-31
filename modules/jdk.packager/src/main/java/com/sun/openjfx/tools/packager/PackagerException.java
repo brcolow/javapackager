@@ -29,10 +29,6 @@ import java.text.MessageFormat;
 
 public class PackagerException extends Exception {
 
-    public PackagerException(Throwable cause) {
-        super(cause);
-    }
-
     public PackagerException(String msg, Throwable cause) {
         super(msg, cause);
     }
@@ -41,11 +37,11 @@ public class PackagerException extends Exception {
         super(msg);
     }
 
-    public PackagerException(String msg, String ... arguments) {
+    public PackagerException(String msg, String... arguments) {
         super(MessageFormat.format(msg, (Object[]) arguments));
     }
 
-    public PackagerException(Throwable cause, String msg, String ... arguments) {
+    public PackagerException(Throwable cause, String msg, String... arguments) {
         super(MessageFormat.format(msg, (Object[]) arguments), cause);
     }
 

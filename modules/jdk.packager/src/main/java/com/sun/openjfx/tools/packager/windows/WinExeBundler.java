@@ -25,16 +25,6 @@
 
 package com.sun.openjfx.tools.packager.windows;
 
-import com.sun.openjfx.tools.packager.AbstractBundler;
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.RelativeFileSet;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-import com.sun.openjfx.tools.packager.bundlers.BundleParams;
-
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -42,7 +32,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -53,6 +42,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.sun.openjfx.tools.packager.AbstractBundler;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+import com.sun.openjfx.tools.packager.bundlers.BundleParams;
 
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_CDS_CACHE_MODE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
@@ -99,27 +98,26 @@ public class WinExeBundler extends AbstractBundler {
             "",
             "win.app.bundler",
             WinAppBundler.class,
-            params -> new WinAppBundler(),
-            null);
+        params -> new WinAppBundler(), null);
 
     public static final BundlerParamInfo<WinServiceBundler> SERVICE_BUNDLER = new WindowsBundlerParam<>(
             "",
             "",
             "win.service.bundler",
             WinServiceBundler.class,
-            params -> new WinServiceBundler(),
-            null);
+        params -> new WinServiceBundler(), null);
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new WindowsBundlerParam<>(
             "",
             "",
             "configRoot",
-            File.class, params -> {
-                File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "windows");
-                imagesRoot.mkdirs();
-                return imagesRoot;
-            },
-            (s, p) -> null);
+            File.class,
+        params -> {
+            File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "windows");
+            imagesRoot.mkdirs();
+            return imagesRoot;
+        },
+        (s, p) -> null);
 
     // default for .exe is user level installation
     // only do system wide if explicitly requested
@@ -129,24 +127,25 @@ public class WinExeBundler extends AbstractBundler {
                     "means use the system default.",
             "win.exe." + BundleParams.PARAM_SYSTEM_WIDE,
             Boolean.class,
-            params -> params.containsKey(SYSTEM_WIDE.getID())
-                    ? SYSTEM_WIDE.fetchFrom(params)
-                    : false, // EXEs default to user local install
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
+        params -> params.containsKey(SYSTEM_WIDE.getID()) ?
+                SYSTEM_WIDE.fetchFrom(params) : false, // EXEs default to user local install
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
 
     public static final BundlerParamInfo<File> EXE_IMAGE_DIR = new WindowsBundlerParam<>(
             "",
             "",
             "win.exe.imageDir",
             File.class,
-            params -> {
-                File imagesRoot = IMAGES_ROOT.fetchFrom(params);
-                if (!imagesRoot.exists()) imagesRoot.mkdirs();
-                return new File(imagesRoot, "win-exe.image");
-            },
-            (s, p) -> null);
+        params -> {
+            File imagesRoot = IMAGES_ROOT.fetchFrom(params);
+            if (!imagesRoot.exists()) {
+                imagesRoot.mkdirs();
+            }
+            return new File(imagesRoot, "win-exe.image");
+        },
+        (s, p) -> null);
 
-    private final static String DEFAULT_EXE_PROJECT_TEMPLATE = "packager/windows/template.iss";
+    private static final String DEFAULT_EXE_PROJECT_TEMPLATE = "packager/windows/template.iss";
     private static final String TOOL_INNO_SETUP_COMPILER = "iscc.exe";
 
     public static final BundlerParamInfo<String> TOOL_INNO_SETUP_COMPILER_EXECUTABLE = new WindowsBundlerParam<>(
@@ -154,16 +153,16 @@ public class WinExeBundler extends AbstractBundler {
             "File path to iscc.exe from the InnoSetup tool.",
             "win.exe.iscc.exe",
             String.class,
-            params -> {
-                for (String dirString : (System.getenv("PATH") + ";C:\\Program Files (x86)\\Inno Setup 5;C:\\Program Files\\Inno Setup 5").split(";")) {
-                    File f = new File(dirString.replace("\"", ""), TOOL_INNO_SETUP_COMPILER);
-                    if (f.isFile()) {
-                        return f.toString();
-                    }
+        params -> {
+            for (String dirString : (System.getenv("PATH") + ";C:\\Program Files (x86)\\Inno Setup 5;" +
+                    "C:\\Program Files\\Inno Setup 5").split(";")) {
+                File f = new File(dirString.replace("\"", ""), TOOL_INNO_SETUP_COMPILER);
+                if (f.isFile()) {
+                    return f.toString();
                 }
-                return null;
-            },
-            null);
+            }
+            return null;
+        }, null);
 
     @Override
     public String getName() {
@@ -199,11 +198,11 @@ public class WinExeBundler extends AbstractBundler {
                 LICENSE_FILE,
                 MENU_GROUP,
                 MENU_HINT,
-//                RUN_AT_STARTUP,
+                // RUN_AT_STARTUP,
                 SHORTCUT_HINT,
-//                SERVICE_HINT,
-//                START_ON_INSTALL,
-//                STOP_ON_UNINSTALL,
+                // SERVICE_HINT,
+                // START_ON_INSTALL,
+                // STOP_ON_UNINSTALL,
                 SYSTEM_WIDE,
                 TITLE,
                 VENDOR,
@@ -216,7 +215,7 @@ public class WinExeBundler extends AbstractBundler {
     }
 
     static class VersionExtractor extends PrintStream {
-        double version = 0f;
+        double version;
 
         VersionExtractor() {
             super(new ByteArrayOutputStream());
@@ -376,7 +375,7 @@ public class WinExeBundler extends AbstractBundler {
         if (WindowsDefender.isThereAPotentialWindowsDefenderIssue()) {
             Log.info(MessageFormat.format("Warning: Windows Defender may prevent the Java Packager from functioning. " +
                     "If there is an issue, it can be addressed by either disabling realtime monitoring, or adding an " +
-                    "exclusion for the directory \"{0}\".", WindowsDefender.getUserTempDirectory()));
+                    "exclusion for the directory \"{0}\".", System.getProperty("java.io.tmpdir")));
         }
 
         // validate we have valid tools before continuing
@@ -482,7 +481,8 @@ public class WinExeBundler extends AbstractBundler {
                                      Map<String, ? super Object> params) throws IOException {
         String value = param.fetchFrom(params);
         if (value.contains("\r") || value.contains("\n")) {
-            throw new IOException("Configuration Parameter " + param.getID() + " cannot contain multiple lines of text");
+            throw new IOException("Configuration Parameter " + param.getID() +
+                    " cannot contain multiple lines of text");
         }
         data.put(key, innosetupEscape(value));
     }
@@ -539,36 +539,38 @@ public class WinExeBundler extends AbstractBundler {
         validateValueAndPut(data, "APPLICATION_DESCRIPTION", DESCRIPTION, params);
         data.put("APPLICATION_SERVICE", SERVICE_HINT.fetchFrom(params) ? "returnTrue" : "returnFalse");
         data.put("APPLICATION_NOT_SERVICE", SERVICE_HINT.fetchFrom(params) ? "returnFalse" : "returnTrue");
-        data.put("APPLICATION_APP_CDS_INSTALL", ENABLE_APP_CDS.fetchFrom(params)
-                        && ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params))
-                        || "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))
-                        ? "returnTrue"
-                        : "returnFalse");
+        data.put("APPLICATION_APP_CDS_INSTALL", ENABLE_APP_CDS.fetchFrom(params) &&
+                ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)) ||
+                        "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params))) ? "returnTrue" : "returnFalse");
         data.put("START_ON_INSTALL", START_ON_INSTALL.fetchFrom(params) ? "-startOnInstall" : "");
         data.put("STOP_ON_UNINSTALL", STOP_ON_UNINSTALL.fetchFrom(params) ? "-stopOnUninstall" : "");
         data.put("RUN_AT_STARTUP", RUN_AT_STARTUP.fetchFrom(params) ? "-runAtStartup" : "");
 
         StringBuilder secondaryLaunchersCfg = new StringBuilder();
         for (Map<String, ? super Object> launcher : SECONDARY_LAUNCHERS.fetchFrom(params)) {
-            String application_name = APP_FS_NAME.fetchFrom(launcher);
+            String applicationName = APP_FS_NAME.fetchFrom(launcher);
             if (MENU_HINT.fetchFrom(launcher)) {
-                //Name: "{group}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_FS_NAME.exe"; IconFilename: "{app}\APPLICATION_NAME.ico"
+                // Name: "{group}\APPLICATION_NAME";
+                // Filename: "{app}\APPLICATION_FS_NAME.exe";
+                // IconFilename: "{app}\APPLICATION_NAME.ico"
                 secondaryLaunchersCfg.append("Name: \"{group}\\");
-                secondaryLaunchersCfg.append(application_name);
+                secondaryLaunchersCfg.append(applicationName);
                 secondaryLaunchersCfg.append("\"; Filename: \"{app}\\");
-                secondaryLaunchersCfg.append(application_name);
+                secondaryLaunchersCfg.append(applicationName);
                 secondaryLaunchersCfg.append(".exe\"; IconFilename: \"{app}\\");
-                secondaryLaunchersCfg.append(application_name);
+                secondaryLaunchersCfg.append(applicationName);
                 secondaryLaunchersCfg.append(".ico\"\r\n");
             }
             if (SHORTCUT_HINT.fetchFrom(launcher)) {
-                //Name: "{commondesktop}\APPLICATION_NAME"; Filename: "{app}\APPLICATION_FS_NAME.exe";  IconFilename: "{app}\APPLICATION_NAME.ico"
+                // Name: "{commondesktop}\APPLICATION_NAME";
+                // Filename: "{app}\APPLICATION_FS_NAME.exe";
+                // IconFilename: "{app}\APPLICATION_NAME.ico"
                 secondaryLaunchersCfg.append("Name: \"{commondesktop}\\");
-                secondaryLaunchersCfg.append(application_name);
+                secondaryLaunchersCfg.append(applicationName);
                 secondaryLaunchersCfg.append("\"; Filename: \"{app}\\");
-                secondaryLaunchersCfg.append(application_name);
+                secondaryLaunchersCfg.append(applicationName);
                 secondaryLaunchersCfg.append(".exe\";  IconFilename: \"{app}\\");
-                secondaryLaunchersCfg.append(application_name);
+                secondaryLaunchersCfg.append(applicationName);
                 secondaryLaunchersCfg.append(".ico\"\r\n");
             }
         }
@@ -580,7 +582,6 @@ public class WinExeBundler extends AbstractBundler {
         for (int i = 0; i < fetchFrom.size(); i++) {
             Map<String, ? super Object> fileAssociation = fetchFrom.get(i);
             String description = FA_DESCRIPTION.fetchFrom(fileAssociation);
-            File icon = FA_ICON.fetchFrom(fileAssociation); //TODO FA_ICON_ICO
 
             List<String> extensions = FA_EXTENSIONS.fetchFrom(fileAssociation);
             String entryName = regName + "File";
@@ -593,7 +594,11 @@ public class WinExeBundler extends AbstractBundler {
             } else {
                 for (String ext : extensions) {
                     if (isSystemWide) {
-                        // "Root: HKCR; Subkey: \".myp\"; ValueType: string; ValueName: \"\"; ValueData: \"MyProgramFile\"; Flags: uninsdeletevalue"
+                        // Root: HKCR;
+                        // Subkey: \".myp\";
+                        // ValueType: string; ValueName: \"\";
+                        // ValueData: \"MyProgramFile\";
+                        // Flags: uninsdeletevalue
                         registryEntries.append("Root: HKCR; Subkey: \".")
                                 .append(ext)
                                 .append("\"; ValueType: string; ValueName: \"\"; ValueData: \"")
@@ -614,14 +619,20 @@ public class WinExeBundler extends AbstractBundler {
                 List<String> mimeTypes = FA_CONTENT_TYPE.fetchFrom(fileAssociation);
                 for (String mime : mimeTypes) {
                     if (isSystemWide) {
-                        // "Root: HKCR; Subkey: HKCR\\Mime\\Database\\Content Type\\application/chaos; ValueType: string; ValueName: Extension; ValueData: .chaos; Flags: uninsdeletevalue"
+                        // Root: HKCR;
+                        // Subkey: HKCR\\Mime\\Database\\Content Type\\application/chaos;
+                        // ValueType: string;
+                        // ValueName: Extension;
+                        // ValueData: .chaos;
+                        // Flags: uninsdeletevalue
                         registryEntries.append("Root: HKCR; Subkey: \"Mime\\Database\\Content Type\\")
                             .append(mime)
                             .append("\"; ValueType: string; ValueName: \"Extension\"; ValueData: \".")
                             .append(ext)
                             .append("\"; Flags: uninsdeletevalue\r\n");
                     } else {
-                        registryEntries.append("Root: HKCU; Subkey: \"Software\\Classes\\Mime\\Database\\Content Type\\")
+                        registryEntries
+                                .append("Root: HKCU; Subkey: \"Software\\Classes\\Mime\\Database\\Content Type\\")
                                 .append(mime)
                                 .append("\"; ValueType: string; ValueName: \"Extension\"; ValueData: \".")
                                 .append(ext)
@@ -631,7 +642,12 @@ public class WinExeBundler extends AbstractBundler {
             }
 
             if (isSystemWide) {
-                //"Root: HKCR; Subkey: \"MyProgramFile\"; ValueType: string; ValueName: \"\"; ValueData: \"My Program File\"; Flags: uninsdeletekey"
+                // Root: HKCR;
+                // Subkey: \"MyProgramFile\";
+                // ValueType: string;
+                // ValueName: \"\";
+                // ValueData: \"My Program File\";
+                // Flags: uninsdeletekey
                 registryEntries.append("Root: HKCR; Subkey: \"")
                     .append(entryName)
                     .append("\"; ValueType: string; ValueName: \"\"; ValueData: \"")
@@ -646,9 +662,14 @@ public class WinExeBundler extends AbstractBundler {
 
             }
 
+            File icon = FA_ICON.fetchFrom(fileAssociation); // TODO FA_ICON_ICO
             if (icon != null && icon.exists()) {
                 if (isSystemWide) {
-                    // "Root: HKCR; Subkey: \"MyProgramFile\\DefaultIcon\"; ValueType: string; ValueName: \"\"; ValueData: \"{app}\\MYPROG.EXE,0\"\n" +
+                    // Root: HKCR;
+                    // Subkey: \"MyProgramFile\\DefaultIcon\";
+                    // ValueType: string;
+                    // ValueName: \"\";
+                    // ValueData: \"{app}\\MYPROG.EXE,0\"\n"
                     registryEntries.append("Root: HKCR; Subkey: \"")
                         .append(entryName)
                         .append("\\DefaultIcon\"; ValueType: string; ValueName: \"\"; ValueData: \"{app}\\")
@@ -664,16 +685,22 @@ public class WinExeBundler extends AbstractBundler {
             }
 
             if (isSystemWide) {
-                //"Root: HKCR; Subkey: \"MyProgramFile\\shell\\open\\command\"; ValueType: string; ValueName: \"\"; ValueData: \"\"\"{app}\\MYPROG.EXE\"\" \"\"%1\"\"\"\n"
+                // Root: HKCR;
+                // Subkey: \"MyProgramFile\\shell\\open\\command\";
+                // ValueType: string;
+                // ValueName: \"\";
+                // ValueData: \"\"\"{app}\\MYPROG.EXE\"\" \"\"%1\"\"\"\n
                 registryEntries.append("Root: HKCR; Subkey: \"")
                         .append(entryName)
-                        .append("\\shell\\open\\command\"; ValueType: string; ValueName: \"\"; ValueData: \"\"\"{app}\\")
+                        .append("\\shell\\open\\command\"; ValueType: string; " +
+                                "ValueName: \"\"; ValueData: \"\"\"{app}\\")
                         .append(APP_FS_NAME.fetchFrom(params))
                         .append("\"\" \"\"%1\"\"\"\r\n");
             } else {
                 registryEntries.append("Root: HKCU; Subkey: \"Software\\Classes\\")
                         .append(entryName)
-                        .append("\\shell\\open\\command\"; ValueType: string; ValueName: \"\"; ValueData: \"\"\"{app}\\")
+                        .append("\\shell\\open\\command\"; ValueType: string; " +
+                                "ValueName: \"\"; ValueData: \"\"\"{app}\\")
                         .append(APP_FS_NAME.fetchFrom(params))
                         .append("\"\" \"\"%1\"\"\"\r\n");
             }
@@ -694,7 +721,7 @@ public class WinExeBundler extends AbstractBundler {
         w.close();
     }
 
-    private final static String DEFAULT_INNO_SETUP_ICON = "packager/windows/icon_inno_setup.bmp";
+    private static final String DEFAULT_INNO_SETUP_ICON = "packager/windows/icon_inno_setup.bmp";
 
     private boolean prepareProjectConfig(Map<String, ? super Object> params) throws IOException {
         prepareMainProjectFile(params);

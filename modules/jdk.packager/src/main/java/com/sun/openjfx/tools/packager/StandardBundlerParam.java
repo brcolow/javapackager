@@ -25,8 +25,6 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.sun.openjfx.tools.packager.bundlers.BundleParams;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -54,11 +52,13 @@ import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.sun.openjfx.tools.packager.bundlers.BundleParams;
+
 public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
 
     private static final String JAVABASEJMOD = "java.base.jmod";
-    public static final String MANIFEST_JAVAFX_MAIN ="JavaFX-Application-Class";
-    public static final String MANIFEST_PRELOADER = "JavaFX-Preloader-Class";
+    private static final String MANIFEST_PRELOADER = "JavaFX-Preloader-Class";
+    public static final String MANIFEST_JAVAFX_MAIN = "JavaFX-Application-Class";
 
     public StandardBundlerParam(String name, String description, String id,
                                 Class<T> valueType,
@@ -73,12 +73,12 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
     }
 
     public static final StandardBundlerParam<RelativeFileSet> APP_RESOURCES = new StandardBundlerParam<>(
-                    "Resources",
-                    "All of the files to place in the resources directory.  Including all needed jars as assets.",
-                    BundleParams.PARAM_APP_RESOURCES,
-                    RelativeFileSet.class,
-                    null,
-                    null);
+            "Resources",
+            "All of the files to place in the resources directory.  Including all needed jars as assets.",
+            BundleParams.PARAM_APP_RESOURCES,
+            RelativeFileSet.class,
+            null,
+            null);
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<RelativeFileSet>> APP_RESOURCES_LIST = new StandardBundlerParam<>(
@@ -87,7 +87,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "Including all needed jars as assets.",
             BundleParams.PARAM_APP_RESOURCES + "List",
             (Class<List<RelativeFileSet>>) (Object) List.class,
-            p -> new ArrayList<>(Collections.singletonList(APP_RESOURCES.fetchFrom(p))),
+        p -> new ArrayList<>(Collections.singletonList(APP_RESOURCES.fetchFrom(p))),
             // Default is appResources, as a single item list
             StandardBundlerParam::createAppResourcesListFromString);
 
@@ -96,15 +96,15 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "Path to the directory containing the files to be bundled.",
             "srcdir",
             String.class,
-            p -> null,
-            (s, p) -> {
-                String value = String.valueOf(s);
-                if (value.charAt(value.length() - 1) == File.separatorChar) {
-                    return value.substring(0, value.length() - 1);
-                } else {
-                    return value;
-                }
-            });
+        p -> null,
+        (s, p) -> {
+            String value = String.valueOf(s);
+            if (value.charAt(value.length() - 1) == File.separatorChar) {
+                return value.substring(0, value.length() - 1);
+            } else {
+                return value;
+            }
+        });
 
     // note that each bundler is likely to replace this one with their own converter
     public static final StandardBundlerParam<RelativeFileSet> MAIN_JAR = new StandardBundlerParam<>(
@@ -113,23 +113,22 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "assembled application dir.",
             "mainJar",
             RelativeFileSet.class,
-            params -> {
-                extractMainClassInfoFromAppResources(params);
-                return (RelativeFileSet) params.get("mainJar");
-            },
-            StandardBundlerParam::getMainJar);
+        params -> {
+            extractMainClassInfoFromAppResources(params);
+            return (RelativeFileSet) params.get("mainJar");
+        }, StandardBundlerParam::getMainJar);
 
     public static final StandardBundlerParam<String> CLASSPATH = new StandardBundlerParam<>(
             "Main Jar Classpath",
             "The classpath from the main jar of the application, relative to the assembled application directory.",
             "classpath",
             String.class,
-            params -> {
-                extractMainClassInfoFromAppResources(params);
-                String cp = (String) params.get("classpath");
-                return cp == null ? "" : cp;
-            },
-            (s, p) -> s.replace(File.pathSeparator, " "));
+        params -> {
+            extractMainClassInfoFromAppResources(params);
+            String cp = (String) params.get("classpath");
+            return cp == null ? "" : cp;
+        },
+        (s, p) -> s.replace(File.pathSeparator, " "));
 
     public static final StandardBundlerParam<String> MAIN_CLASS = new StandardBundlerParam<>(
             "Main Class",
@@ -137,36 +136,37 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "with a main method.",
             BundleParams.PARAM_APPLICATION_CLASS,
             String.class,
-            params -> {
-                extractMainClassInfoFromAppResources(params);
-                String s = (String) params.get(BundleParams.PARAM_APPLICATION_CLASS);
-                if (s == null) {
-                    s = JLinkBundlerHelper.getMainClass(params);
-                }
-                return s;
-            },
-            (s, p) -> s);
+        params -> {
+            extractMainClassInfoFromAppResources(params);
+            String s = (String) params.get(BundleParams.PARAM_APPLICATION_CLASS);
+            if (s == null) {
+                s = JLinkBundlerHelper.getMainClass(params);
+            }
+            return s;
+        },
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> APP_NAME = new StandardBundlerParam<>(
             "App Name",
             "The name of the application.",
             BundleParams.PARAM_NAME,
             String.class,
-            params -> {
-                String s = MAIN_CLASS.fetchFrom(params);
-                if (s == null) {
-                    return null;
-                }
+        params -> {
+            String s = MAIN_CLASS.fetchFrom(params);
+            if (s == null) {
+                return null;
+            }
 
-                int idx = s.lastIndexOf(".");
-                if (idx >= 0) {
-                    return s.substring(idx + 1);
-                }
-                return s;
-            },
-            (s, p) -> s);
+            int idx = s.lastIndexOf(".");
+            if (idx >= 0) {
+                return s.substring(idx + 1);
+            }
+            return s;
+        },
+        (s, p) -> s);
 
-    private static Pattern TO_FS_NAME = Pattern.compile("\\s|[\\\\/?:*<>|]"); // keep out invalid/undesirable filename characters
+    // keep out invalid/undesirable filename characters
+    private static Pattern TO_FS_NAME = Pattern.compile("\\s|[\\\\/?:*<>|]");
 
     public static final StandardBundlerParam<String> APP_FS_NAME = new StandardBundlerParam<>(
             "App File System Name",
@@ -174,24 +174,24 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "dots, and dashes.",
             "name.fs",
             String.class,
-            params -> TO_FS_NAME.matcher(APP_NAME.fetchFrom(params)).replaceAll(""),
-            (s, p) -> s);
+        params -> TO_FS_NAME.matcher(APP_NAME.fetchFrom(params)).replaceAll(""),
+        (s, p) -> s);
 
     public static final StandardBundlerParam<File> ICON = new StandardBundlerParam<>(
             "Icon",
             "The main icon of the application bundle.",
             BundleParams.PARAM_ICON,
             File.class,
-            params -> null,
-            (s, p) -> new File(s));
+        params -> null,
+        (s, p) -> new File(s));
 
     public static final StandardBundlerParam<String> VENDOR = new StandardBundlerParam<>(
             "Vendor",
             "The vendor of the application.",
             BundleParams.PARAM_VENDOR,
             String.class,
-            params -> "Unknown",
-            (s, p) -> s);
+        params -> "Unknown",
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> CATEGORY = new StandardBundlerParam<>(
             "Category",
@@ -199,38 +199,36 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "application specific categories as well.",
             BundleParams.PARAM_CATEGORY,
             String.class,
-            params -> "Unknown",
-            (s, p) -> s);
+        params -> "Unknown",
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> DESCRIPTION = new StandardBundlerParam<>(
             "Description",
             "A longer description of the application",
             BundleParams.PARAM_DESCRIPTION,
             String.class,
-            params -> params.containsKey(APP_NAME.getID())
-                    ? APP_NAME.fetchFrom(params)
-                    : "none",
-            (s, p) -> s);
+        params -> params.containsKey(APP_NAME.getID()) ? APP_NAME.fetchFrom(params) : "none",
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> COPYRIGHT = new StandardBundlerParam<>(
             "Copyright",
             "The copyright for the application.",
             BundleParams.PARAM_COPYRIGHT,
             String.class,
-            params -> MessageFormat.format("Copyright (C) {0,date,YYYY}", new Date()),
-            (s, p) -> s);
+        params -> MessageFormat.format("Copyright (C) {0,date,YYYY}", new Date()),
+        (s, p) -> s);
 
     public static final StandardBundlerParam<Boolean> USE_FX_PACKAGING = new StandardBundlerParam<>(
             "FX Packaging",
             "Should we use the JavaFX packaging conventions?",
             "fxPackaging",
             Boolean.class,
-            params -> {
-                extractMainClassInfoFromAppResources(params);
-                Boolean result = (Boolean) params.get("fxPackaging");
-                return (result == null) ? Boolean.FALSE : result;
-            },
-            (s, p) -> Boolean.valueOf(s));
+        params -> {
+            extractMainClassInfoFromAppResources(params);
+            Boolean result = (Boolean) params.get("fxPackaging");
+            return (result == null) ? Boolean.FALSE : result;
+        },
+        (s, p) -> Boolean.valueOf(s));
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<String>> ARGUMENTS = new StandardBundlerParam<>(
@@ -238,8 +236,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "Command Line Arguments to be passed to the main class if no arguments are specified by the launcher.",
             "arguments",
             (Class<List<String>>) (Object) List.class,
-            params -> Collections.emptyList(),
-            (s, p) -> splitStringWithEscapes(s));
+        params -> Collections.emptyList(),
+        (s, p) -> splitStringWithEscapes(s));
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<String>> JVM_OPTIONS = new StandardBundlerParam<>(
@@ -247,8 +245,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "JVM flags and options to be passed in.",
             "jvmOptions",
             (Class<List<String>>) (Object) List.class,
-            params -> Collections.emptyList(),
-            (s, p) -> Arrays.asList(s.split("\\s+")));
+        params -> Collections.emptyList(),
+        (s, p) -> Arrays.asList(s.split("\\s+")));
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<Map<String, String>> JVM_PROPERTIES = new StandardBundlerParam<>(
@@ -256,20 +254,20 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "JVM System Properties (of the -Dname=value variety).",
             "jvmProperties",
             (Class<Map<String, String>>) (Object) Map.class,
-            params -> Collections.emptyMap(),
-            (s, params) -> {
-                Map<String, String> map = new HashMap<>();
-                try {
-                    Properties p = new Properties();
-                    p.load(new StringReader(s));
-                    for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                        map.put((String) entry.getKey(), (String) entry.getValue());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+        params -> Collections.emptyMap(),
+        (s, params) -> {
+            Map<String, String> map = new HashMap<>();
+            try {
+                Properties p = new Properties();
+                p.load(new StringReader(s));
+                for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                    map.put((String) entry.getKey(), (String) entry.getValue());
                 }
-                return map;
-            });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return map;
+        });
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<Map<String, String>> USER_JVM_OPTIONS = new StandardBundlerParam<>(
@@ -277,28 +275,27 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "JVM Options the user may override, along with their default values.",
             "userJvmOptions",
             (Class<Map<String, String>>) (Object) Map.class,
-            params -> Collections.emptyMap(),
-            (s, params) -> {
-                Map<String, String> map = new HashMap<>();
-                try {
-                    Properties p = new Properties();
-                    p.load(new StringReader(s));
-                    for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                        map.put((String) entry.getKey(), (String) entry.getValue());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+        params -> Collections.emptyMap(),
+        (s, params) -> {
+            Map<String, String> map = new HashMap<>();
+            try {
+                Properties p = new Properties();
+                p.load(new StringReader(s));
+                for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                    map.put((String) entry.getKey(), (String) entry.getValue());
                 }
-                return map;
-            });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return map;
+        });
 
     public static final StandardBundlerParam<String> TITLE = new StandardBundlerParam<>(
             "Title",
             "A title for the application.", //?? but what does it do?
             BundleParams.PARAM_TITLE,
             String.class,
-            APP_NAME::fetchFrom,
-            (s, p) -> s);
+            APP_NAME::fetchFrom, (s, p) -> s);
 
     // note that each bundler is likely to replace this one with their own converter
     public static final StandardBundlerParam<String> VERSION = new StandardBundlerParam<>(
@@ -306,8 +303,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "The version of this application.",
             BundleParams.PARAM_VERSION,
             String.class,
-            params -> "1.0",
-            (s, p) -> s);
+        params -> "1.0", (s, p) -> s);
 
     public static final StandardBundlerParam<Boolean> SYSTEM_WIDE = new StandardBundlerParam<>(
             "System Wide",
@@ -315,40 +311,40 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "the system default.",
             BundleParams.PARAM_SYSTEM_WIDE,
             Boolean.class,
-            params -> null,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
+        params -> null,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> SERVICE_HINT  = new StandardBundlerParam<>(
             "Service Hint",
             "The bundler should register the application as service/daemon.",
             BundleParams.PARAM_SERVICE_HINT,
             Boolean.class,
-            params -> false,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
+        params -> false,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> START_ON_INSTALL  = new StandardBundlerParam<>(
             "Start On Install",
             "Controls whether the service/daemon should be started on install.",
             "startOnInstall",
             Boolean.class,
-            params -> false,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
+        params -> false,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> STOP_ON_UNINSTALL = new StandardBundlerParam<>(
             "Stop On Uninstall",
             "Controls whether the service/daemon should be stopped on uninstall.",
             "stopOnUninstall",
             Boolean.class,
-            params -> true,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? true : Boolean.valueOf(s));
+        params -> true,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? true : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> RUN_AT_STARTUP = new StandardBundlerParam<>(
             "Run At Startup",
             "Controls whether the service/daemon should be started during system startup.",
             "runAtStartup",
             Boolean.class,
-            params -> false,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
+        params -> false,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> SIGN_BUNDLE = new StandardBundlerParam<>(
             "Sign Bundle",
@@ -356,24 +352,24 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "bundlers. Bundlers that do not support signing will silently ignore this setting.",
             "signBundle",
             Boolean.class,
-            params -> null,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
+        params -> null,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> SHORTCUT_HINT = new StandardBundlerParam<>(
             "Shortcut Hint",
             "If the bundler can create desktop shortcuts, should it make one?",
             BundleParams.PARAM_SHORTCUT,
             Boolean.class,
-            params -> false,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
+        params -> false,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? false : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> MENU_HINT = new StandardBundlerParam<>(
             "Menu Hint",
             "If the bundler can add the application to the system menu, should it?",
             BundleParams.PARAM_MENU,
             Boolean.class,
-            params -> false,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? true : Boolean.valueOf(s));
+        params -> false,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? true : Boolean.valueOf(s));
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<String>> LICENSE_FILE = new StandardBundlerParam<>(
@@ -381,30 +377,30 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "The license file, relative to the assembled application directory.",
             BundleParams.PARAM_LICENSE_FILE,
             (Class<List<String>>) (Object) List.class,
-            params -> Collections.emptyList(),
-            (s, p) -> Arrays.asList(s.split(",")));
+        params -> Collections.emptyList(),
+        (s, p) -> Arrays.asList(s.split(",")));
 
     public static final BundlerParamInfo<String> LICENSE_TYPE = new StandardBundlerParam<>(
             "",
             "",
             BundleParams.PARAM_LICENSE_TYPE,
             String.class,
-            params -> "Unknown",
-            (s, p) -> s);
+        params -> "Unknown",
+        (s, p) -> s);
 
     public static final StandardBundlerParam<File> BUILD_ROOT = new StandardBundlerParam<>(
             "Build Root",
             "The directory in which to use and place temporary files.",
             "buildRoot",
             File.class,
-            params -> {
-                try {
-                    return Files.createTempDirectory("fxbundler").toFile();
-                } catch (IOException ioe) {
-                    return null;
-                }
-            },
-            (s, p) -> new File(s));
+        params -> {
+            try {
+                return Files.createTempDirectory("fxbundler").toFile();
+            } catch (IOException ioe) {
+                return null;
+            }
+        },
+        (s, p) -> new File(s));
 
     public static final StandardBundlerParam<String> IDENTIFIER = new StandardBundlerParam<>(
             "Identifier",
@@ -412,19 +408,19 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "reverse order, such as com.example.myapplication.",
             BundleParams.PARAM_IDENTIFIER,
             String.class,
-            params -> {
-                String s = MAIN_CLASS.fetchFrom(params);
-                if (s == null) {
-                    return null;
-                }
+        params -> {
+            String s = MAIN_CLASS.fetchFrom(params);
+            if (s == null) {
+                return null;
+            }
 
-                int idx = s.lastIndexOf(".");
-                if (idx >= 1) {
-                    return s.substring(0, idx);
-                }
-                return s;
-            },
-            (s, p) -> s);
+            int idx = s.lastIndexOf(".");
+            if (idx >= 1) {
+                return s.substring(0, idx);
+            }
+            return s;
+        },
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> PREFERENCES_ID = new StandardBundlerParam<>(
             "Preferences ID",
@@ -432,8 +428,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "main package name, such as \"com/example/myapplication\".",
             "preferencesID",
             String.class,
-            p -> Optional.ofNullable(IDENTIFIER.fetchFrom(p)).orElse("").replace('.', '/'),
-            (s, p) -> s);
+        p -> Optional.ofNullable(IDENTIFIER.fetchFrom(p)).orElse("").replace('.', '/'),
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> PRELOADER_CLASS = new StandardBundlerParam<>(
             "JavaFX Preloader Class Name",
@@ -441,44 +437,42 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                     "class needs to exist in the classpath, preferably early in the path.",
             "preloader",
             String.class,
-            p -> null,
-            null);
+        p -> null, null);
 
     public static final StandardBundlerParam<Boolean> VERBOSE  = new StandardBundlerParam<>(
             "Verbose",
             "Flag to print out more information and saves configuration files for bundlers.",
             "verbose",
             Boolean.class,
-            params -> false,
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? true : Boolean.valueOf(s));
+        params -> false,
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? true : Boolean.valueOf(s));
 
     public static final StandardBundlerParam<File> DROP_IN_RESOURCES_ROOT = new StandardBundlerParam<>(
             "Drop-In Resources Root",
             "The directory to look for bundler specific drop in resources.  If not set the classpath will be searched.",
             "dropinResourcesRoot",
             File.class,
-            params -> new File("."),
-            (s, p) -> new File(s));
+        params -> new File("."),
+        (s, p) -> new File(s));
 
     @SuppressWarnings("unchecked")
-    public static final StandardBundlerParam<List<Map<String, ? super Object>>> SECONDARY_LAUNCHERS = new StandardBundlerParam<>(
-            "Secondary Launchers",
-            "A collection of bundle param info for secondary launchers",
-            "secondaryLaunchers",
-            (Class<List<Map<String, ? super Object>>>) (Object) List.class,
-            params -> new ArrayList<>(1),
-            // valueOf(null) is false, and we actually do want null in some cases
-            (s, p) -> null);
+    public static final StandardBundlerParam<List<Map<String, ? super Object>>> SECONDARY_LAUNCHERS =
+            new StandardBundlerParam<>(
+                    "Secondary Launchers",
+                    "A collection of bundle param info for secondary launchers",
+                    "secondaryLaunchers",
+                    (Class<List<Map<String, ? super Object>>>) (Object) List.class,
+                params -> new ArrayList<>(1), (s, p) -> null);
 
     @SuppressWarnings("unchecked")
-    public static final StandardBundlerParam<List<Map<String, ? super Object>>> FILE_ASSOCIATIONS = new StandardBundlerParam<>(
-            "File Associations",
-            "A list of maps where each map describes a file association.  Uses the \"fileAssociation.\" series of " +
-                    "bundle arguments in each map.",
-            "fileAssociations",
-            (Class<List<Map<String, ? super Object>>>) (Object) List.class,
-            params -> new ArrayList<>(1),
-            (s, p) -> null);
+    public static final StandardBundlerParam<List<Map<String, ? super Object>>> FILE_ASSOCIATIONS =
+            new StandardBundlerParam<>(
+                    "File Associations",
+                    "A list of maps where each map describes a file association.  Uses the \"fileAssociation.\"" +
+                            "series of bundle arguments in each map.",
+                    "fileAssociations",
+                    (Class<List<Map<String, ? super Object>>>) (Object) List.class,
+                params -> new ArrayList<>(1), (s, p) -> null);
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<String>> FA_EXTENSIONS = new StandardBundlerParam<>(
@@ -486,8 +480,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "The File Extension to be associated, just the extension no dots.",
             "fileAssociation.extension",
             (Class<List<String>>) (Object) List.class,
-            params -> null, // null means not matched to an extension
-            (s, p) -> Arrays.asList(s.split("(,|\\s)+")));
+        params -> null, // null means not matched to an extension
+        (s, p) -> Arrays.asList(s.split("(,|\\s)+")));
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<String>> FA_CONTENT_TYPE = new StandardBundlerParam<>(
@@ -495,40 +489,38 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "Content Type to be associated.  Such as application/x-vnd.my-awesome-app.",
             "fileAssociation.contentType",
             (Class<List<String>>) (Object) List.class,
-            params -> null, // null means not matched to a content/mime type
-            (s, p) -> Arrays.asList(s.split("(,|\\s)+")));
+        params -> null, // null means not matched to a content/mime type
+        (s, p) -> Arrays.asList(s.split("(,|\\s)+")));
 
     public static final StandardBundlerParam<String> FA_DESCRIPTION = new StandardBundlerParam<>(
             "File Association Description",
             "The description to be used for associated files.  The default is \"<appName> File\".",
             "fileAssociation.description",
             String.class,
-            params -> APP_NAME.fetchFrom(params) + " File",
-            null);
+        params -> APP_NAME.fetchFrom(params) + " File", null);
 
     public static final StandardBundlerParam<File> FA_ICON = new StandardBundlerParam<>(
             "File Association Icon",
             "The Icon to be used for associated files.  Defaults to the application icon.",
             "fileAssociation.icon",
             File.class,
-            ICON::fetchFrom,
-            (s, p) -> new File(s));
+        ICON::fetchFrom, (s, p) -> new File(s));
 
     public static final StandardBundlerParam<Boolean> ENABLE_APP_CDS = new StandardBundlerParam<>(
             "Enable AppCDS",
             "Enabled and package with Application Class Data Sharing, including generation of .jsa file.",
             "commercial.AppCDS",
             Boolean.class,
-            p -> false,
-            (s, p) -> Boolean.parseBoolean(s));
+        p -> false,
+        (s, p) -> Boolean.parseBoolean(s));
 
     public static final StandardBundlerParam<String> APP_CDS_CACHE_MODE = new StandardBundlerParam<>(
             "AppCDS Cache Mode",
-            "The mode in which the AppCDS .jpa files are generated and cached.  Current values are 'install', 'auto', and 'auto+install'.",
+            "The mode in which the AppCDS .jpa files are generated and cached.  Current values are 'install', " +
+                    "'auto', and 'auto+install'.",
             "commercial.AppCDS.cache",
             String.class,
-            p -> "auto",
-            (s, p) -> s);
+        p -> "auto", (s, p) -> s);
 
     @SuppressWarnings("unchecked")
     public static final StandardBundlerParam<List<String>> APP_CDS_CLASS_ROOTS = new StandardBundlerParam<>(
@@ -536,8 +528,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "List of \"root classes\" for AppCDS to generate class sharing data from.  Default is the main class.",
             "commercial.AppCDS.classRoots",
             (Class<List<String>>) ((Object) List.class),
-            p -> Collections.singletonList(MAIN_CLASS.fetchFrom(p)),
-            (s, p) -> Arrays.asList(s.split("[ ,:]")));
+        p -> Collections.singletonList(MAIN_CLASS.fetchFrom(p)),
+        (s, p) -> Arrays.asList(s.split("[ ,:]")));
 
     @SuppressWarnings("unchecked")
     public static final BundlerParamInfo<List<Path>> MODULE_PATH = new StandardBundlerParam<>(
@@ -545,42 +537,41 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "When packaging the Java Runtime, this is the path JLink will look in for modules.",
             "module-path",
             (Class<List<Path>>) (Object) List.class,
-            p -> getDefaultModulePath(),
-            (s, p) -> {
-                List<Path> modulePath = Arrays.asList(s.split(File.pathSeparator)).stream()
-                        .map(ss -> new File(ss).toPath())
-                        .collect(Collectors.toList());
-                Path javaBasePath = null;
-                if (modulePath != null) {
+        p -> getDefaultModulePath(),
+        (s, p) -> {
+            List<Path> modulePath = Arrays.stream(s.split(File.pathSeparator))
+                    .map(ss -> new File(ss).toPath())
+                    .collect(Collectors.toList());
+            Path javaBasePath = null;
+            if (modulePath != null) {
+                javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
+            } else {
+                modulePath = new ArrayList();
+            }
+
+            // Add the default JDK module path to the module path.
+            if (javaBasePath == null) {
+                List<Path> jdkModulePath = getDefaultModulePath();
+
+                if (jdkModulePath != null) {
+                    modulePath.addAll(jdkModulePath);
                     javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
-                } else {
-                    modulePath = new ArrayList();
                 }
+            }
 
-                // Add the default JDK module path to the module path.
-                if (javaBasePath == null) {
-                    List<Path> jdkModulePath = getDefaultModulePath();
+            if (javaBasePath == null || !Files.exists(javaBasePath)) {
+                Log.info("Warning: No JDK Modules found.");
+            }
 
-                    if (jdkModulePath != null) {
-                        modulePath.addAll(jdkModulePath);
-                        javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
-                    }
-                }
-
-                if (javaBasePath == null || !Files.exists(javaBasePath)) {
-                    Log.info("Warning: No JDK Modules found.");
-                }
-
-                return modulePath;
-            });
+            return modulePath;
+        });
 
     public static final BundlerParamInfo<String> MODULE = new StandardBundlerParam<>(
             "Main Module",
             "The main module of the application.  This module should have the main-class, and is on the module path.",
             "module",
             String.class,
-            p -> null,
-            (s, p) -> String.valueOf(s));
+        p -> null, (s, p) -> String.valueOf(s));
 
     @SuppressWarnings("unchecked")
     public static final BundlerParamInfo<Set<String>> ADD_MODULES = new StandardBundlerParam<>(
@@ -588,8 +579,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "List of Modules to add to JImage creation, including possible services.",
             "add-modules",
             (Class<Set<String>>) (Object) Set.class,
-            p -> new LinkedHashSet<>(Collections.singleton("java.base")),
-            (s, p) -> new LinkedHashSet<>(Arrays.asList(s.split(","))));
+        p -> new LinkedHashSet<>(Collections.singleton("java.base")),
+        (s, p) -> new LinkedHashSet<>(Arrays.asList(s.split(","))));
 
     @SuppressWarnings("unchecked")
     public static final BundlerParamInfo<Set<String>> LIMIT_MODULES = new StandardBundlerParam<>(
@@ -597,26 +588,24 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             "Modules to Limit JImage creation to.",
             "limit-modules",
             (Class<Set<String>>) (Object) Set.class,
-            p -> new LinkedHashSet<>(),
-            (s, p) -> new LinkedHashSet<>(Arrays.asList(s.split(","))));
+        p -> new LinkedHashSet<>(),
+        (s, p) -> new LinkedHashSet<>(Arrays.asList(s.split(","))));
 
     public static final BundlerParamInfo<Boolean> STRIP_NATIVE_COMMANDS = new StandardBundlerParam<>(
             "Strip Native Executables",
             "Removes native executables from the JImage creation.",
             "strip-native-commands",
             Boolean.class,
-            p -> Boolean.TRUE,
-            (s, p) -> Boolean.valueOf(s));
+        p -> Boolean.TRUE, (s, p) -> Boolean.valueOf(s));
 
-    public static final BundlerParamInfo<Boolean> SINGLETON = new StandardBundlerParam<> (
-        "Singleton",
-        "Prevents from launching multiple instances of application.",
-        BundleParams.PARAM_SINGLETON,
-        Boolean.class,
-        params -> Boolean.FALSE,
-        (s, p) -> Boolean.valueOf(s));
+    public static final BundlerParamInfo<Boolean> SINGLETON = new StandardBundlerParam<>(
+            "Singleton",
+            "Prevents from launching multiple instances of application.",
+            BundleParams.PARAM_SINGLETON,
+            Boolean.class,
+        params -> Boolean.FALSE, (s, p) -> Boolean.valueOf(s));
 
-    public static void extractMainClassInfoFromAppResources(Map<String, ? super Object> params) {
+    private static void extractMainClassInfoFromAppResources(Map<String, ? super Object> params) {
         boolean hasMainClass = params.containsKey(MAIN_CLASS.getID());
         boolean hasMainJar = params.containsKey(MAIN_JAR.getID());
         boolean hasMainJarClassPath = params.containsKey(CLASSPATH.getID());
@@ -647,7 +636,9 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                 return;
             }
             for (RelativeFileSet rfs : rfsl) {
-                if (rfs == null) continue;
+                if (rfs == null) {
+                    continue;
+                }
 
                 for (String s : rfs.getIncludedFiles()) {
                     filesToCheck.add(new String[]{rfs.getBaseDirectory().toString(), s});
@@ -661,11 +652,15 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
         for (String[] fnames : filesToCheck) {
             try {
                 // only sniff jars
-                if (!fnames[1].toLowerCase().endsWith(".jar")) continue;
+                if (!fnames[1].toLowerCase().endsWith(".jar")) {
+                    continue;
+                }
 
                 File file = new File(fnames[0], fnames[1]);
                 // that actually exist
-                if (!file.exists()) continue;
+                if (!file.exists()) {
+                    continue;
+                }
 
                 try (JarFile jf = new JarFile(file)) {
                     Manifest m = jf.getManifest();
@@ -683,13 +678,13 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                             } else {
                                 if (fxMain != null) {
                                     Log.info(MessageFormat.format(
-                                            "The jar {0} has an FX Application class{1} that does not match the declared main {2}",
-                                            fnames[1], fxMain, declaredMainClass));
+                                            "The jar {0} has an FX Application class{1} that does not match the " +
+                                                    "declared main {2}", fnames[1], fxMain, declaredMainClass));
                                 }
                                 if (mainClass != null) {
                                     Log.info(MessageFormat.format(
-                                            "The jar {0} has a main class {1} that does not match the declared main {2}",
-                                            fnames[1], mainClass, declaredMainClass));
+                                            "The jar {0} has a main class {1} that does not match the declared " +
+                                                    "main {2}", fnames[1], mainClass, declaredMainClass));
                                 }
                                 continue;
                             }
@@ -721,13 +716,14 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                         break;
                     }
                 }
-            } catch (IOException ignore) {
-                ignore.printStackTrace();
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         }
     }
 
-    public static void validateMainClassInfoFromAppResources(Map<String, ? super Object> params) throws ConfigException {
+    public static void validateMainClassInfoFromAppResources(Map<String, ? super Object> params)
+            throws ConfigException {
         boolean hasMainClass = params.containsKey(MAIN_CLASS.getID());
         boolean hasMainJar = params.containsKey(MAIN_JAR.getID());
         boolean hasMainJarClassPath = params.containsKey(CLASSPATH.getID());
@@ -741,19 +737,22 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
 
         if (!params.containsKey(MAIN_CLASS.getID())) {
             if (hasMainJar) {
-                throw new ConfigException(
-                        MessageFormat.format("An application class was not specified nor was one found in the jar {0}",
-                                MAIN_JAR.fetchFrom(params)),
-                        MessageFormat.format("Please specify a applicationClass or ensure that the jar {0} specifies one in the manifest.",
-                                MAIN_JAR.fetchFrom(params)));
+                throw new ConfigException(MessageFormat.format(
+                        "An application class was not specified nor was one found in the jar {0}",
+                        MAIN_JAR.fetchFrom(params)),
+                        MessageFormat.format("Please specify a applicationClass or ensure that the jar {0} specifies " +
+                                        "one in the manifest.", MAIN_JAR.fetchFrom(params)));
             } else if (hasMainJarClassPath) {
                 throw new ConfigException(
                         "An application class was not specified nor was one found in the supplied classpath",
-                        "Please specify a applicationClass or ensure that the classpath has a jar containing one in the manifest.");
+                        "Please specify a applicationClass or ensure that the classpath has a jar containing one " +
+                                "in the manifest.");
             } else {
                 throw new ConfigException(
-                        "An application class was not specified nor was one found in the supplied application resources",
-                        "Please specify a applicationClass or ensure that the appResources has a jar containing one in the manifest.");
+                        "An application class was not specified nor was one found in the supplied " +
+                                "application resources",
+                        "Please specify a applicationClass or ensure that the appResources has a jar containing " +
+                                "one in the manifest.");
             }
         }
     }
@@ -763,11 +762,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
         List<String> l = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean quoted = false;
-        boolean escaped = false;
         for (char c : s.toCharArray()) {
-            if (escaped) {
-                current.append(c);
-            } else if ('"' == c) {
+            if ('"' == c) {
                 quoted = !quoted;
             } else if (!quoted && Character.isWhitespace(c)) {
                 l.add(current.toString());
@@ -780,7 +776,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
         return l;
     }
 
-    private static List<RelativeFileSet> createAppResourcesListFromString(String s, Map<String, ? super Object> objectObjectMap) {
+    private static List<RelativeFileSet> createAppResourcesListFromString(
+            String s, Map<String, ? super Object> objectObjectMap) {
         List<RelativeFileSet> result = new ArrayList<>();
         for (String path : s.split("[:;]")) {
             File f = new File(path);
@@ -810,32 +807,32 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             File mainJarFile = new File(appResourcesRoot, moduleName);
 
             if (mainJarFile.exists()) {
-                return new RelativeFileSet(appResourcesRoot, new LinkedHashSet<>(Collections.singletonList(mainJarFile)));
-            }
-            else {
+                return new RelativeFileSet(appResourcesRoot, new LinkedHashSet<>(
+                        Collections.singletonList(mainJarFile)));
+            } else {
                 List<Path> modulePath = MODULE_PATH.fetchFrom(params);
                 Path modularJarPath = JLinkBundlerHelper.findPathOfModule(modulePath, moduleName);
 
                 if (modularJarPath != null && Files.exists(modularJarPath)) {
-                    return new RelativeFileSet(appResourcesRoot, new LinkedHashSet<>(Collections.singletonList(modularJarPath.toFile())));
+                    return new RelativeFileSet(appResourcesRoot, new LinkedHashSet<>(
+                            Collections.singletonList(modularJarPath.toFile())));
                 }
             }
         }
 
-        throw new IllegalArgumentException(
-                new ConfigException(MessageFormat.format("The configured main jar does not exist {0}", moduleName),
-                        "The main jar must be specified relative to the app resources (not an absolute path), and " +
-                                "must exist within those resources."));
+        throw new IllegalArgumentException(new ConfigException(MessageFormat.format(
+                "The configured main jar does not exist {0}", moduleName),
+                "The main jar must be specified relative to the app resources (not an absolute path), and " +
+                        "must exist within those resources."));
     }
 
-    public static List<Path> getDefaultModulePath() {
+    private static List<Path> getDefaultModulePath() {
         List<Path> result = new ArrayList<>();
         Path jdkModulePath = Paths.get(System.getProperty("java.home"), "jmods").toAbsolutePath();
 
         if (jdkModulePath != null && Files.exists(jdkModulePath)) {
             result.add(jdkModulePath);
-        }
-        else {
+        } else {
             // On a developer build the JDK Home isn't where we expect it
             // relative to the jmods directory. Do some extra
             // processing to find it.

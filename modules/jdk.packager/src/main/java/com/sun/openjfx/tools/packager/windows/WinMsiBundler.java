@@ -103,48 +103,47 @@ public class WinMsiBundler extends AbstractBundler {
             "",
             "win.app.bundler",
             WinAppBundler.class,
-            params -> new WinAppBundler(),
-            null);
+        params -> new WinAppBundler(), null);
 
     public static final BundlerParamInfo<WinServiceBundler> SERVICE_BUNDLER = new WindowsBundlerParam<>(
             "",
             "",
             "win.service.bundler",
             WinServiceBundler.class,
-            params -> new WinServiceBundler(),
-            null);
+        params -> new WinServiceBundler(), null);
 
     public static final BundlerParamInfo<Boolean> CAN_USE_WIX36 = new WindowsBundlerParam<>(
             "",
             "",
             "win.msi.canUseWix36",
             Boolean.class,
-            params -> false,
-            (s, p) -> Boolean.valueOf(s));
+        params -> false, (s, p) -> Boolean.valueOf(s));
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new WindowsBundlerParam<>(
             "",
             "",
             "configRoot",
             File.class,
-            params -> {
-                File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "windows");
-                imagesRoot.mkdirs();
-                return imagesRoot;
-            },
-            (s, p) -> null);
+        params -> {
+            File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "windows");
+            imagesRoot.mkdirs();
+            return imagesRoot;
+        },
+        (s, p) -> null);
 
     public static final BundlerParamInfo<File> MSI_IMAGE_DIR = new WindowsBundlerParam<>(
             "",
             "",
             "win.msi.imageDir",
             File.class,
-            params -> {
-                File imagesRoot = IMAGES_ROOT.fetchFrom(params);
-                if (!imagesRoot.exists()) imagesRoot.mkdirs();
-                return new File(imagesRoot, "win-msi.image");
-            },
-            (s, p) -> null);
+        params -> {
+            File imagesRoot = IMAGES_ROOT.fetchFrom(params);
+            if (!imagesRoot.exists()) {
+                imagesRoot.mkdirs();
+            }
+            return new File(imagesRoot, "win-msi.image");
+        },
+        (s, p) -> null);
 
     public static final BundlerParamInfo<File> WIN_APP_IMAGE = new WindowsBundlerParam<>(
             "",
@@ -152,7 +151,7 @@ public class WinMsiBundler extends AbstractBundler {
             "win.app.image",
             File.class,
             null,
-            (s, p) -> null);
+        (s, p) -> null);
 
     public static final StandardBundlerParam<Boolean> MSI_SYSTEM_WIDE  = new StandardBundlerParam<>(
             "System Wide",
@@ -160,10 +159,9 @@ public class WinMsiBundler extends AbstractBundler {
                     "means use the system default.",
             "win.msi." + BundleParams.PARAM_SYSTEM_WIDE,
             Boolean.class,
-            params -> params.containsKey(SYSTEM_WIDE.getID())
-                    ? SYSTEM_WIDE.fetchFrom(params)
-                    : true, // MSIs default to system wide
-            (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
+        params -> params.containsKey(SYSTEM_WIDE.getID()) ?
+                SYSTEM_WIDE.fetchFrom(params) : true, // MSIs default to system wide
+        (s, p) -> (s == null || "null".equalsIgnoreCase(s)) ? null : Boolean.valueOf(s));
 
 
     public static final StandardBundlerParam<String> PRODUCT_VERSION = new StandardBundlerParam<>(
@@ -172,53 +170,53 @@ public class WinMsiBundler extends AbstractBundler {
             "win.msi.productVersion",
             String.class,
             VERSION::fetchFrom,
-            (s, p) -> s
-    );
+        (s, p) -> s);
 
     public static final BundlerParamInfo<UUID> UPGRADE_UUID = new WindowsBundlerParam<>(
             "Upgrade UUID",
             "The UUID associated with upgrades for this package.",
             "win.msi.upgradeUUID",
             UUID.class,
-            params -> UUID.randomUUID(), // TODO check to see if identifier is a valid UUID during default
-            (s, p) -> UUID.fromString(s));
+        params -> UUID.randomUUID(), // TODO check to see if identifier is a valid UUID during default
+        (s, p) -> UUID.fromString(s));
 
     private static final String TOOL_CANDLE = "candle.exe";
     private static final String TOOL_LIGHT = "light.exe";
     // autodetect just v3.7, v3.8, and 3.9
-    private static final String AUTODETECT_DIRS = ";C:\\Program Files (x86)\\WiX Toolset v3.9\\bin;C:\\Program Files\\WiX Toolset v3.9\\bin;C:\\Program Files (x86)\\WiX Toolset v3.8\\bin;C:\\Program Files\\WiX Toolset v3.8\\bin;C:\\Program Files (x86)\\WiX Toolset v3.7\\bin;C:\\Program Files\\WiX Toolset v3.7\\bin";
+    private static final String AUTODETECT_DIRS = ";C:\\Program Files (x86)\\WiX Toolset v3.9\\bin;" +
+            "C:\\Program Files\\WiX Toolset v3.9\\bin;C:\\Program Files (x86)\\WiX Toolset v3.8\\bin;" +
+            "C:\\Program Files\\WiX Toolset v3.8\\bin;C:\\Program Files (x86)\\WiX Toolset v3.7\\bin;" +
+            "C:\\Program Files\\WiX Toolset v3.7\\bin";
 
     public static final BundlerParamInfo<String> TOOL_CANDLE_EXECUTABLE = new WindowsBundlerParam<>(
             "WiX candle.exe location",
             "File path to candle.exe from the WiX toolset.",
             "win.msi.candle.exe",
             String.class,
-            params -> {
-                for (String dirString : (System.getenv("PATH") + AUTODETECT_DIRS).split(";")) {
-                    File f = new File(dirString.replace("\"", ""), TOOL_CANDLE);
-                    if (f.isFile()) {
-                        return f.toString();
-                    }
+        params -> {
+            for (String dirString : (System.getenv("PATH") + AUTODETECT_DIRS).split(";")) {
+                File f = new File(dirString.replace("\"", ""), TOOL_CANDLE);
+                if (f.isFile()) {
+                    return f.toString();
                 }
-                return null;
-            },
-            null);
+            }
+            return null;
+        }, null);
 
     public static final BundlerParamInfo<String> TOOL_LIGHT_EXECUTABLE = new WindowsBundlerParam<>(
             "WiX light.exe location",
             "File path to light.exe from the WiX toolset.",
             "win.msi.light.exe",
             String.class,
-            params -> {
-                for (String dirString : (System.getenv("PATH") + AUTODETECT_DIRS).split(";")) {
-                    File f = new File(dirString.replace("\"", ""), TOOL_LIGHT);
-                    if (f.isFile()) {
-                        return f.toString();
-                    }
+        params -> {
+            for (String dirString : (System.getenv("PATH") + AUTODETECT_DIRS).split(";")) {
+                File f = new File(dirString.replace("\"", ""), TOOL_LIGHT);
+                if (f.isFile()) {
+                    return f.toString();
                 }
-                return null;
-            },
-            null);
+            }
+            return null;
+        }, null);
 
     @Override
     public String getName() {
@@ -253,13 +251,13 @@ public class WinMsiBundler extends AbstractBundler {
                 MENU_GROUP,
                 MENU_HINT,
                 PRODUCT_VERSION,
-//                RUN_AT_STARTUP,
+                // RUN_AT_STARTUP,
                 SHORTCUT_HINT,
-//                SERVICE_HINT,
-//                START_ON_INSTALL,
-//                STOP_ON_UNINSTALL,
+                // SERVICE_HINT,
+                // START_ON_INSTALL,
+                // STOP_ON_UNINSTALL,
                 SYSTEM_WIDE,
-                //UPGRADE_UUID,
+                // UPGRADE_UUID,
                 VENDOR,
                 LICENSE_FILE,
                 INSTALLDIR_CHOOSER);
@@ -271,7 +269,7 @@ public class WinMsiBundler extends AbstractBundler {
     }
 
     static class VersionExtractor extends PrintStream {
-        double version = 0f;
+        double version;
 
         public VersionExtractor() {
             super(new ByteArrayOutputStream());
@@ -314,7 +312,9 @@ public class WinMsiBundler extends AbstractBundler {
     @Override
     public boolean validate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
         try {
-            if (p == null) throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
+            if (p == null) {
+                throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
+            }
 
             // run basic validation to ensure requirements are met
             // we are not interested in return code, only possible exception
@@ -342,9 +342,8 @@ public class WinMsiBundler extends AbstractBundler {
                 bad = true;
             }
 
-            if (bad){
-                throw new ConfigException(
-                        "Can not find WiX tools (light.exe, candle.exe).",
+            if (bad) {
+                throw new ConfigException("Can not find WiX tools (light.exe, candle.exe).",
                         "Download WiX 3.0 or later from http://wix.sf.net and add it to the PATH.");
             }
 
@@ -403,7 +402,6 @@ public class WinMsiBundler extends AbstractBundler {
             }
         }
     }
-
 
     /**
      * http://msdn.microsoft.com/en-us/library/aa370859%28v=VS.85%29.aspx
@@ -505,10 +503,12 @@ public class WinMsiBundler extends AbstractBundler {
 
     public File bundle(Map<String, ? super Object> p, File outdir) {
         if (!outdir.isDirectory() && !outdir.mkdirs()) {
-            throw new RuntimeException(MessageFormat.format("Output directory {0} cannot be created.", outdir.getAbsolutePath()));
+            throw new RuntimeException(MessageFormat.format(
+                    "Output directory {0} cannot be created.", outdir.getAbsolutePath()));
         }
         if (!outdir.canWrite()) {
-            throw new RuntimeException(MessageFormat.format("Output directory {0} is not writable.", outdir.getAbsolutePath()));
+            throw new RuntimeException(MessageFormat.format(
+                    "Output directory {0} is not writable.", outdir.getAbsolutePath()));
         }
 
         // validate we have valid tools before continuing
@@ -534,8 +534,7 @@ public class WinMsiBundler extends AbstractBundler {
                 p.put(MENU_HINT.getID(), true);
             }
 
-            if (prepareProto(p) && prepareWiXConfig(p)
-                    && prepareBasicProjectConfig(p)) {
+            if (prepareProto(p) && prepareWiXConfig(p) && prepareBasicProjectConfig(p)) {
                 File configScriptSrc = getConfig_Script(p);
                 if (configScriptSrc.exists()) {
                     //we need to be running post script in the image folder
@@ -693,8 +692,8 @@ public class WinMsiBundler extends AbstractBundler {
 
     private int id;
     private int compId;
-    private final static String LAUNCHER_ID = "LauncherId";
-    private final static String LAUNCHER_SVC_ID = "LauncherSvcId";
+    private static final String LAUNCHER_ID = "LauncherId";
+    private static final String LAUNCHER_SVC_ID = "LauncherSvcId";
 
     /**
      * Overrides the dialog sequence in built-in dialog set "WixUI_InstallDir"
@@ -719,7 +718,7 @@ public class WinMsiBundler extends AbstractBundler {
         String uiBlock = "     <UI/>\n"; // UI-less element
 
         if (INSTALLDIR_CHOOSER.fetchFrom(params)) {
-            boolean enableTweakForExcludingLicense = (getLicenseFile(params) == null);
+            boolean enableTweakForExcludingLicense = getLicenseFile(params) == null;
             uiBlock =
                 "     <UI>\n" +
                 "     <Property Id=\"WIXUI_INSTALLDIR\" Value=\"APPLICATIONFOLDER\" />\n" +
@@ -738,9 +737,9 @@ public class WinMsiBundler extends AbstractBundler {
 
     private String getAppCDSBlock(Map<String, ? super Object> params) {
         String cdsBlock = "";
-        if (ENABLE_APP_CDS.fetchFrom(params)
-                && ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params))
-                || "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))) {
+        if (ENABLE_APP_CDS.fetchFrom(params) &&
+                ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)) ||
+                        "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))) {
             cdsBlock =
                     "     <CustomAction Id=\"CACHE_CDS\"\n" +
                             "          Directory=\"APPLICATIONFOLDER\"\n" +
@@ -778,9 +777,9 @@ public class WinMsiBundler extends AbstractBundler {
         }
 
         // have files => need to output component
-        out.println(prefix + " <Component Id=\"comp" + (compId++) + "\" DiskId=\"1\""
-                + " Guid=\"" + UUID.randomUUID().toString() + "\""
-                + (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
+        out.println(prefix + " <Component Id=\"comp" + (compId++) + "\" DiskId=\"1\"" +
+                " Guid=\"" + UUID.randomUUID().toString() + "\"" +
+                (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
         out.println(prefix + "  <CreateFolder/>");
         out.println(prefix + "  <RemoveFolder Id=\"RemoveDir" + (id++) + "\" On=\"uninstall\" />");
 
@@ -794,7 +793,7 @@ public class WinMsiBundler extends AbstractBundler {
         //   - we doing user level install as file can not serve as KeyPath
         //   - if we adding shortcut in this component
 
-        for (File f: files) {
+        for (File f : files) {
             boolean isLauncher = f.equals(launcherFile);
             if (isLauncher) {
                 needRegistryKey = true;
@@ -803,13 +802,12 @@ public class WinMsiBundler extends AbstractBundler {
 
         if (needRegistryKey) {
             // has to be under HKCU to make WiX happy
-            out.println(prefix + "    <RegistryKey Root=\"HKCU\" "
-                    + " Key=\"Software\\" + VENDOR.fetchFrom(params) + "\\"
-                    + APP_NAME.fetchFrom(params) + "\""
-                    + (CAN_USE_WIX36.fetchFrom(params)
-                    ? ">" : " Action=\"createAndRemoveOnUninstall\">"));
-            out.println(prefix + "     <RegistryValue Name=\"Version\" Value=\""
-                    + VERSION.fetchFrom(params) + "\" Type=\"string\" KeyPath=\"yes\"/>");
+            out.println(prefix + "    <RegistryKey Root=\"HKCU\" " +
+                    " Key=\"Software\\" + VENDOR.fetchFrom(params) + "\\" +
+                    APP_NAME.fetchFrom(params) + "\"" +
+                    (CAN_USE_WIX36.fetchFrom(params) ? ">" : " Action=\"createAndRemoveOnUninstall\">"));
+            out.println(prefix + "     <RegistryValue Name=\"Version\" Value=\"" +
+                    VERSION.fetchFrom(params) + "\" Type=\"string\" KeyPath=\"yes\"/>");
             out.println(prefix + "   </RegistryKey>");
         }
 
@@ -835,19 +833,19 @@ public class WinMsiBundler extends AbstractBundler {
             idToFileMap.put(f.getName(), thisFileId);
 
             out.println(prefix + "   <File Id=\"" +
-                    thisFileId + "\""
-                    + " Name=\"" + f.getName() + "\" "
-                    + " Source=\"" + relativePath(imageRootDir, f) + "\""
-                    + (BIT_ARCH_64.fetchFrom(params) ? " ProcessorArchitecture=\"x64\"" : "") + ">");
+                    thisFileId + "\"" +
+                    " Name=\"" + f.getName() + "\" " +
+                    " Source=\"" + relativePath(imageRootDir, f) + "\"" +
+                    (BIT_ARCH_64.fetchFrom(params) ? " ProcessorArchitecture=\"x64\"" : "") + ">");
             if (doShortcuts && desktopShortcut) {
-                out.println(prefix + "  <Shortcut Id=\"desktopShortcut\" Directory=\"DesktopFolder\""
-                        + " Name=\"" + APP_NAME.fetchFrom(params) + "\" WorkingDirectory=\"INSTALLDIR\""
-                        + " Advertise=\"no\" Icon=\"DesktopIcon.exe\" IconIndex=\"0\" />");
+                out.println(prefix + "  <Shortcut Id=\"desktopShortcut\" Directory=\"DesktopFolder\"" +
+                        " Name=\"" + APP_NAME.fetchFrom(params) + "\" WorkingDirectory=\"INSTALLDIR\"" +
+                        " Advertise=\"no\" Icon=\"DesktopIcon.exe\" IconIndex=\"0\" />");
             }
             if (doShortcuts && menuShortcut) {
-                out.println(prefix + "     <Shortcut Id=\"ExeShortcut\" Directory=\"ProgramMenuDir\""
-                        + " Name=\"" + APP_NAME.fetchFrom(params)
-                        + "\" Advertise=\"no\" Icon=\"StartMenuIcon.exe\" IconIndex=\"0\" />");
+                out.println(prefix + "     <Shortcut Id=\"ExeShortcut\" Directory=\"ProgramMenuDir\"" +
+                        " Name=\"" + APP_NAME.fetchFrom(params) +
+                        "\" Advertise=\"no\" Icon=\"StartMenuIcon.exe\" IconIndex=\"0\" />");
             }
 
             List<Map<String, ? super Object>> secondaryLaunchers = SECONDARY_LAUNCHERS.fetchFrom(params);
@@ -856,14 +854,14 @@ public class WinMsiBundler extends AbstractBundler {
                 File secondaryLauncherFile = new File(imageRootDir, WinAppBundler.getLauncherName(sl));
                 if (f.equals(secondaryLauncherFile)) {
                     if (SHORTCUT_HINT.fetchFrom(sl)) {
-                        out.println(prefix + "  <Shortcut Id=\"desktopShortcut" + i + "\" Directory=\"DesktopFolder\""
-                                + " Name=\"" + APP_NAME.fetchFrom(sl) + "\" WorkingDirectory=\"INSTALLDIR\""
-                                + " Advertise=\"no\" Icon=\"Launcher" + i + ".exe\" IconIndex=\"0\" />");
+                        out.println(prefix + "  <Shortcut Id=\"desktopShortcut" + i + "\" Directory=\"DesktopFolder\"" +
+                                " Name=\"" + APP_NAME.fetchFrom(sl) + "\" WorkingDirectory=\"INSTALLDIR\"" +
+                                " Advertise=\"no\" Icon=\"Launcher" + i + ".exe\" IconIndex=\"0\" />");
                     }
                     if (MENU_HINT.fetchFrom(sl)) {
-                        out.println(prefix + "     <Shortcut Id=\"ExeShortcut" + i + "\" Directory=\"ProgramMenuDir\""
-                                + " Name=\"" + APP_NAME.fetchFrom(sl)
-                                + "\" Advertise=\"no\" Icon=\"Launcher" + i + ".exe\" IconIndex=\"0\" />");
+                        out.println(prefix + "     <Shortcut Id=\"ExeShortcut" + i + "\" Directory=\"ProgramMenuDir\"" +
+                                " Name=\"" + APP_NAME.fetchFrom(sl) + "\" Advertise=\"no\" Icon=\"Launcher" +
+                                i + ".exe\" IconIndex=\"0\" />");
                         //Should we allow different menu groups?  Not for now.
                     }
                 }
@@ -924,7 +922,8 @@ public class WinMsiBundler extends AbstractBundler {
                                     defaultedMimes.add(mime);
                                 }
                             }
-                            out.println(prefix + "      <Verb Id='open' Command='Open' TargetFile='" + LAUNCHER_ID + "' Argument='\"%1\"' />");
+                            out.println(prefix + "      <Verb Id='open' Command='Open' TargetFile='" +
+                                    LAUNCHER_ID + "' Argument='\"%1\"' />");
                             out.println(prefix + "    </Extension>");
                         }
                         out.println(prefix + "   </ProgId>");
@@ -943,7 +942,7 @@ public class WinMsiBundler extends AbstractBundler {
         // http://wixtoolset.org/documentation/manual/v3/xsd/wix/serviceinstall.html
 
         boolean needServiceEntries = false;
-        for (File f: files) {
+        for (File f : files) {
             boolean isLauncherSvc = f.equals(launcherSvcFile);
             if (isLauncherSvc && SERVICE_HINT.fetchFrom(params)) {
                 needServiceEntries = true;
@@ -951,39 +950,38 @@ public class WinMsiBundler extends AbstractBundler {
         }
 
         if (needServiceEntries) {
-            out.println(prefix + " <Component Id=\"comp" + (compId++) + "\" DiskId=\"1\""
-                    + " Guid=\"" + UUID.randomUUID().toString() + "\""
-                    + (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
+            out.println(prefix + " <Component Id=\"comp" + (compId++) + "\" DiskId=\"1\"" +
+                    " Guid=\"" + UUID.randomUUID().toString() + "\"" +
+                    (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
             out.println("  <CreateFolder/>");
             out.println("  <RemoveFolder Id=\"RemoveDir" + (id++) + "\" On=\"uninstall\" />");
 
-            out.println(prefix + "   <File Id=\"" + LAUNCHER_SVC_ID + "\""
-                    + " Name=\"" + launcherSvcFile.getName() + "\" "
-                    + " Source=\"" + relativePath(imageRootDir, launcherSvcFile) + "\""
-                    + (BIT_ARCH_64.fetchFrom(params) ? " ProcessorArchitecture=\"x64\"" : "")
-                    + " KeyPath=\"yes\">");
+            out.println(prefix + "   <File Id=\"" + LAUNCHER_SVC_ID + "\"" +
+                    " Name=\"" + launcherSvcFile.getName() + "\" " +
+                    " Source=\"" + relativePath(imageRootDir, launcherSvcFile) + "\"" +
+                    (BIT_ARCH_64.fetchFrom(params) ? " ProcessorArchitecture=\"x64\"" : "") +
+                    " KeyPath=\"yes\">");
             out.println(prefix + "   </File>");
-            out.println(prefix + "   <ServiceInstall Id=\"" + APP_FS_NAME.fetchFrom(params) + "\""
-                    + " Name=\"" + APP_NAME.fetchFrom(params) + "\""
-                    + " Description=\"" + DESCRIPTION.fetchFrom(params) + "\""
-                    + " ErrorControl=\"normal\""
-                    + " Start=\"" + (RUN_AT_STARTUP.fetchFrom(params) ? "auto" : "demand") + "\""
-                    + " Type=\"ownProcess\" Vital=\"yes\" Account=\"LocalSystem\""
-                    + " Arguments='-mainExe \"" + launcherFile.getName() + "\"'/>");
+            out.println(prefix + "   <ServiceInstall Id=\"" + APP_FS_NAME.fetchFrom(params) + "\"" +
+                    " Name=\"" + APP_NAME.fetchFrom(params) + "\"" +
+                    " Description=\"" + DESCRIPTION.fetchFrom(params) + "\"" +
+                    " ErrorControl=\"normal\"" + " Start=\"" +
+                    (RUN_AT_STARTUP.fetchFrom(params) ? "auto" : "demand") + "\"" +
+                    " Type=\"ownProcess\" Vital=\"yes\" Account=\"LocalSystem\"" +
+                    " Arguments='-mainExe \"" + launcherFile.getName() + "\"'/>");
 
-            out.println(prefix + "   <ServiceControl Id=\""+ APP_FS_NAME.fetchFrom(params) + "\""
-                    + " Name=\"" + APP_NAME.fetchFrom(params) + "\""
-                    + (START_ON_INSTALL.fetchFrom(params) ? " Start=\"install\"" : "")
-                    + (STOP_ON_UNINSTALL.fetchFrom(params) ? " Stop=\"uninstall\"" : "")
-                    + " Remove=\"uninstall\""
-                    + " Wait=\"yes\" />");
+            out.println(prefix + "   <ServiceControl Id=\"" + APP_FS_NAME.fetchFrom(params) + "\"" +
+                    " Name=\"" + APP_NAME.fetchFrom(params) + "\"" +
+                    (START_ON_INSTALL.fetchFrom(params) ? " Start=\"install\"" : "") +
+                    (STOP_ON_UNINSTALL.fetchFrom(params) ? " Stop=\"uninstall\"" : "") +
+                    " Remove=\"uninstall\"" +
+                    " Wait=\"yes\" />");
 
             out.println(prefix + " </Component>");
         }
 
         for (File d : dirs) {
-            out.println(prefix + " <Directory Id=\"dirid" + (id++)
-                    + "\" Name=\"" + d.getName() + "\">");
+            out.println(prefix + " <Directory Id=\"dirid" + (id++) + "\" Name=\"" + d.getName() + "\">");
             walkFileTree(params, d, out, prefix + " ");
             out.println(prefix + " </Directory>");
         }
@@ -1017,8 +1015,7 @@ public class WinMsiBundler extends AbstractBundler {
             // install to user folder
             out.println("  <Directory Name=\"AppData\" Id=\"LocalAppDataFolder\">");
         }
-        out.println("   <Directory Id=\"APPLICATIONFOLDER\" Name=\""
-                + APP_NAME.fetchFrom(params) + "\">");
+        out.println("   <Directory Id=\"APPLICATIONFOLDER\" Name=\"" + APP_NAME.fetchFrom(params) + "\">");
 
         // dynamic part
         id = 0;
@@ -1036,18 +1033,18 @@ public class WinMsiBundler extends AbstractBundler {
         if (MENU_HINT.fetchFrom(params)) {
             out.println("  <Directory Id=\"ProgramMenuFolder\">");
             out.println("    <Directory Id=\"ProgramMenuDir\" Name=\"" + MENU_GROUP.fetchFrom(params) + "\">");
-            out.println("      <Component Id=\"comp" + (compId++) + "\""
-                    + " Guid=\"" + UUID.randomUUID().toString() + "\""
-                    + (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
+            out.println("      <Component Id=\"comp" + (compId++) + "\"" +
+                    " Guid=\"" + UUID.randomUUID().toString() + "\"" +
+                    (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
             out.println("        <RemoveFolder Id=\"ProgramMenuDir\" On=\"uninstall\" />");
             // This has to be under HKCU to make WiX happy.
             // There are numberous discussions on this amoung WiX users
             // (if user A installs and user B uninstalls then key is left behind)
             // and there are suggested workarounds but none of them are appealing.
             // Leave it for now
-            out.println("         <RegistryValue Root=\"HKCU\" Key=\"Software\\"
-                    + VENDOR.fetchFrom(params) + "\\" + APP_NAME.fetchFrom(params)
-                    + "\" Type=\"string\" Value=\"\" />");
+            out.println("         <RegistryValue Root=\"HKCU\" Key=\"Software\\" +
+                    VENDOR.fetchFrom(params) + "\\" + APP_NAME.fetchFrom(params) +
+                    "\" Type=\"string\" Value=\"\" />");
             out.println("      </Component>");
             out.println("    </Directory>");
             out.println(" </Directory>");
@@ -1085,12 +1082,12 @@ public class WinMsiBundler extends AbstractBundler {
         return prepareMainProjectFile(params) && prepareContentList(params);
 
     }
-    private final static String MSI_PROJECT_TEMPLATE = "template.wxs";
-    private final static String MSI_PROJECT_CONTENT_FILE = "bundle.wxi";
+    private static final  String MSI_PROJECT_TEMPLATE = "template.wxs";
+    private static final String MSI_PROJECT_CONTENT_FILE = "bundle.wxi";
 
     private File buildMSI(Map<String, ? super Object> params, File outdir) throws IOException {
         File tmpDir = new File(BUILD_ROOT.fetchFrom(params), "tmp");
-        File candleOut = new File(tmpDir, APP_NAME.fetchFrom(params) +".wixobj");
+        File candleOut = new File(tmpDir, APP_NAME.fetchFrom(params) + ".wixobj");
         File msiOut = new File(outdir, INSTALLER_FILE_NAME.fetchFrom(params) + ".msi");
 
         Log.verbose(MessageFormat.format("Preparing MSI config: {0}", msiOut.getAbsolutePath()));
@@ -1109,14 +1106,13 @@ public class WinMsiBundler extends AbstractBundler {
 
         Log.verbose(MessageFormat.format("Generating MSI: {0}", msiOut.getAbsolutePath()));
 
-        boolean enableLicenseUI = (getLicenseFile(params) != null);
-        boolean enableInstalldirUI = INSTALLDIR_CHOOSER.fetchFrom(params);
+        boolean enableLicenseUI = getLicenseFile(params) != null;
 
         List<String> commandLine = new ArrayList<>();
 
         commandLine.add(TOOL_LIGHT_EXECUTABLE.fetchFrom(params));
         if (enableLicenseUI) {
-            commandLine.add("-dWixUILicenseRtf="+getLicenseFile(params));
+            commandLine.add("-dWixUILicenseRtf=" + getLicenseFile(params));
         }
         commandLine.add("-nologo");
         commandLine.add("-spdb");
@@ -1124,6 +1120,7 @@ public class WinMsiBundler extends AbstractBundler {
         commandLine.add(candleOut.getAbsolutePath());
         commandLine.add("-ext");
         commandLine.add("WixUtilExtension");
+        boolean enableInstalldirUI = INSTALLDIR_CHOOSER.fetchFrom(params);
         if (enableLicenseUI || enableInstalldirUI) {
             commandLine.add("-ext");
             commandLine.add("WixUIExtension.dll");
@@ -1162,15 +1159,15 @@ public class WinMsiBundler extends AbstractBundler {
             if (!existingLicenseIsRTF) {
                 List<String> oldLicense = Files.readAllLines(f.toPath());
                 try (Writer w = Files.newBufferedWriter(f.toPath(), Charset.forName("Windows-1252"))) {
-                    w.write("{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Arial;}}\n" +
-                            "\\viewkind4\\uc1\\pard\\sa200\\sl276\\slmult1\\lang9\\fs20 ");
+                    w.write("{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Arial;}}" +
+                            "\n\\viewkind4\\uc1\\pard\\sa200\\sl276\\slmult1\\lang9\\fs20 ");
                     oldLicense.forEach(l -> {
                         try {
                             for (char c : l.toCharArray()) {
-                                //0x00 <= ch < 0x20 Escaped (\'hh)
-                                //0x20 <= ch < 0x80 Raw(non - escaped) character
-                                //0x80 <= ch <= 0xFF Escaped(\ 'hh)
-                                //0x5C, 0x7B, 0x7D (special RTF characters\,{,})Escaped(\'hh)
+                                // 0x00 <= ch < 0x20 Escaped (\'hh)
+                                // 0x20 <= ch < 0x80 Raw(non - escaped) character
+                                // 0x80 <= ch <= 0xFF Escaped(\ 'hh)
+                                // 0x5C, 0x7B, 0x7D (special RTF characters\,{,})Escaped(\'hh)
                                 // ch > 0xff Escaped (\\ud###?)
                                 if (c < 0x10) {
                                     w.write("\\'0");
@@ -1182,9 +1179,7 @@ public class WinMsiBundler extends AbstractBundler {
                                     // so we trail with a replacement character if
                                     // the font lacks that character - '?'
                                     w.write("?");
-                                } else if ((c < 0x20)
-                                        || (c >= 0x80)
-                                        || (c == 0x5C) || (c == 0x7B) || (c == 0x7D)) {
+                                } else if ((c < 0x20) || (c >= 0x80) || (c == 0x5C) || (c == 0x7B) || (c == 0x7D)) {
                                     w.write("\\'");
                                     w.write(Integer.toHexString(c));
                                 } else {

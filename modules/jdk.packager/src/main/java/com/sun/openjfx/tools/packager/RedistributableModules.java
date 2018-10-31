@@ -29,42 +29,39 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.lang.module.ModuleDescriptor;
+import java.lang.module.ModuleFinder;
+import java.lang.module.ModuleReader;
+import java.lang.module.ModuleReference;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 
 import jdk.tools.jlink.internal.packager.AppRuntimeImageBuilder;
-
-import java.lang.module.ModuleDescriptor;
-import java.lang.module.ModuleFinder;
-import java.lang.module.ModuleReference;
-import java.lang.module.ModuleReader;
 
 public final class RedistributableModules {
     private static final String JDK_PACKAGER_MODULE = "jdk.packager";
 
     private RedistributableModules() {}
 
-    public static String stripComments(String line) {
+    private static String stripComments(String line) {
         String result = line.trim();
         int i = result.indexOf(";");
 
         if (i >= 0) {
-          result = result.substring(0, i);
-          result = result.trim();
+            result = result.substring(0, i);
+            result = result.trim();
         }
 
         return result;
     }
 
-    public static Set<String> getRedistributableModules(List<Path> modulePath,
-                                                        String filename) {
+    public static Set<String> getRedistributableModules(List<Path> modulePath, String filename) {
         Set<String> result = null;
         Set<String> addModules = new HashSet<>();
         Set<String> limitModules = new HashSet<>();
@@ -77,7 +74,7 @@ public final class RedistributableModules {
 
             try {
                 reader = mref.get().open();
-            } catch (NoSuchElementException | IOException ex) {
+            } catch (NoSuchElementException | IOException ignore) {
             }
 
             if (reader != null) {
@@ -85,7 +82,7 @@ public final class RedistributableModules {
 
                 try {
                     stream = reader.open(filename);
-                } catch (IOException ex) {
+                } catch (IOException ignore) {
                 }
 
                 if (stream != null) {
@@ -105,7 +102,7 @@ public final class RedistributableModules {
                                     result.add(module);
                                 }
                             }
-                        } catch (IOException ex) {
+                        } catch (IOException ignore) {
                         }
                     }
                 }
@@ -115,7 +112,8 @@ public final class RedistributableModules {
         return result;
     }
 
-    public static String getModuleVersion(File moduleFile, List<Path> modulePath, Set<String> addModules, Set<String> limitModules) {
+    public static String getModuleVersion(File moduleFile, List<Path> modulePath,
+                                          Set<String> addModules, Set<String> limitModules) {
         String result = "";
 
         Module module = new Module(moduleFile);

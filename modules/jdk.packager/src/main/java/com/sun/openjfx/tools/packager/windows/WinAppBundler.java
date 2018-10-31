@@ -34,12 +34,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
 import com.sun.openjfx.tools.packager.AbstractAppImageBuilder;
 import com.sun.openjfx.tools.packager.AbstractImageBundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
 import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
@@ -91,8 +91,9 @@ public class WinAppBundler extends AbstractImageBundler {
     @Override
     public boolean validate(Map<String, ? super Object> params) throws UnsupportedPlatformException, ConfigException {
         try {
-            if (params == null) throw new ConfigException("Parameters map is null.",
-                    "Pass in a non-null parameters map.");
+            if (params == null) {
+                throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
+            }
 
             return doValidate(params);
         } catch (RuntimeException re) {
@@ -144,7 +145,7 @@ public class WinAppBundler extends AbstractImageBundler {
             return;
         }
 
-        if ((BIT_ARCH_64.fetchFrom(params) != BIT_ARCH_64_RUNTIME.fetchFrom(params))) {
+        if (BIT_ARCH_64.fetchFrom(params) != BIT_ARCH_64_RUNTIME.fetchFrom(params)) {
             throw new ConfigException("Bit architecture mismatch between FX SDK and JRE runtime.",
                     "Make sure to use JRE runtime with correct bit architecture.");
         }

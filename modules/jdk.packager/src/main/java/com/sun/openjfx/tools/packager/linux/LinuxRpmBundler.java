@@ -25,16 +25,6 @@
 
 package com.sun.openjfx.tools.packager.linux;
 
-import com.sun.openjfx.tools.packager.AbstractBundler;
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.RelativeFileSet;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -58,6 +48,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.imageio.ImageIO;
+
+import com.sun.openjfx.tools.packager.AbstractBundler;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
 
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_CDS_CACHE_MODE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
@@ -97,28 +97,29 @@ public class LinuxRpmBundler extends AbstractBundler {
             "",
             "linux.app.bundler",
             LinuxAppBundler.class,
-            params -> new LinuxAppBundler(),
-            null);
+        params -> new LinuxAppBundler(), null);
 
     public static final BundlerParamInfo<File> RPM_IMAGE_DIR = new StandardBundlerParam<>(
             "",
             "",
             "linux.rpm.imageDir",
             File.class,
-            params -> {
-                File imagesRoot = IMAGES_ROOT.fetchFrom(params);
-                if (!imagesRoot.exists()) imagesRoot.mkdirs();
-                return new File(imagesRoot, "linux-rpm.image");
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File imagesRoot = IMAGES_ROOT.fetchFrom(params);
+            if (!imagesRoot.exists()) {
+                imagesRoot.mkdirs();
+            }
+            return new File(imagesRoot, "linux-rpm.image");
+        },
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new StandardBundlerParam<>(
             "",
             "",
             "configRoot",
             File.class,
-            params ->  new File(BUILD_ROOT.fetchFrom(params), "linux"),
-            (s, p) -> new File(s));
+        params ->  new File(BUILD_ROOT.fetchFrom(params), "linux"),
+        (s, p) -> new File(s));
 
     // Fedora rules for package naming are used here
     // https://fedoraproject.org/wiki/Packaging:NamingGuidelines?rd=Packaging/NamingGuidelines
@@ -131,58 +132,60 @@ public class LinuxRpmBundler extends AbstractBundler {
     private static final Pattern RPM_BUNDLE_NAME_PATTERN =
             Pattern.compile("[a-z\\d\\+\\-\\.\\_]+", Pattern.CASE_INSENSITIVE);
 
-    public static final BundlerParamInfo<String> BUNDLE_NAME = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> BUNDLE_NAME = new StandardBundlerParam<>(
             "",
             "",
             "linux.bundleName",
             String.class,
-            params -> {
-                String nm = APP_NAME.fetchFrom(params);
-                if (nm == null) return null;
-
-                // make sure to lower case and spaces become dashes
-                nm = nm.toLowerCase().replaceAll("[ ]", "-");
-
-                return nm;
-            },
-            (s, p) -> {
-                if (!RPM_BUNDLE_NAME_PATTERN.matcher(s).matches()) {
-                    throw new IllegalArgumentException(
-                            new ConfigException(
-                                MessageFormat.format("Invalid value \"{0}\" for the package name.", s),
-                                    "Set the \"linux.bundleName\" parameter to a valid RPM package name. Note that " +
-                                            "the packages must be named using only the following ASCII characters:  " +
-                                            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+"));
-                }
-
-                return s;
+        params -> {
+            String nm = APP_NAME.fetchFrom(params);
+            if (nm == null) {
+                return null;
             }
-        );
 
-    public static final BundlerParamInfo<String> XDG_FILE_PREFIX = new StandardBundlerParam<> (
+            // make sure to lower case and spaces become dashes
+            nm = nm.toLowerCase().replaceAll("[ ]", "-");
+
+            return nm;
+        },
+        (s, p) -> {
+            if (!RPM_BUNDLE_NAME_PATTERN.matcher(s).matches()) {
+                throw new IllegalArgumentException(
+                        new ConfigException(
+                            MessageFormat.format("Invalid value \"{0}\" for the package name.", s),
+                                "Set the \"linux.bundleName\" parameter to a valid RPM package name. Note that " +
+                                        "the packages must be named using only the following ASCII characters:  " +
+                                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+"));
+            }
+
+            return s;
+        }
+    );
+
+    public static final BundlerParamInfo<String> XDG_FILE_PREFIX = new StandardBundlerParam<>(
             "Prefix for XDG files (mime, desktop)",
             "Prefix for XDG MimeInfo and Desktop Files.  Defaults to <vendor>-<appName>, with spaces dropped.",
             "linux.xdg-prefix",
             String.class,
-            params -> {
-                try {
-                    String vendor;
-                    if (params.containsKey(VENDOR.getID())) {
-                        vendor = VENDOR.fetchFrom(params);
-                    } else {
-                        vendor = "javapackager";
-                    }
-                    String appName = APP_FS_NAME.fetchFrom(params);
-
-                    return (vendor + "-" + appName).replaceAll("\\s", "");
-                } catch (Exception e) {
-                    if (Log.isDebug()) {
-                        e.printStackTrace();
-                    }
+        params -> {
+            try {
+                String vendor;
+                if (params.containsKey(VENDOR.getID())) {
+                    vendor = VENDOR.fetchFrom(params);
+                } else {
+                    vendor = "javapackager";
                 }
-                return "unknown-MimeInfo.xml";
-            },
-            (s, p) -> s);
+                String appName = APP_FS_NAME.fetchFrom(params);
+
+                return (vendor + "-" + appName).replaceAll("\\s", "");
+            } catch (Exception e) {
+                if (Log.isDebug()) {
+                    e.printStackTrace();
+                }
+            }
+            return "unknown-MimeInfo.xml";
+        },
+        (s, p) -> s);
 
     private static final String DEFAULT_ICON = "/packager/linux/javalogo_white_32.png";
     private static final String DEFAULT_SPEC_TEMPLATE = "/packager/linux/template.spec";
@@ -208,7 +211,7 @@ public class LinuxRpmBundler extends AbstractBundler {
                 double version = Double.valueOf(v);
                 return minVersion <= version;
             } else {
-               return false;
+                return false;
             }
         } catch (Exception e) {
             Log.verbose(MessageFormat.format("Test for [{0}]. Result: {1}", toolName, e.getMessage()));
@@ -244,10 +247,10 @@ public class LinuxRpmBundler extends AbstractBundler {
             }
 
             // validate presence of required tools
-            if (!testTool(TOOL_RPMBUILD, TOOL_RPMBUILD_MIN_VERSION)){
-                throw new ConfigException(
-                        MessageFormat.format("Can not find rpmbuild {0} or newer.", TOOL_RPMBUILD_MIN_VERSION),
-                        MessageFormat.format("  Install packages needed to build RPM, version {0} or newer.",
+            if (!testTool(TOOL_RPMBUILD, TOOL_RPMBUILD_MIN_VERSION)) {
+                throw new ConfigException(MessageFormat.format(
+                        "Can not find rpmbuild {0} or newer.", TOOL_RPMBUILD_MIN_VERSION), MessageFormat.format(
+                                "Install packages needed to build RPM, version {0} or newer.",
                                 TOOL_RPMBUILD_MIN_VERSION));
             }
 
@@ -267,12 +270,12 @@ public class LinuxRpmBundler extends AbstractBundler {
                     Map<String, ? super Object> assoc = associations.get(i);
                     List<String> mimes = FA_CONTENT_TYPE.fetchFrom(assoc);
                     if (mimes == null || mimes.isEmpty()) {
-                        throw new ConfigException(
-                                MessageFormat.format("No MIME types were specified for File Association number {0}.", i),
+                        throw new ConfigException(MessageFormat.format(
+                                "No MIME types were specified for File Association number {0}.", i),
                                 "For Linux Bundling specify one and only one MIME type for each file association.");
                     } else if (mimes.size() > 1) {
-                        throw new ConfigException(
-                                MessageFormat.format("More than one MIME types was specified for File Association number {0}.", i),
+                        throw new ConfigException(MessageFormat.format(
+                                "More than one MIME types was specified for File Association number {0}.", i),
                                 "For Linux Bundling specify one and only one MIME type for each file association.");
                     }
                 }
@@ -292,7 +295,7 @@ public class LinuxRpmBundler extends AbstractBundler {
         }
     }
 
-    private boolean prepareProto(Map<String, ? super Object> params) {
+    private static boolean prepareProto(Map<String, ? super Object> params) {
         File imageDir = RPM_IMAGE_DIR.fetchFrom(params);
         File appDir = APP_BUNDLER.fetchFrom(params).doBundle(params, imageDir, true);
         return appDir != null;
@@ -348,10 +351,8 @@ public class LinuxRpmBundler extends AbstractBundler {
 
     /*
      * set permissions with a string like "rwxr-xr-x"
-     *
-     * This cannot be directly backport to 22u which is unfortunately built with 1.6
      */
-    private void setPermissions(File file, String permissions) {
+    private static void setPermissions(File file, String permissions) {
         Set<PosixFilePermission> filePermissions = PosixFilePermissions.fromString(permissions);
         try {
             if (file.exists()) {
@@ -392,9 +393,9 @@ public class LinuxRpmBundler extends AbstractBundler {
         }
     }
 
-    private String getLicenseFileString(Map<String, ? super Object> params) {
+    private static String getLicenseFileString(Map<String, ? super Object> params) {
         StringBuilder sb = new StringBuilder();
-        for (String f: LICENSE_FILE.fetchFrom(params)) {
+        for (String f : LICENSE_FILE.fetchFrom(params)) {
             if (sb.length() != 0) {
                 sb.append("\n");
             }
@@ -438,8 +439,8 @@ public class LinuxRpmBundler extends AbstractBundler {
 
             // prepare desktop shortcut
             Writer w = new BufferedWriter(new FileWriter(getConfig_DesktopShortcutFile(rootDir, secondaryLauncher)));
-            String content = preprocessTextResource(
-                    LinuxAppBundler.LINUX_BUNDLER_PREFIX + getConfig_DesktopShortcutFile(rootDir, secondaryLauncher).getName(),
+            String content = preprocessTextResource(LinuxAppBundler.LINUX_BUNDLER_PREFIX +
+                            getConfig_DesktopShortcutFile(rootDir, secondaryLauncher).getName(),
                     "Menu shortcut descriptor", DEFAULT_DESKTOP_FILE_TEMPLATE, secondaryLauncherData,
                     VERBOSE.fetchFrom(params),
                     DROP_IN_RESOURCES_ROOT.fetchFrom(params));
@@ -484,9 +485,9 @@ public class LinuxRpmBundler extends AbstractBundler {
         data.put("SECONDARY_LAUNCHERS_REMOVE", removeScripts.toString());
 
         StringBuilder cdsScript = new StringBuilder();
-        if (ENABLE_APP_CDS.fetchFrom(params)
-                && ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params))
-                || "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))) {
+        if (ENABLE_APP_CDS.fetchFrom(params) &&
+                ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)) ||
+                        "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))) {
             cdsScript.append("/opt/");
             cdsScript.append(data.get("APPLICATION_FS_NAME"));
             cdsScript.append("/");
@@ -496,13 +497,14 @@ public class LinuxRpmBundler extends AbstractBundler {
 
         data.put("APP_CDS_CACHE", cdsScript.toString());
 
-        List<Map<String, ? super Object>> associations = FILE_ASSOCIATIONS.fetchFrom(params);
         data.put("FILE_ASSOCIATION_INSTALL", "");
         data.put("FILE_ASSOCIATION_REMOVE", "");
         data.put("DESKTOP_MIMES", "");
+        List<Map<String, ? super Object>> associations = FILE_ASSOCIATIONS.fetchFrom(params);
         if (associations != null) {
             String mimeInfoFile = XDG_FILE_PREFIX.fetchFrom(params) + "-MimeInfo.xml";
-            StringBuilder mimeInfo = new StringBuilder("<?xml version=\"1.0\"?>\n<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>\n");
+            StringBuilder mimeInfo = new StringBuilder("<?xml version=\"1.0\"?>\n" +
+                    "<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>\n");
             StringBuilder registrations = new StringBuilder();
             StringBuilder deregistrations = new StringBuilder();
             StringBuilder desktopMimes = new StringBuilder("MimeType=");
@@ -519,8 +521,6 @@ public class LinuxRpmBundler extends AbstractBundler {
                     continue;
                 }
 
-                String description = FA_DESCRIPTION.fetchFrom(assoc);
-                File faIcon = FA_ICON.fetchFrom(assoc); //TODO FA_ICON_PNG
                 List<String> extensions = FA_EXTENSIONS.fetchFrom(assoc);
                 if (extensions == null) {
                     Log.info("Creating association with null extension.");
@@ -536,6 +536,7 @@ public class LinuxRpmBundler extends AbstractBundler {
                 mimeInfo.append("  <mime-type type='")
                         .append(thisMime)
                         .append("'>\n");
+                String description = FA_DESCRIPTION.fetchFrom(assoc);
                 if (description != null && !description.isEmpty()) {
                     mimeInfo.append("    <comment>")
                             .append(description)
@@ -569,6 +570,7 @@ public class LinuxRpmBundler extends AbstractBundler {
                 }
                 desktopMimes.append(thisMime);
 
+                File faIcon = FA_ICON.fetchFrom(assoc); //TODO FA_ICON_PNG
                 if (faIcon != null && faIcon.exists()) {
                     int size = getSquareSizeOfImage(faIcon);
 
@@ -576,7 +578,8 @@ public class LinuxRpmBundler extends AbstractBundler {
                         File target = new File(rootDir, APP_FS_NAME.fetchFrom(params) + "_fa_" + faIcon.getName());
                         IOUtils.copyFile(faIcon, target);
 
-                        //xdg-icon-resource install --context mimetypes --size 64 awesomeapp_fa_1.png application-x.vnd-awesome
+                        // xdg-icon-resource install --context mimetypes --size 64
+                        // awesomeapp_fa_1.png application-x.vnd-awesome
                         registrations.append("xdg-icon-resource install --context mimetypes --size ")
                                 .append(size)
                                 .append(" /opt/")
@@ -587,7 +590,8 @@ public class LinuxRpmBundler extends AbstractBundler {
                                 .append(dashMime)
                                 .append("\n");
 
-                        //xdg-icon-resource uninstall --context mimetypes --size 64 awesomeapp_fa_1.png application-x.vnd-awesome
+                        // xdg-icon-resource uninstall --context mimetypes --size 64
+                        // awesomeapp_fa_1.png application-x.vnd-awesome
                         deregistrations.append("xdg-icon-resource uninstall --context mimetypes --size ")
                                 .append(size)
                                 .append(" /opt/")
@@ -651,7 +655,6 @@ public class LinuxRpmBundler extends AbstractBundler {
 
     private Map<String, String> createReplacementData(Map<String, ? super Object> params) {
         Map<String, String> data = new HashMap<>();
-
         data.put("APPLICATION_NAME", APP_NAME.fetchFrom(params));
         data.put("APPLICATION_FS_NAME", APP_FS_NAME.fetchFrom(params));
         data.put("APPLICATION_PACKAGE", BUNDLE_NAME.fetchFrom(params));
@@ -699,11 +702,12 @@ public class LinuxRpmBundler extends AbstractBundler {
         ProcessBuilder pb = new ProcessBuilder(
                 TOOL_RPMBUILD,
                 "-bb", getConfig_SpecFile(params).getAbsolutePath(),
-//                "--define", "%__jar_repack %{nil}",  // debug: improves build time (but will require unpack to install?)
-                "--define", "%_sourcedir "+ RPM_IMAGE_DIR.fetchFrom(params).getAbsolutePath(),
+                // debug: improves build time (but will require unpack to install?)
+                // "--define", "%__jar_repack %{nil}",
+                "--define", "%_sourcedir " + RPM_IMAGE_DIR.fetchFrom(params).getAbsolutePath(),
                 "--define", "%_rpmdir " + outdir.getAbsolutePath(), // save result to output dir
-                "--define", "%_topdir " + broot.getAbsolutePath() // do not use other system directories to build as current user
-        );
+                // do not use other system directories to build as current user
+                "--define", "%_topdir " + broot.getAbsolutePath());
         pb.directory(RPM_IMAGE_DIR.fetchFrom(params));
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
@@ -775,7 +779,7 @@ public class LinuxRpmBundler extends AbstractBundler {
         return bundle(params, outputParentDir);
     }
 
-    private int getSquareSizeOfImage(File f) {
+    private static int getSquareSizeOfImage(File f) {
         try {
             BufferedImage bi = ImageIO.read(f);
             if (bi.getWidth() == bi.getHeight()) {

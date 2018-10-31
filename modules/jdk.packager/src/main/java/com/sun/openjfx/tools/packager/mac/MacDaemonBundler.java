@@ -24,46 +24,53 @@
  */
 package com.sun.openjfx.tools.packager.mac;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.text.MessageFormat;import java.util.Arrays;
+import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.sun.openjfx.tools.packager.AbstractBundler;
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-
-import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.ConfigException;
 import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
 import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.RUN_AT_STARTUP;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.START_ON_INSTALL;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SYSTEM_WIDE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
 
 public class MacDaemonBundler extends AbstractBundler {
 
     private static final String TEMPLATE_LAUNCHD_PLIST  = "/packager/mac/launchd.plist.template";
-
-    public final static String MAC_BUNDLER_PREFIX =
-            BUNDLER_PREFIX + "macosx" + File.separator;
+    private static final String MAC_BUNDLER_PREFIX = BUNDLER_PREFIX + "macosx" + File.separator;
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new StandardBundlerParam<>(
             "",
             "",
             "configRoot",
             File.class,
-            params -> {
-                File configRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
-                configRoot.mkdirs();
-                return configRoot;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File configRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
+            configRoot.mkdirs();
+            return configRoot;
+        },
+        (s, p) -> new File(s));
 
     public MacDaemonBundler() {
         super();
@@ -83,7 +90,7 @@ public class MacDaemonBundler extends AbstractBundler {
         return IDENTIFIER.fetchFrom(params).toLowerCase() + ".daemon";
     }
 
-    public String getAppName(Map<String, ? super Object> params) {
+    private String getAppName(Map<String, ? super Object> params) {
         return APP_FS_NAME.fetchFrom(params) + ".app";
     }
 
@@ -101,16 +108,15 @@ public class MacDaemonBundler extends AbstractBundler {
     }
 
     private void writeLaunchdPlist(File file, Map<String, ? super Object> params)
-            throws IOException
-    {
+            throws IOException {
         Log.verbose(MessageFormat.format("Preparing launchd.plist: {0}", file.getAbsolutePath()));
 
         Map<String, String> data = new HashMap<>();
 
         data.put("DEPLOY_DAEMON_IDENTIFIER", getDaemonIdentifier(params));
         data.put("DEPLOY_DAEMON_LAUNCHER_PATH", getDaemonLauncherPath(params));
-        data.put("DEPLOY_RUN_AT_LOAD", String.valueOf((START_ON_INSTALL.fetchFrom(params))));
-        data.put("DEPLOY_KEEP_ALIVE", String.valueOf((RUN_AT_STARTUP.fetchFrom(params))));
+        data.put("DEPLOY_RUN_AT_LOAD", String.valueOf(START_ON_INSTALL.fetchFrom(params)));
+        data.put("DEPLOY_KEEP_ALIVE", String.valueOf(RUN_AT_STARTUP.fetchFrom(params)));
 
         Writer w = new BufferedWriter(new FileWriter(file));
         w.write(preprocessTextResource(
@@ -121,7 +127,7 @@ public class MacDaemonBundler extends AbstractBundler {
         w.close();
     }
 
-    protected void cleanupConfigFiles(Map<String, ? super Object> params) {
+    private void cleanupConfigFiles(Map<String, ? super Object> params) {
         if (CONFIG_ROOT.fetchFrom(params) != null) {
             if (getConfig_LaunchdPlist(params) != null) {
                 getConfig_LaunchdPlist(params).delete();
@@ -174,7 +180,7 @@ public class MacDaemonBundler extends AbstractBundler {
                     new File(launchDaemonsDirectory,
                             IDENTIFIER.fetchFrom(params).toLowerCase() + ".launchd.plist"));
 
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             Log.verbose(ex);
             return null;
         } finally {
@@ -224,9 +230,7 @@ public class MacDaemonBundler extends AbstractBundler {
     }
 
     @Override
-    public boolean validate(Map<String, ? super Object> params)
-            throws UnsupportedPlatformException, ConfigException
-    {
+    public boolean validate(Map<String, ? super Object> params) throws UnsupportedPlatformException, ConfigException {
         try {
             return doValidate(params);
         } catch (RuntimeException re) {
@@ -239,9 +243,7 @@ public class MacDaemonBundler extends AbstractBundler {
 
     }
 
-    public boolean doValidate(Map<String, ? super Object> p)
-            throws UnsupportedPlatformException, ConfigException
-    {
+    public boolean doValidate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
         if (Platform.getPlatform() != Platform.MAC) {
             throw new UnsupportedPlatformException();
         }

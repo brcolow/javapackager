@@ -71,8 +71,7 @@ import sun.security.x509.X500Name;
  */
 public class JarSignature {
     // name of jar manifest attribute that contains signature
-    public static final String BLOB_SIGNATURE = "META-INF/SIGNATURE.BSF";
-
+    private static final String BLOB_SIGNATURE = "META-INF/SIGNATURE.BSF";
     private final Signature sig;
     private final X509Certificate[] certChain; // for singing scenarios only
     private final SignerInfo[] signerInfos;    // for validation only
@@ -101,9 +100,6 @@ public class JarSignature {
      * Creates new signature for signing.
      *
      * @param privateKey Key to be used for signing.
-     * @return
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
      */
     public static JarSignature create(PrivateKey privateKey, X509Certificate[] chain)
             throws NoSuchAlgorithmException, InvalidKeyException {

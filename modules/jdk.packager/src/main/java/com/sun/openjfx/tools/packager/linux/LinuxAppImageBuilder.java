@@ -24,10 +24,6 @@
  */
 package com.sun.openjfx.tools.packager.linux;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,6 +42,10 @@ import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.StandardBundlerParam;
 
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
+
 public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
 
     private static final String EXECUTABLE_NAME = "JavaAppLauncher";
@@ -63,16 +63,16 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
             "Icon for the application, in PNG format.",
             "icon.png",
             File.class,
-            params -> {
-                File f = ICON.fetchFrom(params);
-                if (f != null && !f.getName().toLowerCase().endsWith(".png")) {
-                    Log.info(MessageFormat.format("The specified icon \"{0}\" is not a PNG file and will not be used." +
-                            " The default icon will be used in it's place.", f));
-                    return null;
-                }
-                return f;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File f = ICON.fetchFrom(params);
+            if (f != null && !f.getName().toLowerCase().endsWith(".png")) {
+                Log.info(MessageFormat.format("The specified icon \"{0}\" is not a PNG file and will not be used." +
+                        " The default icon will be used in it's place.", f));
+                return null;
+            }
+            return f;
+        },
+        (s, p) -> new File(s));
 
     public LinuxAppImageBuilder(Map<String, Object> config, Path imageOutDir) throws IOException {
         super(config, imageOutDir.resolve(APP_FS_NAME.fetchFrom(config) + "/runtime"));
@@ -84,16 +84,10 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
         this.runtimeDir = root.resolve("runtime");
         this.resourcesDir = root.resolve("resources");
         this.params = new HashMap<>();
-        config.entrySet().stream().forEach(e -> params.put(e.getKey(), e.getValue()));
+        config.forEach(params::put);
         Files.createDirectories(appDir);
         Files.createDirectories(runtimeDir);
         Files.createDirectories(resourcesDir);
-    }
-
-    // it is static for the sake of sharing with "installer" bundlers
-    // that may skip calls to validate/bundle in this class!
-    public static File getRootDir(File outDir, Map<String, ? super Object> p) {
-        return new File(outDir, APP_FS_NAME.fetchFrom(p));
     }
 
     private static String getLauncherName(Map<String, ? super Object> p) {
@@ -110,7 +104,7 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
 
         try {
             // create the primary launcher
-            createLauncherForEntryPoint(params, root);
+            createLauncherForEntryPoint(params);
 
             // Copy library to the launcher folder
             Files.copy(Paths.get("./build/generated-resources/com/sun/openjfx/tools/packager/linux/" + LIBRARY_NAME),
@@ -124,7 +118,7 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
                 // remove name.fs that was calculated for main launcher.
                 // otherwise, wrong launcher name will be selected.
                 tmp.remove(APP_FS_NAME.getID());
-                createLauncherForEntryPoint(tmp, root);
+                createLauncherForEntryPoint(tmp);
             }
 
             // Copy class path entries to Java folder
@@ -139,7 +133,7 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
         }
     }
 
-    private void createLauncherForEntryPoint(Map<String, ? super Object> p, Path rootDir) throws IOException {
+    private void createLauncherForEntryPoint(Map<String, ? super Object> p) throws IOException {
         // Copy executable to Linux folder
         Path executableFile = root.resolve(getLauncherName(p));
 

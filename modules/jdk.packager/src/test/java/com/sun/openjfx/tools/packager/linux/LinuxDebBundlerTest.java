@@ -119,7 +119,7 @@ public class LinuxDebBundlerTest {
         runtimeJre = System.getenv("PACKAGER_JRE_ROOT");
 
         assumeTrue("dpkg was not found - skipping PKG tests",
-                LinuxDebBundler.testTool(LinuxDebBundler.TOOL_DPKG, "1"));
+                LinuxDebBundler.testTool(LinuxDebBundler.TOOL_DPKG));
 
         Log.setLogger(new Log.Logger(true));
         Log.setDebug(true);

@@ -25,17 +25,6 @@
 
 package com.sun.openjfx.tools.packager.linux;
 
-import com.sun.openjfx.tools.packager.AbstractBundler;
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.RelativeFileSet;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-import com.sun.openjfx.tools.packager.bundlers.BundleParams;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -56,8 +45,45 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.imageio.ImageIO;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
+import com.sun.openjfx.tools.packager.AbstractBundler;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+import com.sun.openjfx.tools.packager.bundlers.BundleParams;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_CDS_CACHE_MODE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CATEGORY;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.COPYRIGHT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ENABLE_APP_CDS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_CONTENT_TYPE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_EXTENSIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FILE_ASSOCIATIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_FILE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_TYPE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.RUN_AT_STARTUP;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SECONDARY_LAUNCHERS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SERVICE_HINT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.START_ON_INSTALL;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.STOP_ON_UNINSTALL;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SYSTEM_WIDE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.TITLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VENDOR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 import static com.sun.openjfx.tools.packager.linux.LinuxAppBundler.ICON_PNG;
 
 public class LinuxDebBundler extends AbstractBundler {
@@ -67,8 +93,8 @@ public class LinuxDebBundler extends AbstractBundler {
             "",
             "linux.app.bundler",
             LinuxAppBundler.class,
-            params -> new LinuxAppBundler(),
-            (s, p) -> null);
+        params -> new LinuxAppBundler(),
+        (s, p) -> null);
 
     // Debian rules for package naming are used here
     // https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Source
@@ -77,8 +103,7 @@ public class LinuxDebBundler extends AbstractBundler {
     // plus (+) and minus (-) signs, and periods (.).
     // They must be at least two characters long and must start with an alphanumeric character.
     //
-    private static final Pattern DEB_BUNDLE_NAME_PATTERN =
-            Pattern.compile("^[a-z][a-z\\d\\+\\-\\.]+");
+    private static final Pattern DEB_BUNDLE_NAME_PATTERN = Pattern.compile("^[a-z][a-z\\d\\+\\-\\.]+");
 
     public static final BundlerParamInfo<String> BUNDLE_NAME = new StandardBundlerParam<>(
             "",
@@ -88,7 +113,9 @@ public class LinuxDebBundler extends AbstractBundler {
         params -> {
             String nm = APP_NAME.fetchFrom(params);
 
-            if (nm == null) return null;
+            if (nm == null) {
+                return null;
+            }
 
             // make sure to lower case and spaces/underscores become dashes
             nm = nm.toLowerCase().replaceAll("[ _]", "-");
@@ -227,26 +254,26 @@ public class LinuxDebBundler extends AbstractBundler {
         },
         (s, p) -> s);
 
-    private final static String DEFAULT_ICON = "/packager/linux/javalogo_white_32.png";
-    private final static String DEFAULT_CONTROL_TEMPLATE = "/packager/linux/template.control";
-    private final static String DEFAULT_PRERM_TEMPLATE = "/packager/linux/template.prerm";
-    private final static String DEFAULT_PREINSTALL_TEMPLATE = "/packager/linux/template.preinst";
-    private final static String DEFAULT_POSTRM_TEMPLATE = "/packager/linux/template.postrm";
-    private final static String DEFAULT_POSTINSTALL_TEMPLATE = "/packager/linux/template.postinst";
-    private final static String DEFAULT_COPYRIGHT_TEMPLATE = "/packager/linux/template.copyright";
-    private final static String DEFAULT_DESKTOP_FILE_TEMPLATE = "/packager/linux/template.desktop";
-    private final static String DEFAULT_INIT_SCRIPT_TEMPLATE = "/packager/linux/template.deb.init.script";
+    private static final String DEFAULT_ICON = "/packager/linux/javalogo_white_32.png";
+    private static final String DEFAULT_CONTROL_TEMPLATE = "/packager/linux/template.control";
+    private static final String DEFAULT_PRERM_TEMPLATE = "/packager/linux/template.prerm";
+    private static final String DEFAULT_PREINSTALL_TEMPLATE = "/packager/linux/template.preinst";
+    private static final String DEFAULT_POSTRM_TEMPLATE = "/packager/linux/template.postrm";
+    private static final String DEFAULT_POSTINSTALL_TEMPLATE = "/packager/linux/template.postinst";
+    private static final String DEFAULT_COPYRIGHT_TEMPLATE = "/packager/linux/template.copyright";
+    private static final String DEFAULT_DESKTOP_FILE_TEMPLATE = "/packager/linux/template.desktop";
+    private static final String DEFAULT_INIT_SCRIPT_TEMPLATE = "/packager/linux/template.deb.init.script";
 
-    public final static String TOOL_DPKG = "dpkg-deb";
+    public static final String TOOL_DPKG = "dpkg-deb";
 
     public LinuxDebBundler() {
         super();
     }
 
-    public static boolean testTool(String toolName, String minVersion) {
+    public static boolean testTool(String toolName) {
         try {
             ProcessBuilder pb = new ProcessBuilder(toolName, "--version");
-            IOUtils.exec(pb, Log.isDebug(), true); //FIXME not interested in the output
+            IOUtils.exec(pb, Log.isDebug(), true); // FIXME not interested in the output
         } catch (Exception e) {
             Log.verbose(MessageFormat.format("Test for [{0}]. Result: {1}", toolName, e.getMessage()));
             return false;
@@ -257,21 +284,19 @@ public class LinuxDebBundler extends AbstractBundler {
     @Override
     public boolean validate(Map<String, ? super Object> p) throws UnsupportedPlatformException, ConfigException {
         try {
-            if (p == null) throw new ConfigException(
-                    "Parameters map is null.",
-                    "Pass in a non-null parameters map.");
-
-            //run basic validation to ensure requirements are met
-            //we are not interested in return code, only possible exception
-            APP_BUNDLER.fetchFrom(p).doValidate(p);
-
-            //NOTE: Can we validate that the required tools are available before we start?
-            if (!testTool(TOOL_DPKG, "1")){
-                throw new ConfigException(
-                        MessageFormat.format("Can not find {0}.", TOOL_DPKG),
-                        "Please install required packages.");
+            if (p == null) {
+                throw new ConfigException("Parameters map is null.", "Pass in a non-null parameters map.");
             }
 
+            // run basic validation to ensure requirements are met
+            // we are not interested in return code, only possible exception
+            APP_BUNDLER.fetchFrom(p).doValidate(p);
+
+            // NOTE: Can we validate that the required tools are available before we start?
+            if (!testTool(TOOL_DPKG)) {
+                throw new ConfigException(MessageFormat.format("Can not find {0}.", TOOL_DPKG),
+                        "Please install required packages.");
+            }
 
             // validate license file, if used, exists in the proper place
             if (p.containsKey(LICENSE_FILE.getID())) {
@@ -282,11 +307,9 @@ public class LinuxDebBundler extends AbstractBundler {
                         found = found || appResources.contains(license);
                     }
                     if (!found) {
-                        throw new ConfigException(
-                                "Specified license file is missing.",
+                        throw new ConfigException("Specified license file is missing.",
                                 MessageFormat.format("Make sure that \"{0}\" references a file in the app resources, " +
-                                                "and that it is relative to the basedir \"{1}\".",
-                                        license));
+                                                "and that it is relative to the basedir \"{1}\".", license));
                     }
                 }
             } else {
@@ -298,18 +321,16 @@ public class LinuxDebBundler extends AbstractBundler {
 
             // for services, the app launcher must be less than 16 characters or init.d complains
             if (serviceHint && BUNDLE_NAME.fetchFrom(p).length() > 16) {
-                throw new ConfigException(
-                        MessageFormat.format("The bundle name \"{0}\" is too long for a daemon.", BUNDLE_NAME.fetchFrom(p)),
-                        MessageFormat.format("Set a bundler argument \"{0}\" to a bundle name that is shorter than " +
-                                "16 characters.", BUNDLE_NAME.getID()));
+                throw new ConfigException(MessageFormat.format("The bundle name \"{0}\" is too long for a daemon.",
+                        BUNDLE_NAME.fetchFrom(p)), MessageFormat.format("Set a bundler argument \"{0}\" to a bundle " +
+                        "name that is shorter than 16 characters.", BUNDLE_NAME.getID()));
             }
 
-            //treat default null as "system wide install"
+            // treat default null as "system wide install"
             boolean systemWide = SYSTEM_WIDE.fetchFrom(p) == null || SYSTEM_WIDE.fetchFrom(p);
 
             if (serviceHint && !systemWide) {
-                throw new ConfigException(
-                        "Bundler doesn't support per-user daemons.",
+                throw new ConfigException("Bundler doesn't support per-user daemons.",
                         "Make sure that the system wide hint is set to true.");
             }
 
@@ -320,12 +341,12 @@ public class LinuxDebBundler extends AbstractBundler {
                     Map<String, ? super Object> assoc = associations.get(i);
                     List<String> mimes = FA_CONTENT_TYPE.fetchFrom(assoc);
                     if (mimes == null || mimes.isEmpty()) {
-                        throw new ConfigException(
-                                MessageFormat.format("No MIME types were specified for File Association number {0}.", i),
+                        throw new ConfigException(MessageFormat.format(
+                                "No MIME types were specified for File Association number {0}.", i),
                                 "For Linux Bundling specify one and only one MIME type for each file association.");
                     } else if (mimes.size() > 1) {
-                        throw new ConfigException(
-                                MessageFormat.format("More than one MIME types was specified for File Association number {0}.", i),
+                        throw new ConfigException(MessageFormat.format(
+                                "More than one MIME types was specified for File Association number {0}.", i),
                                 "For Linux Bundling specify one and only one MIME type for each file association.");
                     }
                 }
@@ -345,13 +366,6 @@ public class LinuxDebBundler extends AbstractBundler {
         }
     }
 
-    private boolean prepareProto(Map<String, ? super Object> p) {
-        File appImageRoot = APP_IMAGE_ROOT.fetchFrom(p);
-        File appDir = APP_BUNDLER.fetchFrom(p).doBundle(p, appImageRoot, true);
-        return appDir != null;
-    }
-
-    //@Override
     public File bundle(Map<String, ? super Object> p, File outdir) {
         if (!outdir.isDirectory() && !outdir.mkdirs()) {
             throw new RuntimeException(MessageFormat.format(
@@ -362,7 +376,7 @@ public class LinuxDebBundler extends AbstractBundler {
                     "Output directory {0} is not writable.", outdir.getAbsolutePath()));
         }
 
-        //we want to create following structure
+        // we want to create following structure
         //   <package-name>
         //        DEBIAN
         //          control   (file with main package details)
@@ -380,7 +394,8 @@ public class LinuxDebBundler extends AbstractBundler {
         try {
             imageDir.mkdirs();
             configDir.mkdirs();
-            if (prepareProto(p) && prepareProjectConfig(p)) {
+            if (APP_BUNDLER.fetchFrom(p).doBundle(p, APP_IMAGE_ROOT.fetchFrom(p), true) != null &&
+                    prepareProjectConfig(p)) {
                 return buildDeb(p, outdir);
             }
             return null;
@@ -423,7 +438,6 @@ public class LinuxDebBundler extends AbstractBundler {
     private void saveConfigFiles(Map<String, ? super Object> params) {
         try {
             File configRoot = CONFIG_ROOT.fetchFrom(params);
-            File rootDir = LinuxAppBundler.getRootDir(APP_IMAGE_ROOT.fetchFrom(params), params);
 
             if (getConfig_ControlFile(params).exists()) {
                 IOUtils.copyFile(getConfig_ControlFile(params),
@@ -449,6 +463,7 @@ public class LinuxDebBundler extends AbstractBundler {
                 IOUtils.copyFile(getConfig_PostrmFile(params),
                         new File(configRoot, getConfig_PostrmFile(params).getName()));
             }
+            File rootDir = LinuxAppBundler.getRootDir(APP_IMAGE_ROOT.fetchFrom(params), params);
             if (getConfig_DesktopShortcutFile(rootDir, params).exists()) {
                 IOUtils.copyFile(getConfig_DesktopShortcutFile(rootDir, params),
                         new File(configRoot, getConfig_DesktopShortcutFile(rootDir, params).getName()));
@@ -476,7 +491,7 @@ public class LinuxDebBundler extends AbstractBundler {
         }
     }
 
-    private String getArch() {
+    private static String getArch() {
         String arch = System.getProperty("os.arch");
         if ("i386".equals(arch)) {
             return "i386";
@@ -485,19 +500,18 @@ public class LinuxDebBundler extends AbstractBundler {
         }
     }
 
-    private long getInstalledSizeKB(Map<String, ? super Object> params) {
+    private static long getInstalledSizeKB(Map<String, ? super Object> params) {
         return getInstalledSizeKB(APP_IMAGE_ROOT.fetchFrom(params)) >> 10;
     }
 
-    private long getInstalledSizeKB(File dir) {
+    private static long getInstalledSizeKB(File dir) {
         long count = 0;
         File[] children = dir.listFiles();
         if (children != null) {
             for (File file : children) {
                 if (file.isFile()) {
                     count += file.length();
-                }
-                else if (file.isDirectory()) {
+                } else if (file.isDirectory()) {
                     count += getInstalledSizeKB(file);
                 }
             }
@@ -583,9 +597,9 @@ public class LinuxDebBundler extends AbstractBundler {
         data.put("SECONDARY_LAUNCHERS_REMOVE", removeScripts.toString());
 
         StringBuilder cdsScript = new StringBuilder();
-        if (ENABLE_APP_CDS.fetchFrom(params)
-                && ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params))
-                || "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))) {
+        if (ENABLE_APP_CDS.fetchFrom(params) &&
+                ("install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)) ||
+                        "auto+install".equals(APP_CDS_CACHE_MODE.fetchFrom(params)))) {
             cdsScript.append("/opt/");
             cdsScript.append(data.get("APPLICATION_FS_NAME"));
             cdsScript.append("/");
@@ -595,10 +609,10 @@ public class LinuxDebBundler extends AbstractBundler {
 
         data.put("APP_CDS_CACHE", cdsScript.toString());
 
-        List<Map<String, ? super Object>> associations = FILE_ASSOCIATIONS.fetchFrom(params);
         data.put("FILE_ASSOCIATION_INSTALL", "");
         data.put("FILE_ASSOCIATION_REMOVE", "");
         data.put("DESKTOP_MIMES", "");
+        List<Map<String, ? super Object>> associations = FILE_ASSOCIATIONS.fetchFrom(params);
         if (associations != null) {
             String mimeInfoFile = XDG_FILE_PREFIX.fetchFrom(params) + "-MimeInfo.xml";
             StringBuilder mimeInfo = new StringBuilder("<?xml version=\"1.0\"?>\n<mime-info xmlns='" +
@@ -619,8 +633,6 @@ public class LinuxDebBundler extends AbstractBundler {
                     continue;
                 }
 
-                String description = FA_DESCRIPTION.fetchFrom(assoc);
-                File faIcon = FA_ICON.fetchFrom(assoc); // TODO FA_ICON_PNG
                 List<String> extensions = FA_EXTENSIONS.fetchFrom(assoc);
                 if (extensions == null) {
                     Log.info("Creating association with null extension.");
@@ -636,6 +648,7 @@ public class LinuxDebBundler extends AbstractBundler {
                 mimeInfo.append("  <mime-type type='")
                         .append(thisMime)
                         .append("'>\n");
+                String description = FA_DESCRIPTION.fetchFrom(assoc);
                 if (description != null && !description.isEmpty()) {
                     mimeInfo.append("    <comment>")
                             .append(description)
@@ -669,6 +682,7 @@ public class LinuxDebBundler extends AbstractBundler {
                 }
                 desktopMimes.append(thisMime);
 
+                File faIcon = FA_ICON.fetchFrom(assoc); // TODO FA_ICON_PNG
                 if (faIcon != null && faIcon.exists()) {
                     int size = getSquareSizeOfImage(faIcon);
 
@@ -676,7 +690,8 @@ public class LinuxDebBundler extends AbstractBundler {
                         File target = new File(rootDir, APP_FS_NAME.fetchFrom(params) + "_fa_" + faIcon.getName());
                         IOUtils.copyFile(faIcon, target);
 
-                        //xdg-icon-resource install --context mimetypes --size 64 awesomeapp_fa_1.png application-x.vnd-awesome
+                        // xdg-icon-resource install --context mimetypes --size 64
+                        // awesomeapp_fa_1.png application-x.vnd-awesome
                         registrations.append("        xdg-icon-resource install --context mimetypes --size ")
                                 .append(size)
                                 .append(" /opt/")
@@ -687,7 +702,8 @@ public class LinuxDebBundler extends AbstractBundler {
                                 .append(dashMime)
                                 .append("\n");
 
-                        //xdg-icon-resource uninstall --context mimetypes --size 64 awesomeapp_fa_1.png application-x.vnd-awesome
+                        // xdg-icon-resource uninstall --context mimetypes --size 64
+                        // awesomeapp_fa_1.png application-x.vnd-awesome
                         deregistrations.append("        xdg-icon-resource uninstall --context mimetypes --size ")
                                 .append(size)
                                 .append(" /opt/")
@@ -882,8 +898,7 @@ public class LinuxDebBundler extends AbstractBundler {
         outFile.getParentFile().mkdirs();
 
         // run dpkg
-        ProcessBuilder pb = new ProcessBuilder(
-                "fakeroot", TOOL_DPKG, "-b",  FULL_PACKAGE_NAME.fetchFrom(params),
+        ProcessBuilder pb = new ProcessBuilder("fakeroot", TOOL_DPKG, "-b", FULL_PACKAGE_NAME.fetchFrom(params),
                 outFile.getAbsolutePath());
         pb.directory(DEB_IMAGE_DIR.fetchFrom(params).getParentFile());
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));

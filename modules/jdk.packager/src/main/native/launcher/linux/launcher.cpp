@@ -37,7 +37,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-
 typedef bool (*start_launcher)(int argc, char* argv[]);
 typedef void (*stop_launcher)();
 

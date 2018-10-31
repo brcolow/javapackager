@@ -35,7 +35,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URL;
-import java.util.Arrays;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -43,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class IOUtils {
@@ -107,7 +107,7 @@ public class IOUtils {
             throw new IOException("Missing input resource!");
         }
         if (file.exists() && !append) {
-           file.delete();
+            file.delete();
         }
         InputStream in = location.openStream();
         FileOutputStream out = new FileOutputStream(file, append);
@@ -125,7 +125,7 @@ public class IOUtils {
     public static void copyFile(File sourceFile, File destFile) throws IOException {
         destFile.getParentFile().mkdirs();
 
-        //recreate the file as existing copy may have weird permissions
+        // recreate the file as existing copy may have weird permissions
         destFile.delete();
         destFile.createNewFile();
 
@@ -153,24 +153,7 @@ public class IOUtils {
         destFile.setReadable(true, false);
     }
 
-    public static long getFolderSize(File folder) {
-        long foldersize = 0;
-
-        File[] children = folder.listFiles();
-        if (children != null) {
-            for (File f : children) {
-                if (f.isDirectory()) {
-                    foldersize += getFolderSize(f);
-                } else {
-                    foldersize += f.length();
-                }
-            }
-        }
-
-        return foldersize;
-    }
-
-    //run "launcher paramfile" in the directory where paramfile is kept
+    // run "launcher paramfile" in the directory where paramfile is kept
     public static void run(String launcher, File paramFile, boolean verbose)
             throws IOException {
         if (paramFile != null && paramFile.exists()) {
@@ -185,16 +168,15 @@ public class IOUtils {
     }
 
 
-    public static void exec(ProcessBuilder pb, boolean verbose,
-            boolean testForPresenseOnly) throws IOException {
+    public static void exec(ProcessBuilder pb, boolean verbose, boolean testForPresenseOnly) throws IOException {
         exec(pb, verbose, testForPresenseOnly, null);
     }
 
     public static void exec(ProcessBuilder pb, boolean verbose,
                             boolean testForPresenseOnly, PrintStream consumer) throws IOException {
         pb.redirectErrorStream(true);
-        Log.verbose("Running " + Arrays.toString(pb.command().toArray(new String[0]))
-                + (pb.directory() != null ? (" in " + pb.directory()) : ""));
+        Log.verbose("Running " + Arrays.toString(pb.command().toArray(new String[0])) +
+                (pb.directory() != null ? (" in " + pb.directory()) : ""));
         Process p = pb.start();
         InputStreamReader isr = new InputStreamReader(p.getInputStream());
         BufferedReader br = new BufferedReader(isr);
@@ -203,9 +185,9 @@ public class IOUtils {
             if (consumer != null) {
                 consumer.print(lineRead + '\n');
             } else if (verbose) {
-               Log.info(lineRead);
+                Log.info(lineRead);
             } else {
-               Log.debug(lineRead);
+                Log.debug(lineRead);
             }
         }
         try {
@@ -216,7 +198,7 @@ public class IOUtils {
                         " in " + (pb.directory() != null ?
                            pb.directory().getAbsolutePath() : "unspecified directory"));
             }
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException ignore) {
         }
     }
 
@@ -231,7 +213,7 @@ public class IOUtils {
             }
         }
 
-        return Runtime.getRuntime().exec(argsList.toArray(new String[argsList.size()]));
+        return Runtime.getRuntime().exec(argsList.toArray(new String[0]));
     }
 
     private static void logErrorStream(Process p) {
@@ -250,7 +232,7 @@ public class IOUtils {
         thread.start();
     }
 
-    public static int execute(Object ... args) throws IOException, InterruptedException {
+    public static int execute(Object... args) throws IOException, InterruptedException {
         final Process process = startProcess(args);
 
         final BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -300,11 +282,11 @@ public class IOUtils {
         return ret;
     }
 
-    //no good test if we are running pre-JRE7
-    //use heuristic approach
+    // no good test if we are running pre-JRE7
+    // use heuristic approach
     // "false positive" is better than wrong answer
     public static boolean isNotSymbolicLink(File file) {
-        //no symlinks on windows
+        // no symlinks on windows
         if (Platform.getPlatform() == Platform.WINDOWS) {
             return true;
         }
@@ -312,17 +294,18 @@ public class IOUtils {
             if (file == null || file.getParent() == null) {
                 return false;
             }
-            File file_canonical = new File(file.getParentFile().getCanonicalFile(), file.getName());
-            if (file_canonical.getCanonicalFile().equals(file_canonical.getAbsoluteFile())) {
+            File fileCanonical = new File(file.getParentFile().getCanonicalFile(), file.getName());
+            if (fileCanonical.getCanonicalFile().equals(fileCanonical.getAbsoluteFile())) {
                 return true;
             }
-        } catch (IOException ioe) {}
+        } catch (IOException ignore) {
+        }
         return false;
     }
 
     public static byte[] readFully(File file) throws IOException {
         InputStream inp = new FileInputStream(file);
-        //read fully into memory
+        // read fully into memory
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];
         int length;

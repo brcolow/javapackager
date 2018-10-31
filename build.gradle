@@ -4,7 +4,20 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import static org.apache.tools.ant.taskdefs.condition.Os.*
 
 apply plugin: 'java'
+apply plugin: 'checkstyle'
 sourceCompatibility = 1.9
+
+checkstyle {
+    configFile = rootProject.file("gradle/checkstyle.xml")
+    showViolations = true
+    ignoreFailures = false
+    toolVersion = "8.13"
+}
+
+// Decrease verbosity (printing of XSL style sheets, etc.)
+[checkstyleMain, checkstyleTest].each { task ->
+    task.logging.setLevel(LogLevel.LIFECYCLE)
+}
 
 def envJavaHome = System.getenv("JDK_HOME")
 if (envJavaHome == null || envJavaHome.equals("")) envJavaHome = System.getenv("JAVA_HOME")
@@ -295,7 +308,7 @@ project(":fxpackagerservices") {
 
 project(":fxpackager") {
     apply plugin: 'java'
-    // apply plugin: 'checkstyle'
+    apply plugin: 'checkstyle'
 
     project.ext.buildModule = true
     project.ext.moduleName = "com.brcolow.javapackager"
@@ -321,21 +334,18 @@ project(":fxpackager") {
         from "$buildDir/generated-resources"
     }
 
-//    checkstyle {
-//        configFile = rootProject.file("gradle/check/checkstyle.xml")
-//        showViolations = true
-//        ignoreFailures = false
-//        toolVersion = "8.13"
-//    }
-//
-//    // Decrease verbosity (printing of XSL style sheets, etc.)
-//    [checkstyleMain, checkstyleTest].each { task ->
-//        task.logging.setLevel(LogLevel.LIFECYCLE)
-//    }
-//
-//    // exclude module info files for Java 9
-//    checkstyleMain.exclude "**/module-info.java"
-//    checkstyleTest.exclude "**/module-info.java"
+    checkstyle {
+        configFile = rootProject.file("gradle/checkstyle.xml")
+        showViolations = true
+        ignoreFailures = false
+        toolVersion = "8.13"
+        sourceSets = [project.sourceSets.main] // Only lint non-test sources for now.
+    }
+
+    // Decrease verbosity (printing of XSL style sheets, etc.)
+    [checkstyleMain, checkstyleTest].each { task ->
+        task.logging.setLevel(LogLevel.LIFECYCLE)
+    }
 
     commonModuleSetup(project, [ 'fxpackagerservices', 'fxpackager' ])
 
@@ -485,7 +495,6 @@ project(":fxpackager") {
                 winSdkBinDir += "/" + (IS_64 ? "x64" : "x86")
             }
         }
-        println "winSdkBinDir=$winSdkBinDir"
         ext.RC = "${winSdkBinDir}/rc.exe"
         ext.MC = "${winSdkBinDir}/mt.exe"
         def rcCompiler = RC
@@ -1193,13 +1202,4 @@ project(":fxpackager") {
         }
     }
 
-    task copyRedistributableFiles(type: Copy) {
-        def sourceDir = "src/tools/java/legacy"
-        def resourceDir = "src/main/resources/com/sun/openjfx"
-
-        from "$sourceDir/jre.list"
-        into project.file("$resourceDir")
-    }
-
-    processResources.dependsOn copyRedistributableFiles
 }

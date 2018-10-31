@@ -25,8 +25,6 @@
 
 package com.sun.openjfx.tools.packager;
 
-import com.sun.openjfx.tools.resource.PackagerResource;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

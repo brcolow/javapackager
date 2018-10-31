@@ -25,15 +25,15 @@
 
 package com.sun.openjfx.tools.packager.windows;
 
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.JreUtils;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.RelativeFileSet;
-import com.sun.openjfx.tools.packager.bundlers.BundleParams;
-
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.JreUtils;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.bundlers.BundleParams;
 
 import static com.sun.openjfx.tools.packager.JreUtils.extractJreAsRelativeFileSet;
 
@@ -45,68 +45,67 @@ public class WindowsBundlerParam<T> extends StandardBundlerParam<T> {
         super(name, description, id, valueType, defaultValueFunction, stringConverter);
     }
 
-    public static final BundlerParamInfo<String> INSTALLER_FILE_NAME = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> INSTALLER_FILE_NAME = new StandardBundlerParam<>(
             "Installer Name",
-            "The filename of the generated installer without the file type extension.  Default is <App Name>-<Version>.",
+            "The filename of the generated installer without the file type extension. Default is <App Name>-<Version>.",
             "win.installerName",
             String.class,
-            params -> {
-                String nm = APP_NAME.fetchFrom(params);
-                if (nm == null) return null;
+        params -> {
+            String nm = APP_NAME.fetchFrom(params);
+            if (nm == null) {
+                return null;
+            }
+            String version = VERSION.fetchFrom(params);
+            if (version == null) {
+                return nm;
+            } else {
+                return nm + "-" + version;
+            }
+        },
+        (s, p) -> s);
 
-                String version = VERSION.fetchFrom(params);
-                if (version == null) {
-                    return nm;
-                } else {
-                    return nm + "-" + version;
-                }
-            },
-            (s, p) -> s);
-
-    public static final BundlerParamInfo<String> APP_REGISTRY_NAME = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> APP_REGISTRY_NAME = new StandardBundlerParam<>(
             "Registry Name",
             "The name of the application for registry references.  Default is the Application Name with only " +
                     "alphanumerics, dots, and dashes (no whitespace).",
             "win.registryName",
             String.class,
-            params -> {
-                String nm = APP_NAME.fetchFrom(params);
-                if (nm == null) return null;
-
-                return nm.replaceAll("[^-a-zA-Z\\.0-9]", "");
-            },
-            (s, p) -> s);
+        params -> {
+            String nm = APP_NAME.fetchFrom(params);
+            if (nm == null) {
+                return null;
+            }
+            return nm.replaceAll("[^-a-zA-Z\\.0-9]", "");
+        },
+        (s, p) -> s);
 
     public static final StandardBundlerParam<String> MENU_GROUP = new StandardBundlerParam<>(
             "Menu Group",
             "The Start Menu group this application should be placed in.",
             "win.menuGroup",
             String.class,
-            params -> params.containsKey(VENDOR.getID())
-                    ? VENDOR.fetchFrom(params)
-                    : params.containsKey(CATEGORY.getID())
-                    ? CATEGORY.fetchFrom(params)
-                    : "Unknown",
-            (s, p) -> s);
+        params -> params.containsKey(VENDOR.getID()) ? VENDOR.fetchFrom(params) : params.containsKey(CATEGORY.getID()) ?
+                CATEGORY.fetchFrom(params) : "Unknown",
+        (s, p) -> s);
 
     public static final StandardBundlerParam<Boolean> BIT_ARCH_64 = new StandardBundlerParam<>(
             "64-bit",
             "Prepare the bundles for 64 bit windows.",
             "win.64Bit",
             Boolean.class,
-            params -> System.getProperty("os.arch").contains("64"),
-            (s, p) -> Boolean.valueOf(s));
+        params -> System.getProperty("os.arch").contains("64"),
+        (s, p) -> Boolean.valueOf(s));
 
     public static final StandardBundlerParam<Boolean> BIT_ARCH_64_RUNTIME = new StandardBundlerParam<>(
             "runtime 64-bit",
             "Embedded JRE runtime is 64-bit, used to detect bit architecture mismatches.",
             "win.64BitJreRuntime",
             Boolean.class,
-            params -> {
-                WinAppBundler.extractFlagsFromRuntime(params);
-                return "64".equals(params.get(".runtime.bit-arch"));
-            },
-            (s, p) -> Boolean.valueOf(s));
+        params -> {
+            WinAppBundler.extractFlagsFromRuntime(params);
+            return "64".equals(params.get(".runtime.bit-arch"));
+        },
+        (s, p) -> Boolean.valueOf(s));
 
     // Subsetting of JRE is restricted.
     // JRE README defines what is allowed to strip:
@@ -116,31 +115,31 @@ public class WindowsBundlerParam<T> extends StandardBundlerParam<T> {
             "",
             ".win.runtime.rules",
             JreUtils.Rule[].class,
-            params -> new JreUtils.Rule[]{
-                    JreUtils.Rule.prefixNeg("\\bin\\new_plugin"),
-                    JreUtils.Rule.prefixNeg("\\lib\\deploy"),
-                    JreUtils.Rule.suffixNeg(".pdb"),
-                    JreUtils.Rule.suffixNeg(".map"),
-                    JreUtils.Rule.suffixNeg("axbridge.dll"),
-                    JreUtils.Rule.suffixNeg("eula.dll"),
-                    JreUtils.Rule.substrNeg("javacpl"),
-                    JreUtils.Rule.suffixNeg("wsdetect.dll"),
-                    JreUtils.Rule.substrNeg("eployjava1.dll"), //NP and IE versions
-                    JreUtils.Rule.substrNeg("bin\\jp2"),
-                    JreUtils.Rule.substrNeg("bin\\jpi"),
-                    //Rule.suffixNeg("lib\\ext"), //need some of jars there for https to work
-                    JreUtils.Rule.suffixNeg("ssv.dll"),
-                    JreUtils.Rule.substrNeg("npjpi"),
-                    JreUtils.Rule.substrNeg("npoji"),
-                    JreUtils.Rule.suffixNeg(".exe"),
-                    //keep core deploy files as JavaFX APIs use them
-                    //Rule.suffixNeg("deploy.dll"),
-                    JreUtils.Rule.suffixNeg("deploy.jar"),
-                    //Rule.suffixNeg("javaws.jar"),
-                    //Rule.suffixNeg("plugin.jar"),
-                    JreUtils.Rule.suffix(".jar")
-            },
-            (s, p) -> null);
+        params -> new JreUtils.Rule[]{
+                JreUtils.Rule.prefixNeg("\\bin\\new_plugin"),
+                JreUtils.Rule.prefixNeg("\\lib\\deploy"),
+                JreUtils.Rule.suffixNeg(".pdb"),
+                JreUtils.Rule.suffixNeg(".map"),
+                JreUtils.Rule.suffixNeg("axbridge.dll"),
+                JreUtils.Rule.suffixNeg("eula.dll"),
+                JreUtils.Rule.substrNeg("javacpl"),
+                JreUtils.Rule.suffixNeg("wsdetect.dll"),
+                JreUtils.Rule.substrNeg("eployjava1.dll"), // NP and IE versions
+                JreUtils.Rule.substrNeg("bin\\jp2"),
+                JreUtils.Rule.substrNeg("bin\\jpi"),
+                //Rule.suffixNeg("lib\\ext"), // need some of jars there for https to work
+                JreUtils.Rule.suffixNeg("ssv.dll"),
+                JreUtils.Rule.substrNeg("npjpi"),
+                JreUtils.Rule.substrNeg("npoji"),
+                JreUtils.Rule.suffixNeg(".exe"),
+                // keep core deploy files as JavaFX APIs use them
+                // Rule.suffixNeg("deploy.dll"),
+                JreUtils.Rule.suffixNeg("deploy.jar"),
+                // Rule.suffixNeg("javaws.jar"),
+                // Rule.suffixNeg("plugin.jar"),
+                JreUtils.Rule.suffix(".jar")
+        },
+        (s, p) -> null);
 
     public static final BundlerParamInfo<RelativeFileSet> WIN_RUNTIME = new StandardBundlerParam<>(
             "System Wide",
@@ -148,12 +147,12 @@ public class WindowsBundlerParam<T> extends StandardBundlerParam<T> {
                     "use the system default.",
             BundleParams.PARAM_RUNTIME,
             RelativeFileSet.class,
-            params -> extractJreAsRelativeFileSet(System.getProperty("java.home"),
-                    WIN_JRE_RULES.fetchFrom(params)),
-            (s, p) -> extractJreAsRelativeFileSet(s,
-                    WIN_JRE_RULES.fetchFrom(p)));
+        params -> extractJreAsRelativeFileSet(System.getProperty("java.home"),
+                WIN_JRE_RULES.fetchFrom(params)),
+        (s, p) -> extractJreAsRelativeFileSet(s,
+                WIN_JRE_RULES.fetchFrom(p)));
 
-    public static final BundlerParamInfo<Boolean> INSTALLDIR_CHOOSER = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<Boolean> INSTALLDIR_CHOOSER = new StandardBundlerParam<>(
         "Install Directory Chooser",
         "Adds a dialog to let the user choose a directory where the product will be installed.",
         BundleParams.PARAM_INSTALLDIR_CHOOSER,

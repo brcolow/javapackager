@@ -40,9 +40,9 @@ import com.openjfx.packager.services.UserJvmOptionsService;
  * {@see UserJvmOptionsService#getUserJVMDefaults()}
  * to get an instance.
  */
-final public class LauncherUserJvmOptions implements UserJvmOptionsService {
+public final class LauncherUserJvmOptions implements UserJvmOptionsService {
 
-    private static final Object semaphore = new Object();
+    private static final Object SEMAPHORE = new Object();
 
     static {
         try {
@@ -122,7 +122,7 @@ final public class LauncherUserJvmOptions implements UserJvmOptionsService {
     @Override
     public Map<String, String> getUserJVMOptions() {
         checkAllPermissions();
-        synchronized (semaphore) {
+        synchronized (SEMAPHORE) {
             Map<String, String> results = new LinkedHashMap<>();
             for (String s : _getUserJvmOptionKeys()) {
                 results.put(s, _getUserJvmOptionValue(s));
@@ -134,36 +134,35 @@ final public class LauncherUserJvmOptions implements UserJvmOptionsService {
     @Override
     public void setUserJVMOptions(Map<String, String> options) {
         checkAllPermissions();
-        synchronized (semaphore) {
+        synchronized (SEMAPHORE) {
             List<String> keys = new LinkedList<>();
             List<String> values = new LinkedList<>();
 
             for (Map.Entry<String, String> option : options.entrySet()) {
                 if (option.getKey() == null) {
                     throw new IllegalArgumentException(
-                            "For Launcher Backed UserJVMOptions keys in the "
-                                    + "UserJVMOptions map cannot be null.");
+                            "For Launcher Backed UserJVMOptions keys in the " +
+                                    "UserJVMOptions map cannot be null.");
                 }
                 if (option.getValue() == null) {
                     throw new IllegalArgumentException(
-                            "For Launcher Backed UserJVMOptions values in the "
-                                    + "UserJVMOptions map cannot be null. Keys are "
-                                    + "removed by absence, not by setting keys to null."
+                            "For Launcher Backed UserJVMOptions values in the " +
+                                    "UserJVMOptions map cannot be null. Keys are " +
+                                    "removed by absence, not by setting keys to null."
                     );
                 }
                 keys.add(option.getKey());
                 values.add(option.getValue());
             }
 
-            _setUserJvmKeysAndValues(keys.toArray(new String[keys.size()]),
-                    values.toArray(new String[values.size()]));
+            _setUserJvmKeysAndValues(keys.toArray(new String[0]), values.toArray(new String[0]));
         }
     }
 
     @Override
     public Map<String, String> getUserJVMOptionDefaults() {
         checkAllPermissions();
-        synchronized (semaphore) {
+        synchronized (SEMAPHORE) {
             Map<String, String> results = new LinkedHashMap<>();
             for (String s : _getUserJvmOptionDefaultKeys()) {
                 results.put(s, _getUserJvmOptionDefaultValue(s));

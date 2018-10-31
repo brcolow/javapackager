@@ -92,7 +92,7 @@ public class BundlerParamInfo<T> {
         return defaultValueFunction;
     }
 
-    public BiFunction<String, Map<String, ? super Object>,T> getStringConverter() {
+    public BiFunction<String, Map<String, ? super Object>, T> getStringConverter() {
         return stringConverter;
     }
 

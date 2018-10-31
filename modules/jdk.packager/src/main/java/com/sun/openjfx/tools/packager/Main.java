@@ -114,24 +114,6 @@ public class Main {
         return parameters;
     }
 
-    private static List<HtmlParam> parseHtmlParams(String filename) throws IOException {
-        File paramFile = new File(filename);
-        Properties properties = new Properties();
-        FileInputStream in = new FileInputStream(paramFile);
-        properties.load(in);
-        in.close();
-
-        List<HtmlParam> parameters = new ArrayList<>(properties.size());
-
-        for (Map.Entry entry : properties.entrySet()) {
-            HtmlParam param = new HtmlParam();
-            param.setName((String) entry.getKey());
-            param.setValue((String) entry.getValue());
-            parameters.add(param);
-        }
-        return parameters;
-    }
-
     public static void main(String... args) throws Exception {
         // Create logger with default system.out and system.err
         Log.Logger logger = new Log.Logger(false);
@@ -261,18 +243,8 @@ public class Main {
                             deployParams.setPreloader(nextArg(args, i++));
                         } else if (arg.equalsIgnoreCase("-paramFile")) {
                             deployParams.setParams(parseParams(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-htmlParamFile")) {
-                            deployParams.setHtmlParams(parseHtmlParams(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-width")) {
-                            deployParams.setWidth(Integer.parseInt(nextArg(args, i++)));
-                        } else if (arg.equalsIgnoreCase("-height")) {
-                            deployParams.setHeight(Integer.parseInt(nextArg(args, i++)));
                         } else if (arg.equalsIgnoreCase("-name")) {
                             deployParams.setAppName(nextArg(args, i++));
-                        } else if (arg.equalsIgnoreCase("-appId") || arg.equalsIgnoreCase("-templateId")) {
-                            String appIdArg = nextArg(args, i++);
-                            deployParams.setAppId(appIdArg);
-                            deployParams.setId(appIdArg);
                         } else if (arg.equalsIgnoreCase("-verbose") || arg.equalsIgnoreCase("-v")) {
                             deployParams.setVerbose(true);
                             verbose = true;

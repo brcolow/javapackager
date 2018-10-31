@@ -52,15 +52,12 @@ import java.util.function.Function;
  * }</pre>
  */
 public class EnumeratedBundlerParam<T> extends BundlerParamInfo<T> {
-    // Not sure if this is the correct order, my idea is that from and IDE's perspective
+    // Not sure if this is the correct order, my idea is that from an IDE's perspective
     // the string to display to the user is the key and then the value is some type of
     // object (although probably a String in most cases)
     private Map<String, T> elements;
 
-    public EnumeratedBundlerParam(String name,
-                                  String description,
-                                  String id,
-                                  Class<T> valueType,
+    public EnumeratedBundlerParam(String name, String description, String id, Class<T> valueType,
                                   Function<Map<String, ? super Object>, T> defaultValueFunction,
                                   BiFunction<String, Map<String, ? super Object>, T> stringConverter,
                                   Map<String, T> elements) {

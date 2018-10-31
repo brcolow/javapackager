@@ -25,8 +25,6 @@
 
 package com.sun.openjfx.tools.packager.windows;
 
-import static com.sun.openjfx.tools.packager.IOUtils.exec;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +33,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.sun.openjfx.tools.packager.IOUtils.exec;
 
 public final class WindowsRegistry {
 
@@ -74,7 +74,7 @@ public final class WindowsRegistry {
     }
 
     public static List<String> readExclusionsPaths() {
-        List<String> result = new ArrayList();
+        List<String> result = new ArrayList<>();
         final String key = "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows Defender\\Exclusions\\Paths";
         String value = readRegistry(key, "");
 
@@ -109,7 +109,7 @@ public final class WindowsRegistry {
      * @param subkey in the registry key
      * @return registry value or null if not found
      */
-    public static String readRegistry(String key, String subkey){
+    public static String readRegistry(String key, String subkey) {
         StringBuilder result = new StringBuilder();
 
         try {
@@ -130,14 +130,14 @@ public final class WindowsRegistry {
                         new ByteArrayInputStream(baos.toByteArray())));
                 String line;
 
-                while((line = bfReader.readLine()) != null){
+                while ((line = bfReader.readLine()) != null) {
                     result.append(line);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            catch (IOException e) {
-            }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return result.toString();

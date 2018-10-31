@@ -25,7 +25,6 @@
 
 package com.sun.openjfx.tools.packager.mac;
 
-import com.sun.openjfx.tools.packager.IOUtils;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -44,14 +43,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-final public class MacCertificate {
+import com.sun.openjfx.tools.packager.IOUtils;
+
+public final class MacCertificate {
     private String certificate;
     private boolean verbose;
-
-    public MacCertificate(String certificate) {
-        this.certificate = certificate;
-        this.verbose = false;
-    }
 
     public MacCertificate(String certificate, boolean verbose) {
         this.certificate = certificate;
@@ -63,6 +59,7 @@ final public class MacCertificate {
     }
 
     private static File findCertificate(String certificate, boolean verbose) {
+        System.out.println("CERTIFICATE FILE: " + certificate);
         File result = null;
 
         List<String> args = new ArrayList<>();
@@ -83,20 +80,20 @@ final public class MacCertificate {
                     new ByteArrayInputStream(baos.toByteArray())));
             String line;
 
-            while((line = bfReader.readLine()) != null){
+            while ((line = bfReader.readLine()) != null) {
                 p.println(line);
             }
 
             p.close();
             result = output;
-        }
-        catch (IOException ioe) {
+        } catch (IOException ignore) {
         }
 
         return result;
     }
 
     private static Date findCertificateDate(String filename, boolean verbose) {
+        System.out.println("CERTIFICATE DATE FILENAME: " + filename);
         Date result = null;
 
         List<String> args = new ArrayList<>();
@@ -114,8 +111,7 @@ final public class MacCertificate {
             output = output.substring(output.indexOf("=") + 1);
             DateFormat df = new SimpleDateFormat("MMM dd kk:mm:ss yyyy z", Locale.ENGLISH);
             result = df.parse(output);
-        }
-        catch (IOException | ParseException ioe) {
+        } catch (IOException | ParseException ignore) {
         }
 
         return result;
@@ -134,8 +130,7 @@ final public class MacCertificate {
                 if (file != null) {
                     certificateDate = findCertificateDate(file.getCanonicalPath(), verbose);
                 }
-            }
-            finally {
+            } finally {
                 if (file != null) {
                     file.delete();
                 }
@@ -149,8 +144,7 @@ final public class MacCertificate {
                     result = true;
                 }
             }
-        }
-        catch (IOException ex) {
+        } catch (IOException ignore) {
         }
 
         return result;

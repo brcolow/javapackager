@@ -63,8 +63,7 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 
 public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
 
-    private static final String WINDOWS_BUNDLER_PREFIX =
-            BUNDLER_PREFIX + "windows" + File.separator;
+    private static final String WINDOWS_BUNDLER_PREFIX = BUNDLER_PREFIX + "windows" + File.separator;
 
     private static final String EXECUTABLE_NAME = "WinLauncher.exe";
     private static final String LIBRARY_NAME = "packager.dll";
@@ -218,14 +217,14 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
         try (Stream<Path> files = Files.list(runtimeDir.resolve("bin"))) {
             files.filter(p -> Pattern.matches("^(vcruntime|msvcp|msvcr|ucrtbase|api-ms-win-).*\\.dll$",
                     p.toFile().getName().toLowerCase()))
-                 .filter(p -> !p.toString().toLowerCase().endsWith(finalVsVer + ".dll"))
-                 .forEach(p -> {
-                    try {
-                        Files.copy(p, root.resolve((p.toFile().getName())));
-                    } catch (IOException e) {
-                        ioe.set(e);
-                    }
-                });
+                    .filter(p -> !p.toString().toLowerCase().endsWith(finalVsVer + ".dll"))
+                    .forEach(p -> {
+                        try {
+                            Files.copy(p, root.resolve(p.toFile().getName()));
+                        } catch (IOException e) {
+                            ioe.set(e);
+                        }
+                    });
         }
 
         IOException e = ioe.get();
@@ -326,7 +325,7 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
                     Log.info(MessageFormat.format("Warning: Windows Defender may prevent the Java Packager from " +
                             "functioning. If there is an issue, it can be addressed by either disabling realtime " +
                             "monitoring, or adding an exclusion for the directory \"{0}\".",
-                            WindowsDefender.getUserTempDirectory()));
+                            System.getProperty("java.io.tmpdir")));
                 }
 
                 launcher.setWritable(true);

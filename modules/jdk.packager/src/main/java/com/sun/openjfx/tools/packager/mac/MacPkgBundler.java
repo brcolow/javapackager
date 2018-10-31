@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +62,7 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.SERVICE_HINT;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class MacPkgBundler extends MacBaseInstallerBundler {
 
@@ -351,7 +351,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
         out.println("</choice>");
         out.println("<pkg-ref id=\"" + appId + "\" version=\"" + VERSION.fetchFrom(params) +
                 "\" onConclusion=\"none\">" +
-                        URLEncoder.encode(getPackages_AppPackage(params).getName(), StandardCharsets.UTF_8) + "</pkg-ref>");
+                        URLEncoder.encode(getPackages_AppPackage(params).getName(), UTF_8) + "</pkg-ref>");
 
         if (SERVICE_HINT.fetchFrom(params)) {
             out.println("<choice id=\"" + daemonId + "\" visible=\"false\">");
@@ -359,7 +359,7 @@ public class MacPkgBundler extends MacBaseInstallerBundler {
             out.println("</choice>");
             out.println("<pkg-ref id=\"" + daemonId + "\" version=\"" + VERSION.fetchFrom(params) +
                     "\" onConclusion=\"none\">" +
-                    URLEncoder.encode(getPackages_DaemonPackage(params).getName(), StandardCharsets.UTF_8) + "</pkg-ref>");
+                    URLEncoder.encode(getPackages_DaemonPackage(params).getName(), UTF_8) + "</pkg-ref>");
         }
 
         out.println("</installer-gui-script>");
