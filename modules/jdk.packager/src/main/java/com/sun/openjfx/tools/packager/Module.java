@@ -37,13 +37,13 @@ public final class Module {
     private String filename;
     private ModuleType moduleType;
 
-    public enum JarType {All, UnnamedJar, ModularJar}
-    public enum ModuleType {Unknown, UnnamedJar, ModularJar, Jmod, ExplodedModule}
+    public enum JarType { All, UnnamedJar, ModularJar }
+    public enum ModuleType { Unknown, UnnamedJar, ModularJar, Jmod, ExplodedModule }
 
-    public Module(File AFile) {
+    public Module(File file) {
         super();
-        filename = AFile.getPath();
-        moduleType = getModuleType(AFile);
+        filename = file.getPath();
+        moduleType = getModuleType(file);
     }
 
     public String getModuleName() {
@@ -68,18 +68,15 @@ public final class Module {
         if (file.isFile()) {
             if (filename.endsWith(".jmod")) {
                 result = ModuleType.Jmod;
-            }
-            else if (filename.endsWith(".jar")) {
+            } else if (filename.endsWith(".jar")) {
                 JarType status = isModularJar(filename);
                 if (status == JarType.ModularJar) {
                     result = ModuleType.ModularJar;
-                }
-                else if (status == JarType.UnnamedJar) {
+                } else if (status == JarType.UnnamedJar) {
                     result = ModuleType.UnnamedJar;
                 }
             }
-        }
-        else if (file.isDirectory()) {
+        } else if (file.isDirectory()) {
             File moduleInfo = new File(filename + File.separator + "module-info.class");
 
             if (moduleInfo.exists()) {
@@ -90,11 +87,11 @@ public final class Module {
         return result;
     }
 
-    private static JarType isModularJar(String FileName) {
+    private static JarType isModularJar(String file) {
         JarType result = JarType.All;
 
         try {
-            ZipInputStream zip = new ZipInputStream(new FileInputStream(FileName));
+            ZipInputStream zip = new ZipInputStream(new FileInputStream(file));
             result = JarType.UnnamedJar;
 
             try {
@@ -106,15 +103,15 @@ public final class Module {
                 }
 
                 zip.close();
-            } catch (IOException ex) {
+            } catch (IOException ignore) {
             }
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException ignore) {
         }
 
         return result;
     }
 
-    private static String getFileWithoutExtension(String FileName) {
-        return FileName.replaceFirst("[.][^.]+$", "");
+    private static String getFileWithoutExtension(String file) {
+        return file.replaceFirst("[.][^.]+$", "");
     }
 }

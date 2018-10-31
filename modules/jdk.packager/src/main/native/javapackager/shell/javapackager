@@ -30,55 +30,53 @@ done
 # resolve symlinks
 PRG=$0
 while [ -h "$PRG" ]; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '^.*-> \(.*\)$' 2>/dev/null`
+    ls=$(ls -ld "$PRG")
+    link=$(expr "$ls" : '^.*-> \(.*\)$' 2>/dev/null)
     if expr "$link" : '^/' 2> /dev/null >/dev/null; then
 	PRG="$link"
     else
-	PRG="`dirname "$PRG"`/$link"
+	PRG="$(dirname "$PRG")/$link"
     fi
 done
 
 # detect Darwin and Cygwin environments
-darwin=false;
 cygwin=false;
-case "`uname`" in
-  Darwin*) darwin=true;
-           if [ -z "$JAVA_HOME" ] ; then
-               BIN_DIR=`dirname $PRG`
-               JAVA_HOME=`cd $BIN_DIR > /dev/null; pwd`/..
+case "$(uname)" in
+  Darwin*) if [ -z "$JAVA_HOME" ] ; then
+               BIN_DIR=$(dirname "$PRG")
+               JAVA_HOME=$(cd "$BIN_DIR" > /dev/null; pwd)/..
            fi
            ;;
   CYGWIN*) cygwin=true;;
 esac
 
-JAVA_PACKAGER_PATH=$(cd $(dirname $0) ; pwd -P)
+JAVA_PACKAGER_PATH=$(cd "$(dirname "$0")"; pwd -P)
 JAVA_CMD="${JAVA_PACKAGER_PATH}/java"
 
 if [[ ! -f ${JAVA_CMD} ]]; then
-  if [ -n "$JAVA_HOME" -a -x "$JAVA_HOME/bin/javac" ] ; then
+  if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/javac" ] ; then
       JAVA_CMD="$JAVA_HOME/bin/java"
       export JAVA_HOME
   else
-    JAVAC_CMD=`which javac 2> /dev/null `
+    JAVAC_CMD=$(command -v javac 2> /dev/null)
     while [ -h "$JAVAC_CMD" ]; do
-      ls=`ls -ld "$JAVAC_CMD"`
-      link=`expr "$ls" : '^.*-> \(.*\)$' 2>/dev/null`
+      ls=$(ls -ld "$JAVAC_CMD")
+      link=$(expr "$ls" : '^.*-> \(.*\)$' 2>/dev/null)
       if expr "$link" : '^/' 2> /dev/null >/dev/null; then
         JAVAC_CMD="$link"
       else
-        JAVAC_CMD="`dirname "$JAVAC_CMD"`/$link"
+        JAVAC_CMD="$(dirname "$JAVAC_CMD")/$link"
       fi
     done
 
-    BIN_DIR=`dirname "$JAVAC_CMD"`
-    JAVA_HOME=`dirname "$BIN_DIR"`
+    BIN_DIR=$(dirname "$JAVAC_CMD")
+    JAVA_HOME=$(dirname "$BIN_DIR")
     if [ "m$JAVA_HOME" != "m." ]; then
       JAVA_CMD="$JAVA_HOME/bin/java"
       export JAVA_HOME
     else
       unset JAVA_HOME
-      JAVA_CMD=`which java 2> /dev/null `
+      JAVA_CMD=$(command -v java 2> /dev/null)
       if [ -z "$JAVA_CMD" ]; then
         JAVA_CMD="java"
       fi
@@ -92,12 +90,12 @@ if [ ! -x "$JAVA_CMD" ] ; then
 fi
 
 if $cygwin ; then
-    JAVA_CMD=`cygpath --unix "$JAVA_CMD"`
+    JAVA_CMD=$(cygpath --unix "$JAVA_CMD")
 fi
 
 # The cray looking use of echo and ARGS expands the ARGS array into a space
 # separated list to be passed as an argument to JAVA. This is similar to "$@"
 # except we had to strip out some arguments that we don't want to be passed
 # to the Java Packager.
-eval exec "$JAVA_CMD" ${DEBUG} ${MEMORY} ${JAVA_ARGS} \
-    --module-path ${JAVA_PACKAGER_PATH} --add-opens jdk.jlink/jdk.tools.jlink.internal.packager=com.brcolow.javapackager -m com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main $(IFS=$' '; echo "${ARGS[*]}")
+eval exec "$JAVA_CMD" "${DEBUG}" "${MEMORY}" "${JAVA_ARGS}" \
+    --module-path "${JAVA_PACKAGER_PATH}" --add-opens jdk.jlink/jdk.tools.jlink.internal.packager=com.brcolow.javapackager -m com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main "$(IFS=$' '; echo "${ARGS[*]}")"

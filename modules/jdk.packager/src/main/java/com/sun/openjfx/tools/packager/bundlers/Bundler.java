@@ -39,10 +39,10 @@ public final class Bundler {
 
     public static final class Bundle {
         public BundleType type = BundleType.NONE;
-        public String format = null;
+        public String format;
     }
 
-    static public Bundle stringToBundle(String value) {
+    public static Bundle stringToBundle(String value) {
         Bundle result = new Bundle();
 
         if (!value.isEmpty()) {

@@ -42,21 +42,17 @@ import java.nio.charset.Charset;
  */
 public class SingleInstanceService {
 
-    static private boolean DEBUG = false;
-    static private PrintStream DEBUG_STREAM = null;
-
-    static private int currPort;
-    static private String stringId = null;
-    static private String randomNumberString = null;
-
-    static private SingleInstanceImpl instance = null;
+    private static boolean DEBUG;
+    private static PrintStream DEBUG_STREAM;
+    private static int currPort;
+    private static String stringId;
+    private static String randomNumberString;
+    private static SingleInstanceImpl instance;
 
     static final int ENCODING_PLATFORM = 1;
     static final int ENCODING_UNICODE = 2;
-
     static final String ENCODING_PLATFORM_NAME = "UTF-8";
     static final String ENCODING_UNICODE_NAME = "UTF-16LE";
-
     static final String APP_ID_PREFIX = "javapackager.si.";
 
     private SingleInstanceService() {}
@@ -123,8 +119,7 @@ public class SingleInstanceService {
      *
      * @param slistener the listener for unregistering.
      */
-    public static void unregisterSingleInstance(
-            SingleInstanceListener slistener) {
+    public static void unregisterSingleInstance(SingleInstanceListener slistener) {
         instance.removeSingleInstanceListener(slistener);
     }
 
@@ -132,7 +127,7 @@ public class SingleInstanceService {
      * Returns true if single instance server is running for the id
      */
     static boolean isServerRunning(String id) {
-        trace("isServerRunning ? : "+ id);
+        trace("isServerRunning ? : " + id);
         File siDir = new File(SingleInstanceImpl.SI_FILEDIR);
         String[] fList = siDir.list();
         if (fList != null) {
@@ -146,11 +141,9 @@ public class SingleInstanceService {
                     try {
                         currPort = Integer.parseInt(
                                 file.substring(file.lastIndexOf('_') + 1));
-                        trace("isServerRunning: " + file
-                                + ": port: " + currPort);
+                        trace("isServerRunning: " + file + ": port: " + currPort);
                     } catch (NumberFormatException nfe) {
-                        trace("isServerRunning: " + file
-                                + ": port parsing failed");
+                        trace("isServerRunning: " + file + ": port parsing failed");
                         trace(nfe);
                         return false;
                     }
@@ -162,11 +155,9 @@ public class SingleInstanceService {
                     try (BufferedReader br = new BufferedReader(
                             new FileReader(siFile))) {
                         randomNumberString = br.readLine();
-                        trace("isServerRunning: " + file + ": magic: "
-                                + randomNumberString);
-                    } catch (IOException ioe ) {
-                        trace("isServerRunning: " + file
-                                + ": reading magic failed");
+                        trace("isServerRunning: " + file + ": magic: " + randomNumberString);
+                    } catch (IOException ioe) {
+                        trace("isServerRunning: " + file + ": reading magic failed");
                         trace(ioe);
                     }
                     trace("isServerRunning: " + file + ": setting id - OK");
@@ -231,7 +222,7 @@ public class SingleInstanceService {
             final int tries = 5;
 
             // try to listen for ACK
-            for (int i=0; i < tries; i++) {
+            for (int i = 0; i < tries; i++) {
                 String str = br.readLine();
                 if (str != null && str.equals(SingleInstanceImpl.SI_ACK)) {
                     trace("Got ACK");
@@ -244,8 +235,7 @@ public class SingleInstanceService {
             trace(se);
         } catch (Exception ioe) {
             trace(ioe);
-        }
-        finally {
+        } finally {
             try {
                 if (br != null) {
                     br.close();

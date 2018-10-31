@@ -49,8 +49,6 @@ public final class JLinkBundlerHelper {
 
     private static final String JRE_MODULES_FILENAME =
             "com/sun/openjfx/tools/jre.list";
-    private static final String SERVER_JRE_MODULES_FILENAME =
-            "com/sun/openjfx/tools/server.jre.list";
 
     private JLinkBundlerHelper() {}
 
@@ -59,69 +57,40 @@ public final class JLinkBundlerHelper {
             "Automatically calculate modules to Limit JImage creation to.",
             "detect-modules",
             Boolean.class,
-            p -> Boolean.FALSE,
-            (s, p) -> Boolean.valueOf(s));
+        p -> Boolean.FALSE,
+        (s, p) -> Boolean.valueOf(s));
 
     @SuppressWarnings("unchecked")
     public static final BundlerParamInfo<Map<String, String>> JLINK_OPTIONS = new StandardBundlerParam<>(
             "JLink Options",
             "Options to be added to JLink invocation.",
             "jlinkOptions",
-            (Class<Map<String, String>>) (Object) Map.class,
-            p -> Collections.emptyMap(),
-            (s, p) -> {
-                try {
-                    Properties props = new Properties();
-                    props.load(new StringReader(s));
-                    return new LinkedHashMap<>((Map) props);
-                } catch (IOException e) {
-                    return new LinkedHashMap<>();
-                }
-            });
+        (Class<Map<String, String>>) (Object) Map.class,
+        p -> Collections.emptyMap(),
+        (s, p) -> {
+            try {
+                Properties props = new Properties();
+                props.load(new StringReader(s));
+                return new LinkedHashMap<>((Map) props);
+            } catch (IOException e) {
+                return new LinkedHashMap<>();
+            }
+        });
 
     public static final BundlerParamInfo<String> JLINK_BUILDER = new StandardBundlerParam<>(
             "JLink Builder",
             "Name of the JLink Builder to build the application image with.",
             "jlink.builder",
             String.class,
-            null,
-            (s, p) -> s);
+            null, (s, p) -> s);
 
     public static final BundlerParamInfo<Integer> DEBUG = new StandardBundlerParam<>(
             "",
             "",
             "-J-Xdebug",
             Integer.class,
-            p -> null,
-            (s, p) -> Integer.valueOf(s));
-
-    public static String listOfPathToString(List<Path> value) {
-        StringBuilder result = new StringBuilder();
-
-        for (Path path : value) {
-            if (result.length() > 0) {
-                result.append(File.pathSeparator);
-            }
-
-            result.append(path.toString());
-        }
-
-        return result.toString();
-    }
-
-    public static String setOfStringToString(Set<String> value) {
-        StringBuilder result = new StringBuilder();
-
-        for (String element : value) {
-            if (result.length() > 0) {
-                result.append(",");
-            }
-
-            result.append(element);
-        }
-
-        return result.toString();
-    }
+        p -> null,
+        (s, p) -> Integer.valueOf(s));
 
     public static File getMainJar(Map<String, ? super Object> params) {
         File result = null;
@@ -152,19 +121,16 @@ public final class JLinkBundlerHelper {
                 result = mainModule.substring(index + 1);
             }
         } else {
-            RelativeFileSet fileset =
-                    StandardBundlerParam.MAIN_JAR.fetchFrom(params);
+            RelativeFileSet fileset = StandardBundlerParam.MAIN_JAR.fetchFrom(params);
             if (fileset != null) {
                 result = StandardBundlerParam.MAIN_CLASS.fetchFrom(params);
-            } else {
-                // possibly app-image
             }
         }
 
         return result;
     }
 
-    public static String getMainModule(Map<String, ? super Object> params) {
+    private static String getMainModule(Map<String, ? super Object> params) {
         String result = "";
         String mainModule = StandardBundlerParam.MODULE.fetchFrom(params);
 
@@ -173,8 +139,7 @@ public final class JLinkBundlerHelper {
 
             if (index > 0) {
                 result = mainModule.substring(0, index);
-            }
-            else {
+            } else {
                 result = mainModule;
             }
         }
@@ -189,7 +154,7 @@ public final class JLinkBundlerHelper {
         Path javaBasePath = findPathOfModule(modulePath, "java.base.jmod");
         Set<String> addModules = getRedistributableModules(modulePath,
                 StandardBundlerParam.ADD_MODULES.fetchFrom(params),
-                limitModules, JRE_MODULES_FILENAME);
+                JRE_MODULES_FILENAME);
 
         if (javaBasePath != null && javaBasePath.toFile().exists()) {
             result = RedistributableModules.getModuleVersion(
@@ -233,8 +198,8 @@ public final class JLinkBundlerHelper {
     }
 
     private static Set<String> getRedistributableModules(List<Path> modulePath, Set<String> addModules,
-                                                         Set<String> limitModules, String filename) {
-        ModuleHelper moduleHelper = new ModuleHelper(modulePath, addModules, limitModules, filename);
+                                                         String filename) {
+        ModuleHelper moduleHelper = new ModuleHelper(modulePath, addModules, filename);
         return removeInvalidModules(modulePath, moduleHelper.modules());
     }
 
@@ -244,11 +209,11 @@ public final class JLinkBundlerHelper {
         Set<String> addModules = StandardBundlerParam.ADD_MODULES.fetchFrom(params);
         Set<String> limitModules = StandardBundlerParam.LIMIT_MODULES.fetchFrom(params);
         boolean stripNativeCommands = StandardBundlerParam.STRIP_NATIVE_COMMANDS.fetchFrom(params);
+        Map<String, String> userArguments = JLINK_OPTIONS.fetchFrom(params);
         Path outputDir = imageBuilder.getRoot();
         String excludeFileList = imageBuilder.getExcludeFileList();
         File mainJar = getMainJar(params);
         Module.ModuleType mainJarType = Module.ModuleType.Unknown;
-
 
         if (mainJar != null) {
             mainJarType = new Module(mainJar).getModuleType();
@@ -264,8 +229,7 @@ public final class JLinkBundlerHelper {
         // non-redistributable modules removed.
         if (mainJarType == Module.ModuleType.UnnamedJar && !detectModules) {
             addModules.add(ModuleHelper.ALL_RUNTIME);
-        }
-        else if (mainJarType == Module.ModuleType.Unknown || mainJarType == Module.ModuleType.ModularJar) {
+        } else if (mainJarType == Module.ModuleType.Unknown || mainJarType == Module.ModuleType.ModularJar) {
             String mainModule = getMainModule(params);
             addModules.add(mainModule);
 
@@ -279,7 +243,7 @@ public final class JLinkBundlerHelper {
         }
 
         Set<String> redistModules = getRedistributableModules(
-                modulePath, addModules, limitModules, JRE_MODULES_FILENAME);
+                modulePath, addModules, JRE_MODULES_FILENAME);
         addModules.addAll(redistModules);
 
         if (imageBuilder.getPlatformSpecificModulesFile() != null) {
@@ -297,6 +261,7 @@ public final class JLinkBundlerHelper {
                     "--limit-modules = " + limitModules.toString() +
                     "--exclude-files = " + excludeFileList +
                     "--strip-native-commands = " + stripNativeCommands +
+                    userArguments +
                     " ]" + outputDir.toString());
         }
 
@@ -307,7 +272,7 @@ public final class JLinkBundlerHelper {
         appRuntimeBuilder.setLimitModules(limitModules);
         appRuntimeBuilder.setExcludeFileList(excludeFileList);
         appRuntimeBuilder.setStripNativeCommands(stripNativeCommands);
-        appRuntimeBuilder.setUserArguments(new HashMap<>());
+        appRuntimeBuilder.setUserArguments(userArguments);
 
         appRuntimeBuilder.build();
         imageBuilder.prepareApplicationFiles();
@@ -399,9 +364,9 @@ public final class JLinkBundlerHelper {
         public static final String ALL_RUNTIME = "ALL-RUNTIME";
 
         private final Set<String> modules = new HashSet<>();
-        private enum Macros {None, AllModulePath, AllRuntime}
+        private enum Macros { None, AllModulePath, AllRuntime }
 
-        public ModuleHelper(List<Path> paths, Set<String> roots, Set<String> limitMods, String filename) {
+        public ModuleHelper(List<Path> paths, Set<String> roots, String filename) {
             Macros macro = Macros.None;
 
             for (Iterator<String> iterator = roots.iterator(); iterator.hasNext();) {
@@ -423,15 +388,13 @@ public final class JLinkBundlerHelper {
 
             switch (macro) {
                 case AllModulePath:
-                    this.modules.addAll(getModuleNamesFromPath(paths));
+                    modules.addAll(getModuleNamesFromPath(paths));
                     break;
                 case AllRuntime:
                     Set<String> m = RedistributableModules.getRedistributableModules(paths, filename);
-
                     if (m != null) {
-                        this.modules.addAll(m);
+                        modules.addAll(m);
                     }
-
                     break;
             }
         }
@@ -440,9 +403,9 @@ public final class JLinkBundlerHelper {
             return modules;
         }
 
-        private static Set<String> getModuleNamesFromPath(List<Path> Value) {
+        private static Set<String> getModuleNamesFromPath(List<Path> value) {
             Set<String> result = new LinkedHashSet<>();
-            ModuleManager mm = new ModuleManager(Value);
+            ModuleManager mm = new ModuleManager(value);
             List<Module> modules = mm.getModules(EnumSet.of(ModuleManager.SearchType.ModularJar,
                     ModuleManager.SearchType.Jmod, ModuleManager.SearchType.ExplodedModule));
 

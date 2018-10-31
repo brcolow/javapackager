@@ -34,14 +34,13 @@ import java.util.Set;
 public class RelativeFileSet {
 
     public enum Type {
-        UNKNOWN, jar, nativelib, icon, license, data
+        UNKNOWN, JAR, NATIVELIB, ICON, LICENSE, DATA
     }
 
     private Type type = Type.UNKNOWN;
     private String mode;
     private String os;
     private String arch;
-
     private File basedir;
     private Set<String> files = new LinkedHashSet<>();
 
@@ -57,14 +56,14 @@ public class RelativeFileSet {
     public RelativeFileSet(File base, Collection<File> files) {
         basedir = base;
         String baseAbsolute = basedir.getAbsolutePath();
-        for (File f: files) {
+        for (File f : files) {
             String absolute = f.getAbsolutePath();
             if (!absolute.startsWith(baseAbsolute)) {
                 throw new RuntimeException("File " + f.getAbsolutePath() +
                         " does not belong to " + baseAbsolute);
             }
             if (!absolute.equals(baseAbsolute)) { // possible in javapackager case
-                this.files.add(absolute.substring(baseAbsolute.length()+1));
+                this.files.add(absolute.substring(baseAbsolute.length() + 1));
             }
         }
     }
@@ -76,9 +75,9 @@ public class RelativeFileSet {
     public boolean contains(String[] requiredFiles) {
         boolean result = true;
 
-        for(String fname: requiredFiles) {
+        for (String fname : requiredFiles) {
             if (!files.contains(fname)) {
-                Log.debug("  Runtime does not contain [" + fname + "]");
+                Log.debug("Runtime does not contain [" + fname + "]");
                 result = false;
             }
         }
@@ -90,7 +89,7 @@ public class RelativeFileSet {
         if (files.contains(requiredFile)) {
             return true;
         } else {
-            Log.debug("  Runtime does not contain [" + requiredFile + "]");
+            Log.debug("Runtime does not contain [" + requiredFile + "]");
             return false;
         }
     }

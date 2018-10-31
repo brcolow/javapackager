@@ -39,7 +39,7 @@ import com.openjfx.packager.services.UserJvmOptionsService;
  * {@see UserJvmOptionsService#getUserJVMDefaults()}
  * to get an instance.
  */
-final public class PreferencesUserJvmOptions implements UserJvmOptionsService {
+public final class PreferencesUserJvmOptions implements UserJvmOptionsService {
 
     Preferences node = Preferences.userRoot().node(System.getProperty(
             "app.preferences.id").replace(".", "/")).node("JVMUserOptions");

@@ -99,7 +99,6 @@ public class MacAppBundler extends AbstractImageBundler {
         map.put("Utilities", "public.app-category.utilities");
         map.put("Video", "public.app-category.video");
         map.put("Weather", "public.app-category.weather");
-
         map.put("Action Games", "public.app-category.action-games");
         map.put("Adventure Games", "public.app-category.adventure-games");
         map.put("Arcade Games", "public.app-category.arcade-games");
@@ -119,102 +118,92 @@ public class MacAppBundler extends AbstractImageBundler {
         map.put("Strategy Games", "public.app-category.strategy-games");
         map.put("Trivia Games", "public.app-category.trivia-games");
         map.put("Word Games", "public.app-category.word-games");
-
         return map;
     }
 
-    public static final EnumeratedBundlerParam<String> MAC_CATEGORY =
-            new EnumeratedBundlerParam<>(
-                    "Category",
-                    "Mac App Store Categories. Note that the key is the string to display to the user and the value " +
-                            "is the id of the category.",
-                    "mac.category",
-                    String.class,
-                    params -> params.containsKey(CATEGORY.getID())
-                            ? CATEGORY.fetchFrom(params)
-                            : "Unknown",
-                    (s, p) -> s,
-                    getMacCategories()
-            );
+    public static final EnumeratedBundlerParam<String> MAC_CATEGORY = new EnumeratedBundlerParam<>(
+            "Category",
+            "Mac App Store Categories. Note that the key is the string to display to the user and the value " +
+                    "is the id of the category.",
+            "mac.category",
+            String.class,
+        params -> params.containsKey(CATEGORY.getID()) ? CATEGORY.fetchFrom(params) : "Unknown",
+        (s, p) -> s, getMacCategories());
 
-    public static final BundlerParamInfo<String> MAC_CF_BUNDLE_NAME =
-            new StandardBundlerParam<>(
-                    "CFBundleName",
-                    "The name of the app as it appears in the Menu Bar.  This can be different from the application " +
-                            "name.  This name should be less than 16 characters long and be suitable for displaying " +
-                            "in the menu bar and the app's Info window.",
-                    "mac.CFBundleName",
-                    String.class,
-                    params -> null,
-                    (s, p) -> s);
+    public static final BundlerParamInfo<String> MAC_CF_BUNDLE_NAME = new StandardBundlerParam<>(
+            "CFBundleName",
+            "The name of the app as it appears in the Menu Bar.  This can be different from the application " +
+                    "name.  This name should be less than 16 characters long and be suitable for displaying " +
+                    "in the menu bar and the app's Info window.",
+            "mac.CFBundleName",
+            String.class,
+        params -> null,
+        (s, p) -> s);
 
-    public static final BundlerParamInfo<String> MAC_CF_BUNDLE_IDENTIFIER =
-            new StandardBundlerParam<>(
-                    "CFBundleIdentifier",
-                    "An identifier that uniquely identifies the application for MacOSX (and on the Mac App Store).  " +
-                            "May only use alphanumeric (A-Z,a-z,0-9), hyphen (-), and period (.) characters.",
-                    "mac.CFBundleIdentifier",
-                    String.class,
-                    IDENTIFIER::fetchFrom,
-                    (s, p) -> s);
+    public static final BundlerParamInfo<String> MAC_CF_BUNDLE_IDENTIFIER = new StandardBundlerParam<>(
+            "CFBundleIdentifier",
+            "An identifier that uniquely identifies the application for MacOSX (and on the Mac App Store).  " +
+                    "May only use alphanumeric (A-Z,a-z,0-9), hyphen (-), and period (.) characters.",
+            "mac.CFBundleIdentifier",
+            String.class,
+            IDENTIFIER::fetchFrom, (s, p) -> s);
 
-    public static final BundlerParamInfo<String> MAC_CF_BUNDLE_VERSION =
-            new StandardBundlerParam<>(
-                    "CFBundleVersion",
-                    "A computer readable version for the CFBundle.  May contain only digits and from zero to two " +
-                            "dots, such as \"1.8.1\" or \"100\".",
-                    "mac.CFBundleVersion",
-                    String.class,
-                    p -> {
-                        String s = VERSION.fetchFrom(p);
-                        if (validCFBundleVersion(s)) {
-                            return s;
-                        } else {
-                            return "100";
-                        }
-                    },
-                    (s, p) -> s);
+    public static final BundlerParamInfo<String> MAC_CF_BUNDLE_VERSION = new StandardBundlerParam<>(
+            "CFBundleVersion",
+            "A computer readable version for the CFBundle.  May contain only digits and from zero to two " +
+                    "dots, such as \"1.8.1\" or \"100\".",
+            "mac.CFBundleVersion",
+            String.class,
+        p -> {
+            String s = VERSION.fetchFrom(p);
+            if (validCFBundleVersion(s)) {
+                return s;
+            } else {
+                return "100";
+            }
+        },
+        (s, p) -> s);
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new StandardBundlerParam<>(
             "",
             "",
             "configRoot",
             File.class,
-            params -> {
-                File configRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
-                configRoot.mkdirs();
-                return configRoot;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File configRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
+            configRoot.mkdirs();
+            return configRoot;
+        },
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<String> DEFAULT_ICNS_ICON = new StandardBundlerParam<>(
             "Default Icon",
             "The Default Icon for when a user does not specify an icns file.",
             ".mac.default.icns",
             String.class,
-            params -> TEMPLATE_BUNDLE_ICON,
-            (s, p) -> s);
+        params -> TEMPLATE_BUNDLE_ICON,
+        (s, p) -> s);
 
     public static final BundlerParamInfo<String> DEVELOPER_ID_APP_SIGNING_KEY = new StandardBundlerParam<>(
             "Apple Developer ID Application Signing Key",
             "The full name of the Apple Developer ID Application signing key.",
             "mac.signing-key-developer-id-app",
             String.class,
-            params -> {
-                    String result = MacBaseInstallerBundler.findKey("Developer ID Application: " + SIGNING_KEY_USER.fetchFrom(params),
-                                                                    SIGNING_KEYCHAIN.fetchFrom(params),
-                                                                    VERBOSE.fetchFrom(params));
-                    if (result != null) {
-                        MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
+        params -> {
+            String result = MacBaseInstallerBundler.findKey("Developer ID Application: " +
+                            SIGNING_KEY_USER.fetchFrom(params), SIGNING_KEYCHAIN.fetchFrom(params),
+                    VERBOSE.fetchFrom(params));
+            if (result != null) {
+                MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
 
-                        if (!certificate.isValid()) {
-                            Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
-                        }
-                    }
+                if (!certificate.isValid()) {
+                    Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
+                }
+            }
 
-                    return result;
-                },
-            (s, p) -> s);
+            return result;
+        },
+        (s, p) -> s);
 
     public static final BundlerParamInfo<String> BUNDLE_ID_SIGNING_PREFIX = new StandardBundlerParam<>(
             "Bundle Signing Prefix",
@@ -222,24 +211,24 @@ public class MacAppBundler extends AbstractImageBundler {
                     "that don't have an existing CFBundleIdentifier.",
             "mac.bundle-id-signing-prefix",
             String.class,
-            params -> IDENTIFIER.fetchFrom(params) + ".",
-            (s, p) -> s);
+        params -> IDENTIFIER.fetchFrom(params) + ".",
+        (s, p) -> s);
 
     public static final BundlerParamInfo<File> ICON_ICNS = new StandardBundlerParam<>(
             ".icns Icon",
             "Icon for the application, in ICNS format.",
             "icon.icns",
             File.class,
-            params -> {
-                File f = ICON.fetchFrom(params);
-                if (f != null && !f.getName().toLowerCase().endsWith(".icns")) {
-                    Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICNS file and will not be " +
-                            "used.  The default icon will be used in it's place.", f));
-                    return null;
-                }
-                return f;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File f = ICON.fetchFrom(params);
+            if (f != null && !f.getName().toLowerCase().endsWith(".icns")) {
+                Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICNS file and will not be " +
+                        "used.  The default icon will be used in it's place.", f));
+                return null;
+            }
+            return f;
+        },
+        (s, p) -> new File(s));
 
     public MacAppBundler() {
         super();
@@ -340,11 +329,11 @@ public class MacAppBundler extends AbstractImageBundler {
         return true;
     }
 
-    private File getConfig_InfoPlist(Map<String, ? super Object> params) {
+    private static File getConfig_InfoPlist(Map<String, ? super Object> params) {
         return new File(CONFIG_ROOT.fetchFrom(params), "Info.plist");
     }
 
-    private File getConfig_Icon(Map<String, ? super Object> params) {
+    private static File getConfig_Icon(Map<String, ? super Object> params) {
         return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + ".icns");
     }
 
@@ -387,7 +376,7 @@ public class MacAppBundler extends AbstractImageBundler {
     }
 
     public void cleanupConfigFiles(Map<String, ? super Object> params) {
-        //Since building the app can be bypassed, make sure configRoot was set
+        // Since building the app can be bypassed, make sure configRoot was set
         if (CONFIG_ROOT.fetchFrom(params) != null) {
             getConfig_Icon(params).delete();
             getConfig_InfoPlist(params).delete();
@@ -448,24 +437,4 @@ public class MacAppBundler extends AbstractImageBundler {
     public File execute(Map<String, ? super Object> params, File outputParentDir) {
         return doBundle(params, outputParentDir, false);
     }
-
-//    private void createLauncherForEntryPoint(Map<String, ? super Object> p, File rootDirectory) throws IOException {
-//        prepareConfigFiles(p);
-//
-//        if (LAUNCHER_CFG_FORMAT.fetchFrom(p).equals(CFG_FORMAT_PROPERTIES)) {
-//            writeCfgFile(p, rootDirectory);
-//        } else {
-//            writeCfgFile(p, new File(rootDirectory, getLauncherCfgName(p)), "$APPDIR/PlugIns/Java.runtime");
-//        }
-//
-//        // Copy executable root folder
-//        File executableFile = new File(rootDirectory, "Contents/MacOS/" + getLauncherName(p));
-//        IOUtils.copyFromURL(
-//                RAW_EXECUTABLE_URL.fetchFrom(p),
-//                executableFile);
-//        executableFile.setExecutable(true, false);
-//
-//    }
-//
-
 }

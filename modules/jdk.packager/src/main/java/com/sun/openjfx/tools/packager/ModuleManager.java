@@ -34,28 +34,15 @@ import java.util.List;
 public final class ModuleManager {
     private List<String> folders = new ArrayList<>();
 
-    public enum SearchType {UnnamedJar, ModularJar, Jmod, ExplodedModule}
+    public enum SearchType { UnnamedJar, ModularJar, Jmod, ExplodedModule }
 
-    public ModuleManager(String folders) {
+    public ModuleManager(List<Path> paths) {
         super();
-        String lfolders = folders.replaceAll("^\"|\"$", "");
-        List<Path> paths = new ArrayList<>();
-
-        for (String folder : lfolders.split(File.pathSeparator)) {
-            File file = new File(folder);
-            paths.add(file.toPath());
-        }
-
         initialize(paths);
     }
 
-    public ModuleManager(List<Path> Paths) {
-        super();
-        initialize(Paths);
-    }
-
-    private void initialize(List<Path> Paths) {
-        for (Path path : Paths) {
+    private void initialize(List<Path> paths) {
+        for (Path path : paths) {
             folders.add(path.toString().replaceAll("^\"|\"$", ""));
         }
     }
@@ -65,19 +52,19 @@ public final class ModuleManager {
                 SearchType.ModularJar, SearchType.Jmod, SearchType.ExplodedModule));
     }
 
-    public List<Module> getModules(EnumSet<SearchType> Search) {
+    public List<Module> getModules(EnumSet<SearchType> search) {
         List<Module> result = new ArrayList<>();
 
         for (String folder : folders) {
-            result.addAll(getAllModulesInDirectory(folder, Search));
+            result.addAll(getAllModulesInDirectory(folder, search));
         }
 
         return result;
     }
 
-    private static List<Module> getAllModulesInDirectory(String Folder, EnumSet<SearchType> Search) {
+    private static List<Module> getAllModulesInDirectory(String directory, EnumSet<SearchType> search) {
         List<Module> result = new ArrayList<>();
-        File lfolder = new File(Folder);
+        File lfolder = new File(directory);
         File[] files = lfolder.listFiles();
 
         for (File file : files) {
@@ -87,22 +74,22 @@ public final class ModuleManager {
                 case Unknown:
                     break;
                 case UnnamedJar:
-                    if (Search.contains(SearchType.UnnamedJar)) {
+                    if (search.contains(SearchType.UnnamedJar)) {
                         result.add(module);
                     }
                     break;
                 case ModularJar:
-                    if (Search.contains(SearchType.ModularJar)) {
+                    if (search.contains(SearchType.ModularJar)) {
                         result.add(module);
                     }
                     break;
                 case Jmod:
-                    if (Search.contains(SearchType.Jmod)) {
+                    if (search.contains(SearchType.Jmod)) {
                         result.add(module);
                     }
                     break;
                 case ExplodedModule:
-                    if (Search.contains(SearchType.ExplodedModule)) {
+                    if (search.contains(SearchType.ExplodedModule)) {
                         result.add(module);
                     }
                     break;

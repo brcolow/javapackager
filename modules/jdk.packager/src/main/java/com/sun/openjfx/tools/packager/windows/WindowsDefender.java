@@ -25,8 +25,9 @@
 
 package com.sun.openjfx.tools.packager.windows;
 
-import com.sun.openjfx.tools.packager.Platform;
 import java.util.List;
+
+import com.sun.openjfx.tools.packager.Platform;
 
 public final class WindowsDefender {
 
@@ -54,7 +55,7 @@ public final class WindowsDefender {
         // If the user temp directory is not found in the exclusion
         // list then there may be a problem.
         List<String> paths = WindowsRegistry.readExclusionsPaths();
-        String tempDirectory = getUserTempDirectory();
+        String tempDirectory = System.getProperty("java.io.tmpdir");
 
         for (String s : paths) {
             if (s.equals(tempDirectory)) {
@@ -66,8 +67,4 @@ public final class WindowsDefender {
         return result;
     }
 
-    public static String getUserTempDirectory() {
-        String tempDirectory = System.getProperty("java.io.tmpdir");
-        return tempDirectory;
-    }
 }

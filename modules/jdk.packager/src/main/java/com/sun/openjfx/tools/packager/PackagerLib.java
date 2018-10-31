@@ -50,7 +50,6 @@ import javafx.css.Stylesheet;
 import com.sun.openjfx.tools.packager.JarSignature.InputStreamSource;
 import com.sun.openjfx.tools.packager.bundlers.BundleParams;
 import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
-import com.sun.openjfx.tools.resource.PackagerResource;
 
 public class PackagerLib {
     public static final String JAVAFX_VERSION = System.getProperty("java.version");

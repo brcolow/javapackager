@@ -132,11 +132,8 @@ public class JreUtils {
         }
 
         File baseDir = new File(root);
-
         Set<File> lst = new HashSet<>();
-
         walk(baseDir, baseDir, ruleset, lst, acceptSymlinks);
-
         return new RelativeFileSet(baseDir, lst);
     }
 

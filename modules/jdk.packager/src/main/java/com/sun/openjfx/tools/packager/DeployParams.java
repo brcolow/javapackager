@@ -60,33 +60,32 @@ public class DeployParams extends CommonParams {
     String applicationClass;
     String preloader;
     public List<Param> params;
-    List<HtmlParam> htmlParams;
     List<String> arguments; // unnamed arguments
 
     // Java 9 modules support
-    String addModules = null;
-    String limitModules = null;
-    Boolean stripNativeCommands = null;
-    Boolean detectmods = null;
-    String modulePath = null;
-    String module = null;
-    String debugPort = null;
+    String addModules;
+    String limitModules;
+    Boolean stripNativeCommands;
+    Boolean detectmods;
+    String modulePath;
+    String module;
+    String debugPort;
     String srcdir;
 
     int width;
     int height;
     String appName;
     String codebase;
-    boolean isExtension = false;
-    Boolean needShortcut = null;
-    Boolean needMenu = null;
+    boolean isExtension;
+    Boolean needShortcut;
+    Boolean needMenu;
     public String outfile;
     String placeholder = "'javafx-app-placeholder'";
-    String appId = null;
+    String appId;
     String jrePlatform = PackagerLib.JAVAFX_VERSION + "+";
     String fxPlatform = PackagerLib.JAVAFX_VERSION + "+";
-    File javaRuntimeToUse = null;
-    boolean javaRuntimeWasSet = false;
+    File javaRuntimeToUse;
+    boolean javaRuntimeWasSet;
 
     // list of jvm args (in theory string can contain spaces and need to be escaped
     List<String> jvmargs = new LinkedList<>();
@@ -178,8 +177,7 @@ public class DeployParams extends CommonParams {
     public void addAddModule(String value) {
         if (addModules == null) {
             addModules = value;
-        }
-        else {
+        } else {
             addModules += "," + value;
         }
     }
@@ -187,8 +185,7 @@ public class DeployParams extends CommonParams {
     public void addLimitModule(String value) {
         if (limitModules == null) {
             limitModules = value;
-        }
-        else {
+        } else {
             limitModules += "," + value;
         }
     }
@@ -225,14 +222,6 @@ public class DeployParams extends CommonParams {
         appId = id;
     }
 
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
-    public void setHtmlParams(List<HtmlParam> htmlParams) {
-        this.htmlParams = htmlParams;
-    }
-
     public void setOutfile(String outfile) {
         this.outfile = outfile;
     }
@@ -253,10 +242,6 @@ public class DeployParams extends CommonParams {
         this.vendor = vendor;
     }
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
     public void setExtension(boolean isExtension) {
         this.isExtension = isExtension;
     }
@@ -270,7 +255,7 @@ public class DeployParams extends CommonParams {
     // we may get "." as filename and assumption is we include
     // everything in the given folder
     // (IOUtils.copyfiles() have recursive behavior)
-    List<File> expandFileset(File root) {
+    private List<File> expandFileset(File root) {
         List<File> files = new LinkedList<>();
         if (IOUtils.isNotSymbolicLink(root)) {
             if (root.isDirectory()) {
@@ -290,7 +275,7 @@ public class DeployParams extends CommonParams {
     @Override
     public void addResource(File baseDir, String path) {
         File file = new File(baseDir, path);
-        //normalize top level dir
+        // normalize top level dir
         // to strip things like "." in the path
         // or it can confuse symlink detection logic
         file = file.getAbsoluteFile();
@@ -314,46 +299,6 @@ public class DeployParams extends CommonParams {
         resources.add(new RelativeFileSet(baseDir, new LinkedHashSet<>(expandFileset(file))));
     }
 
-    public void addResource(File baseDir, String path, String type) {
-        addResource(baseDir, createFile(baseDir, path), type);
-    }
-
-    public void addResource(File baseDir, File file, String type) {
-        addResource(baseDir, file, "eager", type, null, null);
-    }
-
-    public void addResource(File baseDir, File file, String mode, String type, String os, String arch) {
-        Set<File> singleFile = new LinkedHashSet<>();
-        singleFile.add(file);
-        if (baseDir == null) {
-            baseDir = file.getParentFile();
-        }
-        RelativeFileSet rfs = new RelativeFileSet(baseDir, singleFile);
-        rfs.setArch(arch);
-        rfs.setMode(mode);
-        rfs.setOs(os);
-        rfs.setType(parseTypeFromString(type, file));
-        resources.add(rfs);
-    }
-
-    private RelativeFileSet.Type parseTypeFromString(String type, File file) {
-        if (type == null) {
-            if (file.getName().endsWith(".jar")) {
-                return RelativeFileSet.Type.jar;
-            } else {
-                return RelativeFileSet.Type.UNKNOWN;
-            }
-        } else {
-            return RelativeFileSet.Type.valueOf(type);
-        }
-    }
-
-    private static File createFile(final File baseDir, final String path) {
-        final File testFile = new File(path);
-        return testFile.isAbsolute() ? testFile : new File(baseDir == null
-                ? null : baseDir.getAbsolutePath(), path);
-    }
-
     @Override
     public void validate() throws PackagerException {
         if (outdir == null) {
@@ -374,8 +319,8 @@ public class DeployParams extends CommonParams {
         boolean result = false;
 
         // Success
-        if ((applicationClass != null && !applicationClass.isEmpty() ||
-            (module != null && !module.isEmpty()))) {
+        if (applicationClass != null && !applicationClass.isEmpty() ||
+                module != null && !module.isEmpty()) {
             result = true;
         }
 
@@ -383,7 +328,7 @@ public class DeployParams extends CommonParams {
     }
 
     BundleType bundleType = BundleType.NONE;
-    String targetFormat = null; // means any
+    String targetFormat; // means any
 
     public void setBundleType(BundleType type) {
         bundleType = type;
@@ -404,8 +349,8 @@ public class DeployParams extends CommonParams {
     private String getArch() {
         String arch = System.getProperty("os.arch").toLowerCase();
 
-        if ("x86".equals(arch) || "i386".equals(arch) || "i486".equals(arch)
-                || "i586".equals(arch) || "i686".equals(arch)) {
+        if ("x86".equals(arch) || "i386".equals(arch) || "i486".equals(arch) ||
+                "i586".equals(arch) || "i686".equals(arch)) {
             arch = "x86";
         } else if ("x86_64".equals(arch) || "amd64".equals("arch")) {
             arch = "x86_64";
@@ -414,7 +359,7 @@ public class DeployParams extends CommonParams {
         return arch;
     }
 
-    static final Set<String> MULTI_ARGS = new TreeSet<>(Arrays.asList(
+    private static final Set<String> MULTI_ARGS = new TreeSet<>(Arrays.asList(
             StandardBundlerParam.JVM_PROPERTIES.getID(),
             StandardBundlerParam.JVM_OPTIONS.getID(),
             StandardBundlerParam.USER_JVM_OPTIONS.getID(),
@@ -423,8 +368,7 @@ public class DeployParams extends CommonParams {
             StandardBundlerParam.ADD_MODULES.getID(),
             StandardBundlerParam.LIMIT_MODULES.getID(),
             StandardBundlerParam.STRIP_NATIVE_COMMANDS.getID(),
-            JLinkBundlerHelper.DETECT_MODULES.getID()
-    ));
+            JLinkBundlerHelper.DETECT_MODULES.getID()));
 
     @SuppressWarnings("unchecked")
     public void addBundleArgument(String key, Object value) {
@@ -459,9 +403,9 @@ public class DeployParams extends CommonParams {
             // skip resources for other OS
             // and nativelib jars (we are including raw libraries)
             if ((os == null || currentOS.contains(os.toLowerCase())) &&
-                    (arch == null || currentArch.startsWith(arch.toLowerCase()))
-                    && rfs.getType() != RelativeFileSet.Type.nativelib) {
-                if (rfs.getType() == RelativeFileSet.Type.license) {
+                    (arch == null || currentArch.startsWith(arch.toLowerCase())) &&
+                    rfs.getType() != RelativeFileSet.Type.NATIVELIB) {
+                if (rfs.getType() == RelativeFileSet.Type.LICENSE) {
                     for (String s : rfs.getIncludedFiles()) {
                         bundleParams.addLicenseFile(s);
                     }
@@ -486,7 +430,6 @@ public class DeployParams extends CommonParams {
         bundleParams.setEmail(email);
         bundleParams.setShortcutHint(needShortcut);
         bundleParams.setMenuHint(needMenu);
-        // putUnlessNull(INSTALL_HINT.getID(), needInstall);
         bundleParams.setSystemWide(systemWide);
         bundleParams.setServiceHint(serviceHint);
         bundleParams.setInstalldirChooser(installdirChooser);
@@ -497,7 +440,9 @@ public class DeployParams extends CommonParams {
         bundleParams.setLicenseType(licenseType);
         bundleParams.setDescription(description);
         bundleParams.setTitle(title);
-        if (verbose) bundleParams.setVerbose(true);
+        if (verbose) {
+            bundleParams.setVerbose(true);
+        }
 
         bundleParams.setJvmProperties(properties);
         bundleParams.setJvmargs(jvmargs);
@@ -541,24 +486,13 @@ public class DeployParams extends CommonParams {
             }
         }
 
-        Map<String, String> unescapedHtmlParams = new TreeMap<>();
-        Map<String, String> escapedHtmlParams = new TreeMap<>();
-        if (htmlParams != null) {
-            for (HtmlParam hp : htmlParams) {
-                if (hp.needEscape) {
-                    escapedHtmlParams.put(hp.name, hp.value);
-                } else {
-                    unescapedHtmlParams.put(hp.name, hp.value);
-                }
-            }
-        }
-
         // check for collisions
         TreeSet<String> keys = new TreeSet<>(bundlerArguments.keySet());
         keys.retainAll(bundleParams.getBundleParamsAsMap().keySet());
 
         if (!keys.isEmpty()) {
-            throw new RuntimeException("Deploy Params and Bundler Arguments overlap in the following values:" + keys.toString());
+            throw new RuntimeException("Deploy Params and Bundler Arguments overlap in the following values:" +
+                    keys.toString());
         }
 
         bundleParams.addAllBundleParams(bundlerArguments);

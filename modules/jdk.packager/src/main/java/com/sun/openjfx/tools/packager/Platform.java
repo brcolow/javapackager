@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  *
  *  Platform platform = Platform.getPlatform();
  *
- *  switch(platform) {
+ *  switch(PLATFORM) {
  *    case Platform.MAC: {
  *      //TODO Do something
  *      break;
@@ -53,59 +53,53 @@ public enum Platform {
     MAC,
     SOLARIS;
 
-    private static final Platform platform;
-    private static final int majorVersion;
-    private static final int minorVersion;
+    private static final Platform PLATFORM;
+    private static final int MAJOR_VERSION;
+    private static final int MINOR_VERSION;
 
     static {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {
-            platform = Platform.WINDOWS;
-        }
-        else if (os.contains("nix") || os.contains("nux")) {
-            platform = Platform.LINUX;
-        }
-        else if (os.contains("mac")) {
-            platform = Platform.MAC;
-        }
-        else if (os.contains("sunos") || os.contains("solaris")) {
-            platform = Platform.SOLARIS;
-        }
-        else {
-            platform = Platform.UNKNOWN;
+            PLATFORM = Platform.WINDOWS;
+        } else if (os.contains("nix") || os.contains("nux")) {
+            PLATFORM = Platform.LINUX;
+        } else if (os.contains("mac")) {
+            PLATFORM = Platform.MAC;
+        } else if (os.contains("sunos") || os.contains("solaris")) {
+            PLATFORM = Platform.SOLARIS;
+        } else {
+            PLATFORM = Platform.UNKNOWN;
         }
 
         String version = System.getProperty("os.version");
         String[] parts = version.split(Pattern.quote("."));
 
         if (parts.length > 0) {
-            majorVersion = Integer.parseInt(parts[0]);
+            MAJOR_VERSION = Integer.parseInt(parts[0]);
 
             if (parts.length > 1) {
-                minorVersion = Integer.parseInt(parts[1]);
+                MINOR_VERSION = Integer.parseInt(parts[1]);
+            } else {
+                MINOR_VERSION = -1;
             }
-            else {
-                minorVersion = -1;
-            }
-        }
-        else {
-            majorVersion = -1;
-            minorVersion = -1;
+        } else {
+            MAJOR_VERSION = -1;
+            MINOR_VERSION = -1;
         }
     }
 
     Platform() {}
 
     public static Platform getPlatform() {
-        return platform;
+        return PLATFORM;
     }
 
     public static int getMajorVersion() {
-        return majorVersion;
+        return MAJOR_VERSION;
     }
 
     public static int getMinorVersion() {
-        return minorVersion;
+        return MINOR_VERSION;
     }
 }

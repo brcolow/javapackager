@@ -25,13 +25,6 @@
 
 package com.sun.openjfx.tools.packager.bundlers;
 
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.Platform;
-import com.sun.openjfx.tools.packager.RelativeFileSet;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +35,14 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.RelativeFileSet;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
 
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES;
@@ -69,8 +70,6 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.USER_JVM_OPTIO
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.VENDOR;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
-
-import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
 
 public class BundleParams {
 
@@ -167,8 +166,7 @@ public class BundleParams {
             Object o = params.get(key);
             if (klass.isInstance(o)) {
                 return (C) o;
-            }
-            else if (params.containsKey(keys) && o == null) {
+            } else if (params.containsKey(keys) && o == null) {
                 return null;
             }
             //else if (o != null) {
@@ -291,7 +289,7 @@ public class BundleParams {
         putUnlessNull(PARAM_LICENSE_TYPE, version);
     }
 
-    //path is relative to the application root
+    // path is relative to the application root
     public void addLicenseFile(String path) {
         List<String> licenseFiles = fetchParam(LICENSE_FILE);
         if (licenseFiles == null || licenseFiles.isEmpty()) {
@@ -321,7 +319,8 @@ public class BundleParams {
         putUnlessNull(PARAM_SINGLETON, b);
     }
 
-    public void setSignBundle(Boolean b) { putUnlessNull(SIGN_BUNDLE.getID(), b); }
+    public void setSignBundle(Boolean b) {
+        putUnlessNull(SIGN_BUNDLE.getID(), b); }
 
     public boolean isShortcutHint() {
         return fetchParam(SHORTCUT_HINT);
@@ -427,14 +426,14 @@ public class BundleParams {
         return true;
     }
 
-    //Depending on platform and user input we may get different "references"
-    //Should support
+    // Depending on platform and user input we may get different "references"
+    // Should support
     //   - java.home
     //   - reference to JDK install folder
     //   - should NOT support JRE dir
-    //Note: input could be null (then we asked to use system JRE)
+    // Note: input could be null (then we asked to use system JRE)
     //       or it must be valid directory
-    //Returns null on validation failure. Returns jre root if ok.
+    // Returns null on validation failure. Returns jre root if ok.
     public static File validateRuntimeLocation(File javaHome) {
         if (javaHome == null) {
             return null;
@@ -443,8 +442,7 @@ public class BundleParams {
         File jdkRoot;
         File rtJar = new File(javaHome, "lib/rt.jar");
 
-        if (rtJar.exists()) { //must be "java.home" case
-                              //i.e. we are in JRE folder
+        if (rtJar.exists()) { //must be "java.home" case i.e. we are in JRE folder
             jdkRoot = javaHome.getParentFile();
         } else { //expect it to be root of JDK installation folder
             //On Mac it could be jdk/ or jdk/Contents/Home
@@ -459,8 +457,8 @@ public class BundleParams {
         }
 
         if (!checkJDKRoot(jdkRoot)) {
-            throw new RuntimeException("Can not find JDK artifacts in specified location: "
-                    + javaHome.getAbsolutePath());
+            throw new RuntimeException("Can not find JDK artifacts in specified location: " +
+                    javaHome.getAbsolutePath());
         }
 
         return new File(jdkRoot, "jre");
@@ -520,8 +518,8 @@ public class BundleParams {
         putUnlessNull(PARAM_IDENTIFIER, s);
     }
 
-    private String mainJar = null;
-    private String mainJarClassPath = null;
+    private String mainJar;
+    private String mainJarClassPath;
     private boolean useFXPackaging = true;
 
     //For regular executable Jars we need to take care of classpath
@@ -586,7 +584,7 @@ public class BundleParams {
     }
 
     public void setVendor(String vendor) {
-       putUnlessNull(PARAM_VENDOR, vendor);
+        putUnlessNull(PARAM_VENDOR, vendor);
     }
 
     public String getEmail() {

@@ -24,36 +24,6 @@
  */
 package com.sun.openjfx.tools.packager.mac;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.ARGUMENTS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.CATEGORY;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.CLASSPATH;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.COPYRIGHT;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_CONTENT_TYPE;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_DESCRIPTION;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_EXTENSIONS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_ICON;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.FILE_ASSOCIATIONS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_OPTIONS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_CLASS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_JAR;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.PREFERENCES_ID;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.PRELOADER_CLASS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.USER_JVM_OPTIONS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
-import static com.sun.openjfx.tools.packager.mac.MacAppBundler.BUNDLE_ID_SIGNING_PREFIX;
-import static com.sun.openjfx.tools.packager.mac.MacAppBundler.DEVELOPER_ID_APP_SIGNING_KEY;
-import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEYCHAIN;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,6 +57,35 @@ import com.sun.openjfx.tools.packager.Log;
 import com.sun.openjfx.tools.packager.Platform;
 import com.sun.openjfx.tools.packager.RelativeFileSet;
 import com.sun.openjfx.tools.packager.StandardBundlerParam;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES_LIST;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ARGUMENTS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CATEGORY;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.CLASSPATH;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.COPYRIGHT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_CONTENT_TYPE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_DESCRIPTION;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_EXTENSIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FA_ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.FILE_ASSOCIATIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_OPTIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_JAR;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.PREFERENCES_ID;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.PRELOADER_CLASS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.USER_JVM_OPTIONS;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.BUNDLE_ID_SIGNING_PREFIX;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.DEVELOPER_ID_APP_SIGNING_KEY;
+import static com.sun.openjfx.tools.packager.mac.MacBaseInstallerBundler.SIGNING_KEYCHAIN;
 
 public class MacAppImageBuilder extends AbstractAppImageBuilder {
 
@@ -133,7 +132,6 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         map.put("Utilities", "public.app-category.utilities");
         map.put("Video", "public.app-category.video");
         map.put("Weather", "public.app-category.weather");
-
         map.put("Action Games", "public.app-category.action-games");
         map.put("Adventure Games", "public.app-category.adventure-games");
         map.put("Arcade Games", "public.app-category.arcade-games");
@@ -157,22 +155,13 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         return map;
     }
 
-    public static final BundlerParamInfo<Boolean> MAC_CONFIGURE_LAUNCHER_IN_PLIST = new StandardBundlerParam<>(
-            "Configure Launcher in Info.plist",
-            "Should the legacy method of configuring hte launcher in the Info.plist be used.",
-            "mac.configure-launcher-in-plist",
-            Boolean.class,
-            params -> Boolean.FALSE,
-            (s, p) -> Boolean.valueOf(s));
-
     public static final BundlerParamInfo<String> MAC_CATEGORY = new StandardBundlerParam<>(
             "Category",
             "Mac App Store Categories. Note that the key is the string to display to the user and the value " +
                     "is the id of the category.",
             "mac.category",
             String.class,
-            CATEGORY::fetchFrom,
-            (s, p) -> s);
+            CATEGORY::fetchFrom, (s, p) -> s);
 
     public static final BundlerParamInfo<String> MAC_CF_BUNDLE_NAME = new StandardBundlerParam<>(
             "CFBundleName",
@@ -181,8 +170,8 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                     "in the menu bar and the app's Info window.",
             "mac.CFBundleName",
             String.class,
-            params -> null,
-            (s, p) -> s);
+        params -> null,
+        (s, p) -> s);
 
     public static final BundlerParamInfo<String> MAC_CF_BUNDLE_IDENTIFIER = new StandardBundlerParam<>(
             "CFBundleIdentifier",
@@ -190,8 +179,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                     "  May only use alphanumeric (A-Z,a-z,0-9), hyphen (-), and period (.) characters.",
             "mac.CFBundleIdentifier",
             String.class,
-            IDENTIFIER::fetchFrom,
-            (s, p) -> s);
+            IDENTIFIER::fetchFrom, (s, p) -> s);
 
     public static final BundlerParamInfo<String> MAC_CF_BUNDLE_VERSION = new StandardBundlerParam<>(
             "CFBundleVersion",
@@ -199,69 +187,54 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                     "dots, such as \"1.8.1\" or \"100\".",
             "mac.CFBundleVersion",
             String.class,
-            p -> {
-                String s = VERSION.fetchFrom(p);
-                if (validCFBundleVersion(s)) {
-                    return s;
-                } else {
-                    return "100";
-                }
-            },
-            (s, p) -> s);
+        p -> {
+            String s = VERSION.fetchFrom(p);
+            if (validCFBundleVersion(s)) {
+                return s;
+            } else {
+                return "100";
+            }
+        },
+        (s, p) -> s);
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new StandardBundlerParam<>("",
             "",
             "configRoot",
             File.class,
-            params -> {
-                File configRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
-                configRoot.mkdirs();
-                return configRoot;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File configRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
+            configRoot.mkdirs();
+            return configRoot;
+        },
+        (s, p) -> new File(s));
 
     public static final BundlerParamInfo<String> DEFAULT_ICNS_ICON = new StandardBundlerParam<>(
             "Default Icon",
             "The Default Icon for when a user does not specify an icns file.",
             ".mac.default.icns",
             String.class,
-            params -> TEMPLATE_BUNDLE_ICON,
-            (s, p) -> s);
+        params -> TEMPLATE_BUNDLE_ICON,
+        (s, p) -> s);
 
-//    public static final BundlerParamInfo<String> DEVELOPER_ID_APP_SIGNING_KEY = new StandardBundlerParam<>(
-//            "Apple Developer ID Application Signing Key",
-//            "The full name of the Apple Developer ID Application signing key.",
-//            "mac.signing-key-developer-id-app",
-//            String.class,
-//            params -> MacBaseInstallerBundler.findKey("Developer ID Application: " + SIGNING_KEY_USER.fetchFrom(params), SIGNING_KEYCHAIN.fetchFrom(params), VERBOSE.fetchFrom(params)),
-//            (s, p) -> s);
-
-    //    public static final BundlerParamInfo<String> BUNDLE_ID_SIGNING_PREFIX = new StandardBundlerParam<>(
-//            "Bundle Signing Prefix",
-//            "When signing the application bundle this value is prefixed to all components that need to be signed that don't have an existing CFBundleIdentifier.",
-//            "mac.bundle-id-signing-prefix",
-//            String.class,
-//            params -> IDENTIFIER.fetchFrom(params) + ".",
-//            (s, p) -> s);
-//
     public static final BundlerParamInfo<File> ICON_ICNS = new StandardBundlerParam<>(
             ".icns Icon",
             "Icon for the application, in ICNS format.",
             "icon.icns",
             File.class,
-            params -> {
-                File f = ICON.fetchFrom(params);
-                if (f != null && !f.getName().toLowerCase().endsWith(".icns")) {
-                    Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICNS file and will not be " +
-                            "used.  The default icon will be used in it's place.", f));
-                    return null;
-                }
-                return f;
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File f = ICON.fetchFrom(params);
+            if (f != null && !f.getName().toLowerCase().endsWith(".icns")) {
+                Log.info(MessageFormat.format("The specified icon \"{0}\" is not an ICNS file and will not be " +
+                        "used.  The default icon will be used in it's place.", f));
+                return null;
+            }
+            return f;
+        },
+        (s, p) -> new File(s));
 
     public MacAppImageBuilder(Map<String, Object> config, Path imageOutDir) throws IOException {
-        super(config, imageOutDir.resolve(APP_FS_NAME.fetchFrom(config) + ".app/Contents/PlugIns/Java.runtime/Contents/Home"));
+        super(config, imageOutDir.resolve(APP_FS_NAME.fetchFrom(config) +
+                ".app/Contents/PlugIns/Java.runtime/Contents/Home"));
 
         Objects.requireNonNull(imageOutDir);
 
@@ -464,8 +437,8 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
     private void writeInfoPlist(File file) throws IOException {
         Log.verbose(MessageFormat.format("Preparing Info.plist: {0}", file.getAbsolutePath()));
 
-        //prepare config for exe
-        //Note: do not need CFBundleDisplayName if we do not support localization
+        // prepare config for exe
+        // Note: do not need CFBundleDisplayName if we do not support localization
         Map<String, String> data = new HashMap<>();
         data.put("DEPLOY_ICON_FILE", APP_FS_NAME.fetchFrom(params) + ".icns");
         data.put("DEPLOY_BUNDLE_IDENTIFIER",
@@ -487,8 +460,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
 
         if (hasMainJar) {
             data.put("DEPLOY_MAIN_JAR_NAME", MAIN_JAR.fetchFrom(params).getIncludedFiles().iterator().next());
-        }
-        else if (hasMainModule) {
+        } else if (hasMainModule) {
             data.put("DEPLOY_MODULE_NAME", StandardBundlerParam.MODULE.fetchFrom(params));
         }
 
@@ -566,10 +538,8 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                 Log.info("Creating association with null extension.");
             }
 
-            List<String> mimeTypes = FA_CONTENT_TYPE.fetchFrom(fileAssociation);
-            String itemContentType = MAC_CF_BUNDLE_IDENTIFIER.fetchFrom(params) + "." + ((extensions == null || extensions.isEmpty())
-                    ? "mime"
-                    : extensions.get(0));
+            String itemContentType = MAC_CF_BUNDLE_IDENTIFIER.fetchFrom(params) + "." +
+                    ((extensions == null || extensions.isEmpty()) ? "mime" : extensions.get(0));
             String description = FA_DESCRIPTION.fetchFrom(fileAssociation);
             File icon = FA_ICON.fetchFrom(fileAssociation); //TODO FA_ICON_ICNS
 
@@ -632,8 +602,8 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
             exportedTypes.append("\n")
                     .append("      <key>UTTypeTagSpecification</key>\n")
                     .append("      <dict>\n")
-                            //TODO expose via param? .append("        <key>com.apple.ostype</key>\n");
-                            //TODO expose via param? .append("        <string>ABCD</string>\n")
+                    //TODO expose via param? .append("        <key>com.apple.ostype</key>\n");
+                    //TODO expose via param? .append("        <string>ABCD</string>\n")
                     .append("\n");
 
             if (extensions != null && !extensions.isEmpty()) {
@@ -647,6 +617,8 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                 }
                 exportedTypes.append("        </array>\n");
             }
+
+            List<String> mimeTypes = FA_CONTENT_TYPE.fetchFrom(fileAssociation);
             if (mimeTypes != null && !mimeTypes.isEmpty()) {
                 exportedTypes.append("        <key>public.mime-type</key>\n")
                         .append("        <array>\n");
@@ -663,16 +635,13 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         }
         String associationData;
         if (bundleDocumentTypes.length() > 0) {
-            associationData = "\n  <key>CFBundleDocumentTypes</key>\n  <array>\n"
-                    + bundleDocumentTypes.toString()
-                    + "  </array>\n\n  <key>UTExportedTypeDeclarations</key>\n  <array>\n"
-                    + exportedTypes.toString()
-                    + "  </array>\n";
+            associationData = "\n  <key>CFBundleDocumentTypes</key>\n  <array>\n" + bundleDocumentTypes.toString() +
+                    "  </array>\n\n  <key>UTExportedTypeDeclarations</key>\n  <array>\n" + exportedTypes.toString() +
+                    "  </array>\n";
         } else {
             associationData = "";
         }
         data.put("DEPLOY_FILE_ASSOCIATIONS", associationData);
-
 
         Writer w = new BufferedWriter(new FileWriter(file));
         w.write(preprocessTextResource(
@@ -695,7 +664,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
     }
 
     public static void addNewKeychain(Map<String, ? super Object> params)
-                                    throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         if (Platform.getMajorVersion() < 10 ||
             (Platform.getMajorVersion() == 10 && Platform.getMinorVersion() < 12)) {
             // we need this for OS X 10.12+
@@ -717,7 +686,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         }
 
         boolean contains = keychainList.stream().anyMatch(
-                    str -> str.trim().equals("\""+keyChainPath.trim()+"\""));
+            str -> str.trim().equals("\"" + keyChainPath.trim() + "\""));
         if (contains) {
             // keychain is already added in the search list
             return;
@@ -728,7 +697,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         keychainList.forEach((String s) -> {
             String path = s.trim();
             if (path.startsWith("\"") && path.endsWith("\"")) {
-                path = path.substring(1, path.length()-1);
+                path = path.substring(1, path.length() - 1);
             }
             keyChains.add(path);
         });
@@ -745,7 +714,7 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
     }
 
-    public static void restoreKeychainList(Map<String, ? super Object> params) throws IOException{
+    public static void restoreKeychainList(Map<String, ? super Object> params) throws IOException {
         if (Platform.getMajorVersion() < 10 ||
             (Platform.getMajorVersion() == 10 && Platform.getMinorVersion() < 12)) {
             // we need this for OS X 10.12+
@@ -767,7 +736,9 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         IOUtils.exec(pb, VERBOSE.fetchFrom(params));
     }
 
-    public static void signAppBundle(Map<String, ? super Object> params, Path appLocation, String signingIdentity, String identifierPrefix, String entitlementsFile, String inheritedEntitlements) throws IOException {
+    public static void signAppBundle(Map<String, ? super Object> params, Path appLocation, String signingIdentity,
+                                     String identifierPrefix, String entitlementsFile, String inheritedEntitlements)
+            throws IOException {
         AtomicReference<IOException> toThrow = new AtomicReference<>();
         String appExecutable = "/Contents/MacOS/" + APP_FS_NAME.fetchFrom(params);
         String keyChain = SIGNING_KEYCHAIN.fetchFrom(params);
@@ -788,55 +759,55 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
                     }
                 })
                 .filter(p -> Files.isRegularFile(p) &&
-                                !(p.toString().contains("/Contents/MacOS/libjli.dylib")
-                                        || p.toString().contains("/Contents/MacOS/JavaAppletPlugin")
-                                        || p.toString().endsWith(appExecutable))
+                        !(p.toString().contains("/Contents/MacOS/libjli.dylib") ||
+                                p.toString().contains("/Contents/MacOS/JavaAppletPlugin") |
+                                        p.toString().endsWith(appExecutable))
                 ).forEach(p -> {
-            //noinspection ThrowableResultOfMethodCallIgnored
-            if (toThrow.get() != null) return;
+                    //noinspection ThrowableResultOfMethodCallIgnored
+                    if (toThrow.get() != null) {
+                        return;
+                    }
 
-            // If p is a symlink then skip the signing process.
-            if (Files.isSymbolicLink(p)) {
-                if (VERBOSE.fetchFrom(params)) {
-                    Log.verbose(MessageFormat.format("Warning: codesign is skipping the symlink {0}",
-                            p.toString()));
-                }
-            }
-            else {
-                List<String> args = new ArrayList<>();
-                args.addAll(Arrays.asList("codesign",
-                        "-s", signingIdentity, // sign with this key
-                        "--prefix", identifierPrefix, // use the identifier as a prefix
-                        "-vvvv"));
-                if (entitlementsFile != null &&
-                        (p.toString().endsWith(".jar")
-                                || p.toString().endsWith(".dylib"))) {
-                    args.add("--entitlements");
-                    args.add(entitlementsFile); // entitlements
-                } else if (inheritedEntitlements != null && Files.isExecutable(p)) {
-                    args.add("--entitlements");
-                    args.add(inheritedEntitlements); // inherited entitlements for executable processes
-                }
-                if (keyChain != null && !keyChain.isEmpty()) {
-                    args.add("--keychain");
-                    args.add(keyChain);
-                }
-                args.add(p.toString());
+                    // If p is a symlink then skip the signing process.
+                    if (Files.isSymbolicLink(p)) {
+                        if (VERBOSE.fetchFrom(params)) {
+                            Log.verbose(MessageFormat.format("Warning: codesign is skipping the symlink {0}",
+                                    p.toString()));
+                        }
+                    } else {
+                        List<String> args = new ArrayList<>();
+                        args.addAll(Arrays.asList("codesign",
+                                "-s", signingIdentity, // sign with this key
+                                "--prefix", identifierPrefix, // use the identifier as a prefix
+                                "-vvvv"));
+                        if (entitlementsFile != null &&
+                                (p.toString().endsWith(".jar") || p.toString().endsWith(".dylib"))) {
+                            args.add("--entitlements");
+                            args.add(entitlementsFile); // entitlements
+                        } else if (inheritedEntitlements != null && Files.isExecutable(p)) {
+                            args.add("--entitlements");
+                            args.add(inheritedEntitlements); // inherited entitlements for executable processes
+                        }
+                        if (keyChain != null && !keyChain.isEmpty()) {
+                            args.add("--keychain");
+                            args.add(keyChain);
+                        }
+                        args.add(p.toString());
 
-                try {
-                    Set<PosixFilePermission> oldPermissions = Files.getPosixFilePermissions(p);
-                    File f = p.toFile();
-                    f.setWritable(true, true);
+                        try {
+                            Set<PosixFilePermission> oldPermissions = Files.getPosixFilePermissions(p);
+                            File f = p.toFile();
+                            f.setWritable(true, true);
 
-                    ProcessBuilder pb = new ProcessBuilder(args);
-                    IOUtils.exec(pb, VERBOSE.fetchFrom(params));
+                            ProcessBuilder pb = new ProcessBuilder(args);
+                            IOUtils.exec(pb, VERBOSE.fetchFrom(params));
 
-                    Files.setPosixFilePermissions(p, oldPermissions);
-                } catch (IOException ioe) {
-                    toThrow.set(ioe);
-                }
-            }
-        });
+                            Files.setPosixFilePermissions(p, oldPermissions);
+                        } catch (IOException ioe) {
+                            toThrow.set(ioe);
+                        }
+                    }
+                });
 
         IOException ioe = toThrow.get();
         if (ioe != null) {
@@ -846,7 +817,9 @@ public class MacAppImageBuilder extends AbstractAppImageBuilder {
         // sign all plugins and frameworks
         Consumer<? super Path> signIdentifiedByPList = path -> {
             //noinspection ThrowableResultOfMethodCallIgnored
-            if (toThrow.get() != null) return;
+            if (toThrow.get() != null) {
+                return;
+            }
 
             try {
                 List<String> args = new ArrayList<>();

@@ -49,7 +49,6 @@ module com.brcolow.javapackager {
 
     exports com.sun.openjfx.tools.packager;
     exports com.sun.openjfx.tools.packager.bundlers;
-    exports com.sun.openjfx.tools.resource;
 
     uses com.sun.openjfx.tools.packager.Bundler;
     uses com.sun.openjfx.tools.packager.Bundlers;

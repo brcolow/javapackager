@@ -25,14 +25,6 @@
 
 package com.sun.openjfx.tools.packager.mac;
 
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Platform;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -44,8 +36,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
-import static com.sun.openjfx.tools.packager.mac.MacAppBundler.*;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.DROP_IN_RESOURCES_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.SIGN_BUNDLE;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERBOSE;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.BUNDLE_ID_SIGNING_PREFIX;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.DEFAULT_ICNS_ICON;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.DEVELOPER_ID_APP_SIGNING_KEY;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.MAC_BUNDLER_PREFIX;
+import static com.sun.openjfx.tools.packager.mac.MacAppBundler.getAppBundleParameters;
 
 public class MacAppStoreBundler extends MacBaseInstallerBundler {
 
@@ -58,57 +66,59 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
             "The full name of the signing key to sign the application with.",
             "mac.signing-key-app",
             String.class,
-            params -> {
-                    String result = MacBaseInstallerBundler.findKey("3rd Party Mac Developer Application: " + SIGNING_KEY_USER.fetchFrom(params),
-                                                                    SIGNING_KEYCHAIN.fetchFrom(params),
-                                                                    VERBOSE.fetchFrom(params));
-                    if (result != null) {
-                        MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
+        params -> {
+            String result = MacBaseInstallerBundler.findKey("3rd Party Mac Developer Application: " +
+                            SIGNING_KEY_USER.fetchFrom(params), SIGNING_KEYCHAIN.fetchFrom(params),
+                    VERBOSE.fetchFrom(params));
+            if (result != null) {
+                MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
 
-                        if (!certificate.isValid()) {
-                            Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
-                        }
-                    }
+                if (!certificate.isValid()) {
+                    Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
+                }
+            }
 
-                    return result;
-                },
-            (s, p) -> s);
+            return result;
+        },
+        (s, p) -> s);
 
     public static final BundlerParamInfo<String> MAC_APP_STORE_PKG_SIGNING_KEY = new StandardBundlerParam<>(
             "Installer Signing Key",
             "The full name of the signing key to sign the PKG Installer with.",
             "mac.signing-key-pkg",
             String.class,
-            params -> {
-                    String result = MacBaseInstallerBundler.findKey("3rd Party Mac Developer Installer: " + SIGNING_KEY_USER.fetchFrom(params), SIGNING_KEYCHAIN.fetchFrom(params), VERBOSE.fetchFrom(params));
+        params -> {
+            String result = MacBaseInstallerBundler.findKey("3rd Party Mac Developer Installer: " +
+                            SIGNING_KEY_USER.fetchFrom(params), SIGNING_KEYCHAIN.fetchFrom(params),
+                    VERBOSE.fetchFrom(params));
 
-                    if (result != null) {
-                        MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
+            if (result != null) {
+                MacCertificate certificate = new MacCertificate(result, VERBOSE.fetchFrom(params));
 
-                        if (!certificate.isValid()) {
-                            Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
-                        }
-                    }
+                if (!certificate.isValid()) {
+                    Log.info(MessageFormat.format("Error: Certificate expired {0}.", result));
+                }
+            }
 
-                    return result;
-                },
-            (s, p) -> s);
+            return result;
+        },
+        (s, p) -> s);
 
     public static final StandardBundlerParam<File> MAC_APP_STORE_ENTITLEMENTS  = new StandardBundlerParam<>(
             "Mac App Store Entitlements",
             "Mac App Store Inherit Entitlements",
             "mac.app-store-entitlements",
             File.class,
-            params -> null,
-            (s, p) -> new File(s));
+        params -> null,
+        (s, p) -> new File(s));
 
-    public static final BundlerParamInfo<String> INSTALLER_SUFFIX = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> INSTALLER_SUFFIX = new StandardBundlerParam<>(
             "Installer Suffix",
             "The suffix for the installer name for this package.  <name><suffix>.pkg.",
             "mac.app-store.installerName.suffix",
             String.class,
-            params -> "-MacAppStore",
-            (s, p) -> s);
+        params -> "-MacAppStore",
+        (s, p) -> s);
 
     public MacAppStoreBundler() {
         super();
@@ -131,7 +141,7 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
         p.put(DEFAULT_ICNS_ICON.getID(), TEMPLATE_BUNDLE_ICON_HIDPI);
 
         // next we need to change the jdk/jre stripping to strip gstreamer
-//        p.put(MAC_RULES.getID(), createMacAppStoreRuntimeRules(p));
+        // p.put(MAC_RULES.getID(), createMacAppStoreRuntimeRules(p));
 
         // now we create the app
         File appImageDir = APP_IMAGE_BUILD_ROOT.fetchFrom(p);
@@ -154,15 +164,10 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
             String entitlementsFile = getConfig_Entitlements(p).toString();
             String inheritEntitlements = getConfig_Inherit_Entitlements(p).toString();
 
-            MacAppImageBuilder.signAppBundle(p, appLocation.toPath(), signingIdentity, identifierPrefix, entitlementsFile, inheritEntitlements);
+            MacAppImageBuilder.signAppBundle(p, appLocation.toPath(), signingIdentity, identifierPrefix,
+                    entitlementsFile, inheritEntitlements);
             MacAppImageBuilder.restoreKeychainList(p);
 
-            ProcessBuilder pb;
-
-            // create the final pkg file
-            File finalPKG = new File(outdir, INSTALLER_NAME.fetchFrom(p)
-                    + INSTALLER_SUFFIX.fetchFrom(p)
-                    + ".pkg");
             outdir.mkdirs();
 
             String installIdentify = MAC_APP_STORE_PKG_SIGNING_KEY.fetchFrom(p);
@@ -181,8 +186,12 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
                 buildOptions.add("--keychain");
                 buildOptions.add(keychainName);
             }
+            // create the final pkg file
+            File finalPKG = new File(outdir, INSTALLER_NAME.fetchFrom(p) +
+                    INSTALLER_SUFFIX.fetchFrom(p) + ".pkg");
             buildOptions.add(finalPKG.getAbsolutePath());
 
+            ProcessBuilder pb;
             pb = new ProcessBuilder(buildOptions);
 
             IOUtils.exec(pb, VERBOSE.fetchFrom(p));
@@ -228,11 +237,11 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
     }
 
     private File getConfig_Entitlements(Map<String, ? super Object> params) {
-        return new File(CONFIG_ROOT.fetchFrom(params), APP_NAME.fetchFrom(params) + ".entitlements");
+        return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + ".entitlements");
     }
 
     private File getConfig_Inherit_Entitlements(Map<String, ? super Object> params) {
-        return new File(CONFIG_ROOT.fetchFrom(params), APP_NAME.fetchFrom(params) + "_Inherit.entitlements");
+        return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + "_Inherit.entitlements");
     }
 
     private void prepareEntitlements(Map<String, ? super Object> params) throws IOException {
@@ -261,17 +270,12 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
     }
 
     private String getEntitlementsFileName(Map<String, ? super Object> params) {
-        return MAC_BUNDLER_PREFIX+ APP_NAME.fetchFrom(params) +".entitlements";
+        return MAC_BUNDLER_PREFIX + APP_FS_NAME.fetchFrom(params) + ".entitlements";
     }
 
     private String getInheritEntitlementsFileName(Map<String, ? super Object> params) {
-        return MAC_BUNDLER_PREFIX+ APP_NAME.fetchFrom(params) +"_Inherit.entitlements";
+        return MAC_BUNDLER_PREFIX + APP_FS_NAME.fetchFrom(params) + "_Inherit.entitlements";
     }
-
-
-    //////////////////////////////////////////////////////////////////////////////////
-    // Implement Bundler
-    //////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getName() {
@@ -296,18 +300,15 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
         return results;
     }
 
-    public Collection<BundlerParamInfo<?>> getMacAppStoreBundleParameters() {
-        Collection<BundlerParamInfo<?>> results = new LinkedHashSet<>();
-
-        results.addAll(getAppBundleParameters());
+    private Collection<BundlerParamInfo<?>> getMacAppStoreBundleParameters() {
+        Collection<BundlerParamInfo<?>> results = new LinkedHashSet<>(getAppBundleParameters());
         results.remove(DEVELOPER_ID_APP_SIGNING_KEY);
         results.addAll(Arrays.asList(
                 INSTALLER_SUFFIX,
                 MAC_APP_STORE_APP_SIGNING_KEY,
                 MAC_APP_STORE_ENTITLEMENTS,
                 MAC_APP_STORE_PKG_SIGNING_KEY,
-                SIGNING_KEYCHAIN
-        ));
+                SIGNING_KEYCHAIN));
 
         return results;
     }
@@ -342,17 +343,15 @@ public class MacAppStoreBundler extends MacBaseInstallerBundler {
 
             // make sure we have settings for signatures
             if (MAC_APP_STORE_APP_SIGNING_KEY.fetchFrom(params) == null) {
-                throw new ConfigException(
-                        "No Mac App Store App Signing Key",
+                throw new ConfigException("No Mac App Store App Signing Key",
                         "Install your app signing keys into your Mac Keychain using XCode.");
             }
             if (MAC_APP_STORE_PKG_SIGNING_KEY.fetchFrom(params) == null) {
-                throw new ConfigException(
-                        "No Mac App Store Installer Signing Key",
+                throw new ConfigException("No Mac App Store Installer Signing Key",
                         "Install your app signing keys into your Mac Keychain using XCode.");
             }
 
-            // things we could check...
+            // TODO things we could check...
             // check the icons, make sure it has hidpi icons
             // check the category, make sure it fits in the list apple has provided
             // validate bundle identifier is reverse dns

@@ -24,10 +24,9 @@
  */
 
 // iconswap.cpp : Defines the entry point for the console application.
-//
 
-//Define Windows compatibility requirements
-//XP or later
+// Define Windows compatibility requirements
+// XP or later
 #define WINVER 0x0501
 #define _WIN32_WINNT 0x0501
 

@@ -25,72 +25,72 @@
 
 package com.sun.openjfx.tools.packager.mac;
 
-import com.sun.openjfx.tools.packager.AbstractBundler;
-import com.sun.openjfx.tools.packager.BundlerParamInfo;
-import com.sun.openjfx.tools.packager.StandardBundlerParam;
-import com.sun.openjfx.tools.packager.Log;
-import com.sun.openjfx.tools.packager.ConfigException;
-import com.sun.openjfx.tools.packager.IOUtils;
-import com.sun.openjfx.tools.packager.Platform;
-import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.*;
+import com.sun.openjfx.tools.packager.AbstractBundler;
+import com.sun.openjfx.tools.packager.BundlerParamInfo;
+import com.sun.openjfx.tools.packager.ConfigException;
+import com.sun.openjfx.tools.packager.IOUtils;
+import com.sun.openjfx.tools.packager.Log;
+import com.sun.openjfx.tools.packager.Platform;
+import com.sun.openjfx.tools.packager.StandardBundlerParam;
+import com.sun.openjfx.tools.packager.UnsupportedPlatformException;
+
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.BUILD_ROOT;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.IDENTIFIER;
+import static com.sun.openjfx.tools.packager.StandardBundlerParam.VERSION;
 
 public abstract class MacBaseInstallerBundler extends AbstractBundler {
 
-    //This could be generalized more to be for any type of Image Bundler
+    // This could be generalized more to be for any type of Image Bundler
     public static final BundlerParamInfo<MacAppBundler> APP_BUNDLER = new StandardBundlerParam<>(
             "Mac App Bundler",
             "Creates a .app bundle for the Mac",
             "mac.app.bundler",
             MacAppBundler.class,
-            params -> new MacAppBundler(),
-            (s, p) -> null);
+        params -> new MacAppBundler(),
+        (s, p) -> null);
 
     public final BundlerParamInfo<File> APP_IMAGE_BUILD_ROOT = new StandardBundlerParam<>(
             "",
             "This is temporary location built by the packager that is the root of the image application",
             "mac.app.imageRoot",
             File.class,
-            params -> {
-                File imageDir = IMAGES_ROOT.fetchFrom(params);
-                if (!imageDir.exists()) imageDir.mkdirs();
-                try {
-                    return Files.createTempDirectory(imageDir.toPath(), "image-").toFile();
-                } catch (IOException e) {
-                    return new File(imageDir, getID()+ ".image");
-                }
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File imageDir = IMAGES_ROOT.fetchFrom(params);
+            if (!imageDir.exists()) {
+                imageDir.mkdirs();
+            }
+            try {
+                return Files.createTempDirectory(imageDir.toPath(), "image-").toFile();
+            } catch (IOException e) {
+                return new File(imageDir, getID() + ".image");
+            }
+        },
+        (s, p) -> new File(s));
 
     public static final StandardBundlerParam<File> MAC_APP_IMAGE = new StandardBundlerParam<>(
             "Image Directory",
             "Location of the image that will be used to build either a DMG or PKG installer.",
             "mac.app.image",
             File.class,
-            params -> null,
-            (s, p) -> new File(s));
+        params -> null,
+        (s, p) -> new File(s));
 
 
     public static final BundlerParamInfo<MacDaemonBundler> DAEMON_BUNDLER = new StandardBundlerParam<>(
@@ -98,8 +98,8 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
             "Creates daemon image for the Mac",
             "mac.daemon.bundler",
             MacDaemonBundler.class,
-            params -> new MacDaemonBundler(),
-            (s, p) -> null);
+        params -> new MacDaemonBundler(),
+        (s, p) -> null);
 
 
     public final BundlerParamInfo<File> DAEMON_IMAGE_BUILD_ROOT = new StandardBundlerParam<>(
@@ -107,12 +107,14 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
             "This is temporary location built by the packager that is the root of the daemon image.",
             "mac.daemon.image",
             File.class,
-            params -> {
-                File imageDir = IMAGES_ROOT.fetchFrom(params);
-                if (!imageDir.exists()) imageDir.mkdirs();
-                return new File(imageDir, getID()+ ".daemon");
-            },
-            (s, p) -> new File(s));
+        params -> {
+            File imageDir = IMAGES_ROOT.fetchFrom(params);
+            if (!imageDir.exists()) {
+                imageDir.mkdirs();
+            }
+            return new File(imageDir, getID() + ".daemon");
+        },
+        (s, p) -> new File(s));
 
 
     public static final BundlerParamInfo<File> CONFIG_ROOT = new StandardBundlerParam<>(
@@ -120,46 +122,46 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
             "",
             "configRoot",
             File.class,
-            params -> {
-                File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
-                imagesRoot.mkdirs();
-                return imagesRoot;
-            },
-            (s, p) -> null);
+        params -> {
+            File imagesRoot = new File(BUILD_ROOT.fetchFrom(params), "macosx");
+            imagesRoot.mkdirs();
+            return imagesRoot;
+        },
+        (s, p) -> null);
 
     public static final BundlerParamInfo<String> SIGNING_KEY_USER = new StandardBundlerParam<>(
             "Signing Key User Name",
             "The user name portion of the typical \"Mac Developer ID Application: <user name>\" signing key.",
             "mac.signing-key-user-name",
             String.class,
-            params -> "",
-            null);
+        params -> "", null);
 
     public static final BundlerParamInfo<String> SIGNING_KEYCHAIN = new StandardBundlerParam<>(
             "Signing Keychain",
             "The location of the keychain to use.  If not specified the standard keychains will be used.",
             "mac.signing-keychain",
             String.class,
-            params -> "",
-            null);
+        params -> "", null);
 
-    public static final BundlerParamInfo<String> INSTALLER_NAME = new StandardBundlerParam<> (
+    public static final BundlerParamInfo<String> INSTALLER_NAME = new StandardBundlerParam<>(
             "Installer Name",
-            "The filename of the generated installer without the file type extension.  Default is <App Name>-<Version>.",
+            "The filename of the generated installer without the file type extension. Default is <App Name>-<Version>.",
             "mac.installerName",
             String.class,
-            params -> {
-                String nm = APP_FS_NAME.fetchFrom(params);
-                if (nm == null) return null;
+        params -> {
+            String nm = APP_FS_NAME.fetchFrom(params);
+            if (nm == null) {
+                return null;
+            }
 
-                String version = VERSION.fetchFrom(params);
-                if (version == null) {
-                    return nm;
-                } else {
-                    return nm + "-" + version;
-                }
-            },
-            (s, p) -> s);
+            String version = VERSION.fetchFrom(params);
+            if (version == null) {
+                return nm;
+            } else {
+                return nm + "-" + version;
+            }
+        },
+        (s, p) -> s);
 
     public static File getPredefinedImage(Map<String, ? super Object> p) {
         File applicationImage = null;
@@ -175,7 +177,8 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
         return applicationImage;
     }
 
-    protected void validateAppImageAndBundeler(Map<String, ? super Object> params) throws ConfigException, UnsupportedPlatformException {
+    protected void validateAppImageAndBundeler(Map<String, ? super Object> params)
+            throws ConfigException, UnsupportedPlatformException {
         if (MAC_APP_IMAGE.fetchFrom(params) != null) {
             File applicationImage = MAC_APP_IMAGE.fetchFrom(params);
             if (!applicationImage.exists()) {
@@ -220,13 +223,10 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
         Collection<BundlerParamInfo<?>> results = new LinkedHashSet<>();
 
         results.addAll(MacAppBundler.getAppBundleParameters());
-        results.addAll(Arrays.asList(
-                APP_BUNDLER,
+        results.addAll(Arrays.asList(APP_BUNDLER,
                 CONFIG_ROOT,
                 APP_IMAGE_BUILD_ROOT,
-                MAC_APP_IMAGE
-        ));
-
+                MAC_APP_IMAGE));
         return results;
     }
 
@@ -248,14 +248,12 @@ public abstract class MacBaseInstallerBundler extends AbstractBundler {
             searchOptions.add(key);
             searchOptions.add("-a");
             if (keychainName != null && !keychainName.isEmpty()) {
-                // searchOptions.add(keychainName);
+                // FIXME searchOptions.add(keychainName);
             }
 
             ProcessBuilder pb = new ProcessBuilder(searchOptions);
             IOUtils.exec(pb, verbose, false, ps);
 
-            System.out.println("Inside MacBaseInstallerBundler#findKey");
-            System.out.println("baos.toString(): " + baos.toString());
             Pattern p = Pattern.compile("\"alis\"<blob>=\"([^\"]+)\"");
             Matcher m = p.matcher(baos.toString());
             if (!m.find()) {
