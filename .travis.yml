@@ -12,6 +12,7 @@ cache:
 addons:
     apt:
         packages:
+        - gobjc++
         - rpm
         - fakeroot
 
@@ -37,7 +38,33 @@ matrix:
 # skip install stage.
 install: true
 
-script: ./gradlew build --no-daemon -Pjavapackager.debug=true -PTEST_PACKAGER_DMG=false
+script:
+    - |
+      if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+        CLANG_CHECKER_VER=279
+        wget https://clang-analyzer.llvm.org/downloads/checker-"${CLANG_CHECKER_VER}".tar.bz2
+        tar xf checker-"${CLANG_CHECKER_VER}".tar.bz2
+        PATH=$PATH:${PWD}/checker-${CLANG_CHECKER_VER}/bin
+      fi
+      cmake --version
+      mkdir build
+      cd build
+      mkdir reports
+      scan-build -o reports cmake ..
+      scan-build -o reports cmake --build .
+      ls -la
+      if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+        mkdir -p ../modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/linux
+        cp libpackager.so ../modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/linux/
+        cp JavaAppLauncher ../modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/linux/
+      fi
+      if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+        mkdir -p ../modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/mac
+        cp libpackager.dylib ../modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/mac/
+        cp JavaAppLauncher ../modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/mac/
+      fi
+      cd ..
+      ./gradlew build --no-daemon -Pjavapackager.debug=true -PTEST_PACKAGER_DMG=false
 
 notifications:
   email: false

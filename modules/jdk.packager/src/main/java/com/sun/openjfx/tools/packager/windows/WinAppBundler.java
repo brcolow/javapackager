@@ -116,8 +116,8 @@ public class WinAppBundler extends AbstractImageBundler {
 
         RelativeFileSet runtime = WIN_RUNTIME.fetchFrom(p);
         if (runtime != null) {
-            if (!runtime.contains("legal\\java.base\\LICENSE")) {
-                throw new ConfigException("The Java runtime specified (\"" + runtime + "\") does not seem to be" +
+            if (!(runtime.contains("legal\\java.base\\COPYRIGHT") || runtime.contains("legal\\java.base\\LICENSE"))) {
+                throw new ConfigException("The Java runtime specified (\"" + runtime + "\") does not seem to be " +
                         "correct: ", "Either do not explicitly set the runtime and use the default JAVA_HOME or else" +
                         "specify an actual Java runtime.");
             }

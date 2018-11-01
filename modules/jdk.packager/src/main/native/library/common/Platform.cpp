@@ -30,7 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "Platform.h"
 #include "Lock.h"
 #include "Messages.h"
@@ -39,12 +38,8 @@
 #include "LinuxPlatform.h"
 #include "MacPlatform.h"
 
-
 // Environment
 StaticReadProperty<TString, &Environment::GetNewLine> Environment::NewLine;
-
-
-//--------------------------------------------------------------------------------------------------
 
 Platform& Platform::GetInstance() {
     //Lock lock(true);
@@ -59,9 +54,6 @@ Platform& Platform::GetInstance() {
 #endif // MAC
     return instance;
 }
-
-//--------------------------------------------------------------------------------------------------
-
 
 Library::Library() {
     Initialize();

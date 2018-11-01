@@ -30,14 +30,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef HELPERS_H
 #define HELPERS_H
 
 #include "Platform.h"
 #include "OrderedMap.h"
 #include "IniFile.h"
-
 
 class Helpers {
 private:
