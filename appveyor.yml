@@ -11,6 +11,7 @@ shallow_clone: true
 
 build_script:
   - ps: |
+      choco install cmake --installargs 'ADD_CMAKE_TO_PATH=""User""'` --no-progress --pre --dir C:\Users\Appveyor\cmake
       $client = New-Object net.webclient
       $client.DownloadFile('http://jdk.java.net/11/', 'C:\Users\appveyor\openjdk11.html')
       $openJdk11 = cat C:\Users\appveyor\openjdk11.html | where { $_ -match "href.*https://download.java.net.*jdk11.*windows-x64.*zip\`"" } | %{ $_ -replace "^.*https:", "https:" } | %{ $_ -replace ".zip\`".*$", ".zip" }
@@ -18,17 +19,20 @@ build_script:
       $client.DownloadFile($openJdk11, 'C:\Users\appveyor\openjdk11.zip')
       Expand-Archive -Path 'C:\Users\appveyor\openjdk11.zip' -DestinationPath 'C:\Users\appveyor\openjdk11'
       Copy-Item -Path 'C:\Users\appveyor\openjdk11\*\' -Destination 'C:\jdk11' -Recurse -Force
-      choco install gradle --version 4.10.2
-      $msvcToolsVer = Get-Content "$env:VCINSTALLDIR\Microsoft.VCToolsVersion.default.txt"
-      if ([string]::IsNullOrWhitespace($msvcToolsVer)) {
-        # The MSVC tools version file can have txt *or* props extension.
-        $msvcToolsVer = Get-Content "$env:VCINSTALLDIR\Microsoft.VCToolsVersion.default.props"
-      }
-      $env:MSVC_VER = $msvcToolsVer
-      $env:VS150COMNTOOLS = $env:VCINSTALLDIR
-      $env:VSVARS32FILE = "$env:VCINSTALLDIR\vcvars32.bat"
       refreshenv
-  - cmd: gradle build --no-daemon --warning-mode all
+      mkdir build
+      cd build
+      $env:PATH += ";C:\Users\Appveyor\cmake\bin"
+      cmake ..
+      cmake --build . --config Release
+      cd Release
+      $artifacts = @("javapackager.exe", "WinLauncher.exe", "WinLauncherSvc.exe", "packager.dll")
+      New-Item -Force ..\..\modules\jdk.packager\build\generated-resources\com\sun\openjfx\tools\packager\windows -ItemType "directory"
+      foreach ($artifact in $artifacts) {
+        Copy-Item $artifact -Destination ..\..\modules\jdk.packager\build\generated-resources\com\sun\openjfx\tools\packager\windows -Force
+      }
+      cd ..\..
+  - cmd: .\gradlew build --no-daemon --warning-mode all
 
 on_success:
   - ps: |

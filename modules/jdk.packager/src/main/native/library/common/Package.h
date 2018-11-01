@@ -30,10 +30,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef PACKAGE_H
 #define PACKAGE_H
-
 
 #include "Platform.h"
 #include "PlatformString.h"

@@ -228,7 +228,7 @@ public class WinExeBundler extends AbstractBundler {
                 Matcher matcher = pattern.matcher(content);
                 if (matcher.find()) {
                     String v = matcher.group(1);
-                    version = new Double(v);
+                    version = Double.valueOf(v);
                 }
             }
             return version;

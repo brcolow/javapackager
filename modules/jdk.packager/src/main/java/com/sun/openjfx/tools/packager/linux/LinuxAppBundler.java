@@ -162,8 +162,9 @@ public class LinuxAppBundler extends AbstractImageBundler {
         }
 
         RelativeFileSet runtime = LINUX_RUNTIME.fetchFrom(p);
-        if (runtime != null && !runtime.contains("legal/java.base/LICENSE")) {
-            throw new ConfigException("The Java runtime specified (\"" + runtime + "\") does not seem to be" +
+        if (runtime != null && !(runtime.contains("legal/java.base/COPYRIGHT") ||
+                runtime.contains("legal/java.base/LICENSE"))) {
+            throw new ConfigException("The Java runtime specified (\"" + runtime + "\") does not seem to be " +
                     "correct: ", "Either do not explicitly set the runtime and use the default JAVA_HOME or else" +
                     "specify an actual Java runtime.");
         }

@@ -30,7 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "Package.h"
 #include "Lock.h"
 #include "Helpers.h"
@@ -39,7 +38,6 @@
 #include "IniFile.h"
 
 #include <assert.h>
-
 
 Package::Package(void) {
     FInitialized = false;
