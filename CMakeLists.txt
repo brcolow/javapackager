@@ -6,8 +6,11 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
 
-project(javapackager VERSION 1.0
-                  DESCRIPTION "Java Packager is used to create native installers for JavaFX applications")
+project(javapackager VERSION 0.0.1 LANGUAGES C CXX)
+if(WIN32)
+    include(InstallRequiredSystemLibraries)
+    message(STATUS "Installing system DLLs: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
+endif()
 
 add_library(launcher_lib SHARED modules/jdk.packager/src/main/native/library/common/Exports.h
             modules/jdk.packager/src/main/native/library/common/Exports.cpp
@@ -44,6 +47,9 @@ add_library(launcher_lib SHARED modules/jdk.packager/src/main/native/library/com
             modules/jdk.packager/src/main/native/library/common/PropertyFile.h
             modules/jdk.packager/src/main/native/library/common/PropertyFile.cpp)
 
+# If this is a CMake debug build, set DEBUG compiler definition (used by native launcher library).
+target_compile_definitions(launcher_lib PUBLIC $<$<CONFIG:DEBUG>:DEBUG>)
+
 if(WIN32)
     add_executable(javapackager modules/jdk.packager/src/main/native/javapackager/win/ByteBuffer.cpp
                    modules/jdk.packager/src/main/native/javapackager/win/ByteBuffer.h
@@ -65,7 +71,6 @@ if(WIN32)
 	set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} /d JFX_FNAME=javapackager.exe")
 	set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} /d JFX_INTERNAL_NAME=javapackager")
 	set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} /l 0x409")
-	set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} /nologo")
     set_target_properties(javapackager PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE" "/INCREMENTAL:NO" "/opt:REF")
 
     add_executable(launcher WIN32 modules/jdk.packager/src/main/native/launcher/win/WinLauncher.cpp)
@@ -92,9 +97,42 @@ if(WIN32)
 	target_link_libraries(launcher_lib user32 shell32 advapi32 ole32)
 
     target_compile_definitions(javapackager PRIVATE UNICODE _UNICODE WIN32 _LITTLE_ENDIAN WIN32_LEAN_AND_MEAN _WIN32_WINDOWS=0X0500 _WIN32_WINNT=0X0500)
+    # If this is a CMake debug build, set _DEBUG compiler definition (used by native javapackager on Windows).
+    target_compile_definitions(javapackager PUBLIC $<$<CONFIG:DEBUG>:_DEBUG>)
     target_compile_options(javapackager PRIVATE /nologo /W3 /EHsc /MT /GS /O2)
     target_include_directories(javapackager PUBLIC $ENV{JAVA_HOME}/include $ENV{JAVA_HOME}/include/win32)
     target_link_libraries(javapackager kernel32 advapi32)
+
+    add_custom_command(TARGET launcher POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/windows)
+    add_custom_command(TARGET launcher POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/windows/$<TARGET_FILE_NAME:launcher>)
+    add_custom_command(TARGET launcher_svc POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher_svc>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/windows/$<TARGET_FILE_NAME:launcher_svc>)
+    add_custom_command(TARGET launcher_lib POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher_lib>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/windows/$<TARGET_FILE_NAME:launcher_lib>)
+    add_custom_command(TARGET javapackager POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:javapackager>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/windows/$<TARGET_FILE_NAME:javapackager>)
+
+    # Copy msvcp140.dll and vcruntime140.dll into binary output directory and generated-resources.
+    foreach(dll ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+        get_filename_component(dllname ${dll} NAME)
+        add_custom_command(TARGET launcher POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                ${dll}
+                $<TARGET_FILE_DIR:launcher>/${dllname})
+        add_custom_command(TARGET launcher POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE_DIR:launcher>/${dllname}
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/windows/${dllname})
+    endforeach()
 endif()
 
 if(UNIX AND NOT APPLE)
@@ -116,6 +154,16 @@ if(UNIX AND NOT APPLE)
     target_include_directories(launcher_lib PUBLIC $ENV{JAVA_HOME}/include/linux)
     target_compile_options(launcher_lib PUBLIC -Wextra -Wformat -Wformat-security -fPIC)
 	target_link_libraries(launcher_lib dl pthread)
+
+    add_custom_command(TARGET launcher POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/linux)
+    add_custom_command(TARGET launcher POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/linux/$<TARGET_FILE_NAME:launcher>)
+    add_custom_command(TARGET launcher_lib POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher_lib>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/linux/$<TARGET_FILE_NAME:launcher_lib>)
 endif()
 
 if(APPLE)
@@ -141,6 +189,16 @@ if(APPLE)
     target_include_directories(launcher_lib PUBLIC $ENV{JAVA_HOME}/include $ENV{JAVA_HOME}/include/darwin)
     target_link_libraries(launcher_lib dl "-framework Cocoa")
     set_xcode_property(launcher_lib CLANG_CXX_LIBRARY "libc++")
+
+    add_custom_command(TARGET launcher POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/mac)
+    add_custom_command(TARGET launcher POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/mac/$<TARGET_FILE_NAME:launcher>)
+    add_custom_command(TARGET launcher_lib POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:launcher_lib>
+                ${CMAKE_SOURCE_DIR}/modules/jdk.packager/build/generated-resources/com/sun/openjfx/tools/packager/mac/$<TARGET_FILE_NAME:launcher_lib>)
 endif()
 
 if(NOT WIN32)

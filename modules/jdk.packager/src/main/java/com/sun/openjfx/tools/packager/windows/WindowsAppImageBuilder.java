@@ -234,14 +234,16 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
     }
 
     private boolean copyMSVCDLLs(String vsVer) throws IOException {
-        final InputStream redistMsvcrUrl = WindowsAppImageBuilder.class.getResourceAsStream(
+        Path msvcrPath = Paths.get("./build/generated-resources/com/sun/openjfx/tools/packager/windows/" +
                 REDIST_MSVCR.replaceAll("VS_VER", vsVer));
-        final InputStream redistMsvcpUrl = WindowsAppImageBuilder.class.getResourceAsStream(
+        Path msvcpPath = Paths.get("./build/generated-resources/com/sun/openjfx/tools/packager/windows/" +
                 REDIST_MSVCP.replaceAll("VS_VER", vsVer));
 
-        if (redistMsvcrUrl != null && redistMsvcpUrl != null) {
-            Files.copy(redistMsvcrUrl, root.resolve(REDIST_MSVCR.replaceAll("VS_VER", vsVer)));
-            Files.copy(redistMsvcpUrl, root.resolve(REDIST_MSVCP.replaceAll("VS_VER", vsVer)));
+        if (Files.exists(msvcrPath) && Files.exists(msvcpPath)) {
+            System.out.println("Copying to: " + root.resolve(REDIST_MSVCR.replaceAll("VS_VER", vsVer)));
+            System.out.println("Copying to: " + root.resolve(REDIST_MSVCP.replaceAll("VS_VER", vsVer)));
+            Files.copy(msvcrPath, root.resolve(REDIST_MSVCR.replaceAll("VS_VER", vsVer)));
+            Files.copy(msvcpPath, root.resolve(REDIST_MSVCP.replaceAll("VS_VER", vsVer)));
             return true;
         }
 

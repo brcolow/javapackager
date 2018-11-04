@@ -26,15 +26,11 @@
 package com.sun.openjfx.tools.packager.bundlers;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import com.sun.openjfx.tools.packager.BundlerParamInfo;
 import com.sun.openjfx.tools.packager.JLinkBundlerHelper;
@@ -57,7 +53,6 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_FILE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.LICENSE_TYPE;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.MAIN_CLASS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.MANIFEST_JAVAFX_MAIN;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.MENU_HINT;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.PREFERENCES_ID;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.PRELOADER_CLASS;
@@ -156,12 +151,12 @@ public class BundleParams {
         params.putAll(p);
     }
 
-    public <C> C fetchParam(BundlerParamInfo<C> paramInfo) {
+    private <C> C fetchParam(BundlerParamInfo<C> paramInfo) {
         return paramInfo.fetchFrom(params);
     }
 
     @SuppressWarnings("unchecked")
-    public <C> C fetchParamWithDefault(Class<C> klass, C defaultValue, String... keys) {
+    private <C> C fetchParamWithDefault(Class<C> klass, C defaultValue, String... keys) {
         for (String key : keys) {
             Object o = params.get(key);
             if (klass.isInstance(o)) {
@@ -176,11 +171,11 @@ public class BundleParams {
         return defaultValue;
     }
 
-    public <C> C fetchParam(Class<C> klass, String... keys) {
+    private <C> C fetchParam(Class<C> klass, String... keys) {
         return fetchParamWithDefault(klass, null, keys);
     }
 
-    //NOTE: we do not care about application parameters here
+    // NOTE: we do not care about application parameters here
     // as they will be embedded into jar file manifest and
     // java launcher will take care of them!
 
@@ -516,67 +511,6 @@ public class BundleParams {
 
     public void setIdentifier(String s) {
         putUnlessNull(PARAM_IDENTIFIER, s);
-    }
-
-    private String mainJar;
-    private String mainJarClassPath;
-    private boolean useFXPackaging = true;
-
-    //For regular executable Jars we need to take care of classpath
-    //For JavaFX executable jars we do not need to pay attention to ClassPath entry in manifest
-    public String getAppClassPath() {
-        if (mainJar == null) {
-            //this will find out answer
-            getMainApplicationJar();
-        }
-        if (useFXPackaging || mainJarClassPath == null) {
-            return "";
-        }
-        return mainJarClassPath;
-    }
-
-    //assuming that application was packaged according to the rules
-    // we must have application jar, i.e. jar where we embed launcher
-    // and have main application class listed as main class!
-    //If there are more than one, or none - it will be treated as deployment error
-    //
-    //Note we look for both JavaFX executable jars and regular executable jars
-    //As long as main "application" entry point is the same it is main class
-    // (i.e. for FX jar we will use JavaFX manifest entry ...)
-    public String getMainApplicationJar() {
-        if (mainJar != null) {
-            return mainJar;
-        }
-
-        RelativeFileSet appResources = getAppResource();
-        String applicationClass = getApplicationClass();
-
-        if (appResources == null || applicationClass == null) {
-            return null;
-        }
-        File srcdir = appResources.getBaseDirectory();
-        for (String fname : appResources.getIncludedFiles()) {
-            JarFile jf;
-            try {
-                jf = new JarFile(new File(srcdir, fname));
-                Manifest m = jf.getManifest();
-                Attributes attrs = (m != null) ? m.getMainAttributes() : null;
-                if (attrs != null) {
-                    boolean javaMain = applicationClass.equals(
-                               attrs.getValue(Attributes.Name.MAIN_CLASS));
-                    boolean fxMain = applicationClass.equals(
-                               attrs.getValue(MANIFEST_JAVAFX_MAIN));
-                    if (javaMain || fxMain) {
-                        useFXPackaging = fxMain;
-                        mainJar = fname;
-                        mainJarClassPath = attrs.getValue(Attributes.Name.CLASS_PATH);
-                        return mainJar;
-                    }
-                }
-            } catch (IOException ignore) {
-            }
-        }
-        return null;
     }
 
     public String getVendor() {

@@ -31,7 +31,7 @@
 #include "IconSwap.h"
 #include "VersionInfoSwap.h"
 
-//#define _DEBUG
+#define _DEBUG
 
 #ifdef _DEBUG
 #include <iostream>
@@ -303,7 +303,7 @@ JavaVersion * parseName(const char * jName) {
 
     int v4 = 0;
 
-    //update version
+    // update version
     if (s.length() > 0) {
         nn = s.length();
         for (unsigned int i = 0; i < s.length(); i++) {
@@ -472,22 +472,17 @@ int wmain(int argc, wchar_t* argv[]) {
     std::wstring javacmd;
     std::wstring javahome;
 
-    std::wstring exe = GetCurrentExecutableName();
-
-    if (exe.length() <= 0) {
-        JavaVersion * jv2 = GetMaxVersion(HKEY_LOCAL_MACHINE, "SOFTWARE\\JavaSoft\\JDK");
-        if (jv2 != NULL) {
-            javahome = jv2->home;
-            javacmd = javahome + L"\\bin\\" + L"\\java.exe";
-        }
-        else {
-            javacmd = L"java.exe";
-        }
+    JavaVersion * jv2 = GetMaxVersion(HKEY_LOCAL_MACHINE, "SOFTWARE\\JavaSoft\\JDK");
+    if (jv2 != NULL) {
+        javahome = jv2->home;
+        javacmd = javahome + L"\\bin\\" + L"\\java.exe";
     } else {
-        javacmd = ExtractFilePath(exe) + L"\\java.exe";
+        javacmd = L"java.exe";
     }
-
     std::wstring cmd = L"\"" + javacmd + L"\"";
+    #ifdef _DEBUG
+        std::wcout << cmd << endl;
+    #endif
     if (javahome.length() > 0) {
         SetEnvironmentVariable(L"JAVA_HOME", javahome.c_str());
     }
@@ -504,12 +499,10 @@ int wmain(int argc, wchar_t* argv[]) {
 
         if (argument.find(L"-J-Xmx", 0) == 0) {
             memory = argument.substr(2, argument.length() - 2);
-        }
-        else if (argument.find(debug_arg, 0) == 0) {
+        } else if (argument.find(debug_arg, 0) == 0) {
             std::wstring address = argument.substr(debug_arg.length(), argument.length() - debug_arg.length());
             debug = L"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + address;
-        }
-        else if (argument.find(icon_swap_arg, 0) == 0) {
+        } else if (argument.find(icon_swap_arg, 0) == 0) {
             if (argc != 4) {
                 fwprintf(stderr, TEXT("Usage: javapackager.exe --icon-swap [Icon File Name] [Executable File Name]\n"));
                 return 1;
@@ -520,13 +513,11 @@ int wmain(int argc, wchar_t* argv[]) {
 
             if (ChangeIcon(argv[i + 1], argv[i + 2]) == true) {
                 return 0;
-            }
-            else {
+            } else {
                 fwprintf(stderr, TEXT("failed\n"));
                 return 1;
             }
-        }
-        else if (argument.find(version_swap_arg, 0) == 0) {
+        } else if (argument.find(version_swap_arg, 0) == 0) {
             if (argc != 4) {
                 fwprintf(stderr, TEXT("Usage: javapackager.exe --version-swap [Property File Name] [Executable File Name]\n"));
                 return 1;
@@ -539,27 +530,23 @@ int wmain(int argc, wchar_t* argv[]) {
 
             if (vs.PatchExecutable()) {
                 return 0;
-            }
-            else {
+            } else {
                 fwprintf(stderr, TEXT("failed\n"));
                 return 1;
             }
-        }
-        else {
+        } else {
             args = args + L" \"" + argv[i] + L"\"";
         }
     }
 
-
     cmd += debug +
         L" " + memory +
         L" -Djavafx.home=\"" + javafxhome + L"\"" +
-        L" -classpath \"" + fxlib + L"ant-javafx.jar\"" +
-        L" -m jdk.packager/com.sun.openjfx.tools.packager.Main" +
+        L" -m com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main" +
         L" " + args;
 
 #ifdef _DEBUG
-    printf ("%s", cmd.c_str());
+    wcout << "cmd: " << cmd << endl;
 #endif
 
     STARTUPINFO start;
@@ -569,9 +556,7 @@ int wmain(int argc, wchar_t* argv[]) {
 
     if (!CreateProcess(NULL, (wchar_t *) cmd.data(),
             NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &start, &pi)) {
-#ifdef _DEBUG
         fprintf(stderr, "Cannot start java.exe");
-#endif
         return EXIT_FAILURE;
     }
 

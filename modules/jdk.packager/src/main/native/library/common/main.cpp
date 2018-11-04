@@ -84,7 +84,7 @@ extern "C" {
         bool result = false;
         bool parentProcess = true;
 
-        // Platform must be initialize first.
+        // Platform must be initialized first.
         Platform& platform = Platform::GetInstance();
 
         try {
