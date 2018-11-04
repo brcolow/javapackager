@@ -88,8 +88,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             BundleParams.PARAM_APP_RESOURCES + "List",
             (Class<List<RelativeFileSet>>) (Object) List.class,
         p -> new ArrayList<>(Collections.singletonList(APP_RESOURCES.fetchFrom(p))),
-            // Default is appResources, as a single item list
-            StandardBundlerParam::createAppResourcesListFromString);
+        // Default is appResources, as a single item list
+        (s, map) -> createAppResourcesListFromString(s));
 
     public static final StandardBundlerParam<String> SOURCE_DIR = new StandardBundlerParam<>(
             "Source Directory",
@@ -542,12 +542,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             List<Path> modulePath = Arrays.stream(s.split(File.pathSeparator))
                     .map(ss -> new File(ss).toPath())
                     .collect(Collectors.toList());
-            Path javaBasePath = null;
-            if (modulePath != null) {
-                javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
-            } else {
-                modulePath = new ArrayList();
-            }
+            Path javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
 
             // Add the default JDK module path to the module path.
             if (javaBasePath == null) {
@@ -777,7 +772,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
     }
 
     private static List<RelativeFileSet> createAppResourcesListFromString(
-            String s, Map<String, ? super Object> objectObjectMap) {
+            String s) {
         List<RelativeFileSet> result = new ArrayList<>();
         for (String path : s.split("[:;]")) {
             File f = new File(path);

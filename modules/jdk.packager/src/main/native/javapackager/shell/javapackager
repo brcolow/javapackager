@@ -93,9 +93,13 @@ if $cygwin ; then
     JAVA_CMD=$(cygpath --unix "$JAVA_CMD")
 fi
 
+echo $JAVA_PACKAGER_PATH
+
 # The cray looking use of echo and ARGS expands the ARGS array into a space
 # separated list to be passed as an argument to JAVA. This is similar to "$@"
 # except we had to strip out some arguments that we don't want to be passed
 # to the Java Packager.
 eval exec "$JAVA_CMD" "${DEBUG}" "${MEMORY}" "${JAVA_ARGS}" \
-    --module-path "${JAVA_PACKAGER_PATH}" --add-opens jdk.jlink/jdk.tools.jlink.internal.packager=com.brcolow.javapackager -m com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main "$(IFS=$' '; echo "${ARGS[*]}")"
+    --module-path "${JAVA_PACKAGER_PATH}" \
+    --add-opens jdk.jlink/jdk.tools.jlink.internal.packager=com.brcolow.javapackager \
+    -m com.brcolow.javapackager/com.sun.openjfx.tools.packager.Main "$(IFS=$' '; echo "${ARGS[*]}")"

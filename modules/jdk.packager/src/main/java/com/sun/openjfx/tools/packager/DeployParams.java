@@ -34,7 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.sun.openjfx.tools.packager.bundlers.BundleParams;
@@ -42,7 +41,7 @@ import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
 
 public class DeployParams extends CommonParams {
 
-    final List<RelativeFileSet> resources = new ArrayList<>();
+    private final List<RelativeFileSet> resources = new ArrayList<>();
     String id;
     String title;
     String vendor;
@@ -72,22 +71,20 @@ public class DeployParams extends CommonParams {
     String debugPort;
     String srcdir;
 
-    int width;
-    int height;
     String appName;
-    String codebase;
     boolean isExtension;
     Boolean needShortcut;
     Boolean needMenu;
-    public String outfile;
-    String placeholder = "'javafx-app-placeholder'";
-    String appId;
+    String outfile;
     String jrePlatform = PackagerLib.JAVAFX_VERSION + "+";
     String fxPlatform = PackagerLib.JAVAFX_VERSION + "+";
     File javaRuntimeToUse;
     boolean javaRuntimeWasSet;
 
-    // list of jvm args (in theory string can contain spaces and need to be escaped
+    BundleType bundleType = BundleType.NONE;
+    String targetFormat; // null means any
+
+    // list of jvm args (in theory string can contain spaces and need to be escaped)
     List<String> jvmargs = new LinkedList<>();
     Map<String, String> jvmUserArgs = new LinkedHashMap<>();
 
@@ -97,15 +94,6 @@ public class DeployParams extends CommonParams {
     // raw arguments to the bundler
     Map<String, ? super Object> bundlerArguments = new LinkedHashMap<>();
 
-    public void setJavaRuntimeSource(File src) {
-        javaRuntimeToUse = src;
-        javaRuntimeWasSet = true;
-    }
-
-    public void setCodebase(String codebase) {
-        this.codebase = codebase;
-    }
-
     public void setId(String id) {
         this.id = id;
     }
@@ -114,20 +102,12 @@ public class DeployParams extends CommonParams {
         this.category = category;
     }
 
-    public void setLicenseType(String licenseType) {
-        this.licenseType = licenseType;
-    }
-
     public void setCopyright(String copyright) {
         this.copyright = copyright;
     }
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public void setSystemWide(Boolean systemWide) {
-        this.systemWide = systemWide;
     }
 
     public void setServiceHint(Boolean serviceHint) {
@@ -154,18 +134,6 @@ public class DeployParams extends CommonParams {
         fxPlatform = v;
     }
 
-    public void addJvmArg(String v) {
-        jvmargs.add(v);
-    }
-
-    public void addJvmUserArg(String n, String v) {
-        jvmUserArgs.put(n, v);
-    }
-
-    public void addJvmProperty(String n, String v) {
-        properties.put(n, v);
-    }
-
     public void setAppName(String appName) {
         this.appName = appName;
     }
@@ -190,10 +158,6 @@ public class DeployParams extends CommonParams {
         }
     }
 
-    public void setModulePath(String value) {
-        this.modulePath = value;
-    }
-
     public void setModule(String value) {
         this.module = value;
     }
@@ -212,14 +176,6 @@ public class DeployParams extends CommonParams {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setPlaceholder(String p) {
-        placeholder = p;
-    }
-
-    public void setAppId(String id) {
-        appId = id;
     }
 
     public void setOutfile(String outfile) {
@@ -327,9 +283,6 @@ public class DeployParams extends CommonParams {
         return result;
     }
 
-    BundleType bundleType = BundleType.NONE;
-    String targetFormat; // means any
-
     public void setBundleType(BundleType type) {
         bundleType = type;
     }
@@ -352,7 +305,7 @@ public class DeployParams extends CommonParams {
         if ("x86".equals(arch) || "i386".equals(arch) || "i486".equals(arch) ||
                 "i586".equals(arch) || "i686".equals(arch)) {
             arch = "x86";
-        } else if ("x86_64".equals(arch) || "amd64".equals("arch")) {
+        } else if ("x86_64".equals(arch) || "amd64".equals(arch)) {
             arch = "x86_64";
         }
 
@@ -477,13 +430,6 @@ public class DeployParams extends CommonParams {
 
         if (detectmods != null) {
             bundleParams.setDetectMods(detectmods);
-        }
-
-        Map<String, String> paramsMap = new TreeMap<>();
-        if (params != null) {
-            for (Param p : params) {
-                paramsMap.put(p.name, p.value);
-            }
         }
 
         // check for collisions

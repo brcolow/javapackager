@@ -25,13 +25,8 @@ build_script:
       $env:PATH += ";C:\Users\Appveyor\cmake\bin"
       cmake ..
       cmake --build . --config Release
-      cd Release
-      $artifacts = @("javapackager.exe", "WinLauncher.exe", "WinLauncherSvc.exe", "packager.dll")
-      New-Item -Force ..\..\modules\jdk.packager\build\generated-resources\com\sun\openjfx\tools\packager\windows -ItemType "directory"
-      foreach ($artifact in $artifacts) {
-        Copy-Item $artifact -Destination ..\..\modules\jdk.packager\build\generated-resources\com\sun\openjfx\tools\packager\windows -Force
-      }
-      cd ..\..
+      dir Release
+      cd ..
   - cmd: .\gradlew build --no-daemon --warning-mode all
 
 on_success:
