@@ -31,18 +31,15 @@
  */
 package minesweeperfx;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
 
 public class Game extends Pane {
 
@@ -51,15 +48,15 @@ public class Game extends Pane {
     private Board board;
     private GraphicsContext graphicsContext;
     private Stage stage;
-    private double extraHeight = 0;
+    private double extraHeight;
     private int flagCount;
     private int tileCount;
     private Text minesLabel;
 
-    private static String easyMessage = "Beginner 10 mines 10 x 10 tile grid";
-    private static String mediumMessage = "Intermediate 30 mines 15 x 15 tile grid";
-    private static String hardMessage = "Expert 100 mines 20 x 20 tile grid";
-    private static String crazyMessage = "Crazy random mines random x random tile grid";
+    private static final String EASY_MESSAGE = "Beginner 10 mines 10 x 10 tile grid";
+    private static final String MEDIUM_MESSAGE = "Intermediate 30 mines 15 x 15 tile grid";
+    private static final String HARD_MESSAGE = "Expert 100 mines 20 x 20 tile grid";
+    private static final String CRAZY_MESSAGE = "Crazy random mines random x random tile grid";
 
     static int random(int min, int max) {
         return min + (int)(Math.random() * ((max - min) + 1));
@@ -108,17 +105,18 @@ public class Game extends Pane {
                 int y = random(5, 21);
                 newGame(x, y, random(10, random(10, x * y)));
                 break;
+
             // fix drawing of larger than 20x20 grid
         }
     }
 
     public void newGame(String description) {
         List<String> choices = new ArrayList<>();
-        choices.add(easyMessage);
-        choices.add(mediumMessage);
-        choices.add(hardMessage);
+        choices.add(EASY_MESSAGE);
+        choices.add(MEDIUM_MESSAGE);
+        choices.add(HARD_MESSAGE);
 
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(easyMessage, choices);
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(EASY_MESSAGE, choices);
         dialog.setTitle("Minsweeper");
         dialog.setHeaderText(description);
         dialog.setContentText("New Game?");
@@ -129,9 +127,14 @@ public class Game extends Pane {
     }
 
     private GameDifficulty stringToGameDifficulty(String value) {
-        if (value.equals(mediumMessage)) return GameDifficulty.Medium;
-        else if (value.equals(hardMessage)) return GameDifficulty.Hard;
-        else if (value.equals(crazyMessage)) return GameDifficulty.Crazy;
+        switch (value) {
+            case MEDIUM_MESSAGE:
+                return GameDifficulty.Medium;
+            case HARD_MESSAGE:
+                return GameDifficulty.Hard;
+            case CRAZY_MESSAGE:
+                return GameDifficulty.Crazy;
+        }
         return GameDifficulty.Easy;
     }
 
@@ -149,11 +152,10 @@ public class Game extends Pane {
         if (tile != null) {
             board.uncoverAllAdjacent(tile);
 
-            if (tile.selected(mouseLocation) == true) {
+            if (tile.selected(mouseLocation)) {
                 board.draw(graphicsContext);
                 newGame("Game over!");
-            }
-            else {
+            } else {
                 tileCount--;
 
                 if (tileCount == 0) {
@@ -174,13 +176,12 @@ public class Game extends Pane {
 
             if (state == Tile.FlagState.Flag) {
                 flagCount--;
-            }
-            else if (state == Tile.FlagState.Unflag) {
+            } else if (state == Tile.FlagState.Unflag) {
                 flagCount++;
             }
 
             if (flagCount == 0) {
-                if (board.checkFlags() == true) {
+                if (board.checkFlags()) {
                     board.draw(graphicsContext);
                     newGame("You won!");
                 }

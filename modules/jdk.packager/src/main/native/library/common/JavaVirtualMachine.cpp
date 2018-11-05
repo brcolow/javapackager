@@ -74,11 +74,17 @@ JavaLibrary::JavaLibrary() : Library(), FCreateProc(NULL)  {
 }
 
 bool JavaLibrary::JavaVMCreate(size_t argc, char *argv[]) {
+    for (size_t i = 1; i < argc; i++) {
+        printf("%s \n", argv[i]);
+    }
+
     if (FCreateProc == NULL) {
+        printf("FCreateProc was null\n");
         FCreateProc = (JVM_CREATE)GetProcAddress(LAUNCH_FUNC);
     }
 
     if (FCreateProc == NULL) {
+        printf("FCreateProc was null - returning false\n");
         Platform& platform = Platform::GetInstance();
         Messages& messages = Messages::GetInstance();
         platform.ShowMessage(messages.GetMessage(FAILED_LOCATING_JVM_ENTRY_POINT));
@@ -237,13 +243,11 @@ bool JavaVirtualMachine::StartJVM() {
     if (modulepath.empty() == false) {
         options.AppendValue(_T("-Djava.module.path"), modulepath);
     }
-
     options.AppendValue(_T("-Djava.library.path"), package.GetPackageAppDirectory() + FilePath::PathSeparator() + package.GetPackageLauncherDirectory());
     options.AppendValue(_T("-Djava.launcher.path"), package.GetPackageLauncherDirectory());
     options.AppendValue(_T("-Dapp.preferences.id"), package.GetAppID());
     options.AppendValues(package.GetJVMArgs());
     options.AppendValues(RemoveTrailingEquals(package.GetJVMUserArgs()));
-
 #ifdef DEBUG
     if (package.Debugging() == dsJava) {
         options.AppendValue(_T("-Xdebug"), _T(""));
@@ -301,8 +305,7 @@ bool JavaVirtualMachine::StartJVM() {
 
     if (mainModule.empty() == true) {
         options.AppendValue(Helpers::ConvertJavaPathToId(mainClassName), _T(""));
-    }
-    else {
+    } else {
         options.AppendValue(_T("-m"));
         options.AppendValue(mainModule);
     }
@@ -322,7 +325,7 @@ bool JavaVirtualMachine::NotifySingleInstance() {
     options.AppendValue(_T("-Djava.launcher.path"), package.GetPackageLauncherDirectory());
     // launch SingleInstanceNewActivation.main() to pass arguments to another instance
     options.AppendValue(_T("-m"));
-    options.AppendValue(_T("jdk.packager.services/jdk.packager.services.singleton.SingleInstanceNewActivation"));
+    options.AppendValue(_T("com.brcolow.javapackager.services/jdk.packager.services.singleton.SingleInstanceNewActivation"));
 
     configureLibrary();
 
@@ -382,9 +385,7 @@ bool JavaVirtualMachine::launchVM(JavaOptions& options, std::list<TString>& vmar
         iterator != vmargs.end(); iterator++) {
         TString item = *iterator;
         std::string arg = PlatformString(item).toStdString();
-#ifdef DEBUG
-        printf("%i %s\n", index, arg.c_str());
-#endif //DEBUG
+        printf("%i: %s\n", index, arg.c_str());
         argv[index] = PlatformString::duplicate(arg.c_str());
         index++;
     }
@@ -401,6 +402,7 @@ bool JavaVirtualMachine::launchVM(JavaOptions& options, std::list<TString>& vmar
 #endif //MAC
 
     if (javaLibrary.JavaVMCreate(argc, argv.GetData()) == true) {
+        printf("JavaVMCreate returned true\n");
         return true;
     }
 

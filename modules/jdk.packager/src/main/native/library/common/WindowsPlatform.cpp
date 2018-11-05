@@ -199,15 +199,7 @@ MessageResponse WindowsPlatform::ShowResponseMessage(TString title, TString desc
 //}
 
 TString WindowsPlatform::GetBundledJVMLibraryFileName(TString RuntimePath) {
-    TString result = FilePath::IncludeTrailingSeparater(RuntimePath) +
-        _T("jre\\bin\\jli.dll");
-
-    if (FilePath::FileExists(result) == false) {
-        result = FilePath::IncludeTrailingSeparater(RuntimePath) +
-            _T("bin\\jli.dll");
-    }
-
-    return result;
+    return FilePath::IncludeTrailingSeparater(RuntimePath) + _T("bin\\jli.dll");
 }
 
 ISectionalPropertyContainer* WindowsPlatform::GetConfigFile(TString FileName) {

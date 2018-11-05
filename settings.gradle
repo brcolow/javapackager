@@ -1,4 +1,5 @@
-include 'fxpackager', 'fxpackagerservices'
+include 'fxpackager', 'fxpackagerservices', "minesweeperfx"
 
 project(":fxpackager").projectDir = file("modules/jdk.packager")
 project(":fxpackagerservices").projectDir = file("modules/jdk.packager.services")
+project(":minesweeperfx").projectDir = file("modules/minesweeperfx")

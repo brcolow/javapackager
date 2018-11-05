@@ -31,11 +31,8 @@
  */
 package minesweeperfx;
 
-
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 
 public class Tile {
 
@@ -62,19 +59,17 @@ public class Tile {
 
         switch (state) {
             case Hidden: {
-                if (rectangle.contains(mouseLocation) == true) {
+                if (rectangle.contains(mouseLocation)) {
                     image = Resources.getInstance().getImage(Resources.ImageType.Over);
-                }
-                else {
+                } else {
                     image = Resources.getInstance().getImage(Resources.ImageType.Blank);
                 }
                 break;
             }
             case Flagged: {
-                if (rectangle.contains(mouseLocation) == true) {
+                if (rectangle.contains(mouseLocation)) {
                     image = Resources.getInstance().getImage(Resources.ImageType.FlagOver);
-                }
-                else {
+                } else {
                     image = Resources.getInstance().getImage(Resources.ImageType.Flag);
                 }
                 break;
@@ -91,14 +86,13 @@ public class Tile {
     }
 
     public void draw(GraphicsContext graphics) {
-        Image image = null;
+        Image image;
 
         if ((imageType == Resources.ImageType.Mine) &&
             (state == TileState.Showing)) {
 
             image = Resources.getInstance().getImage(Resources.ImageType.HitMine);
-        }
-        else {
+        } else {
             image = Resources.getInstance().getImage(imageType);
         }
 
@@ -110,7 +104,7 @@ public class Tile {
     public boolean hitTest(Point mouseLocation) {
         boolean result = false;
 
-        if (rectangle.contains(mouseLocation) == true) {
+        if (rectangle.contains(mouseLocation)) {
             result = true;
         }
 
@@ -120,7 +114,7 @@ public class Tile {
     public boolean selected(Point mouseLocation) {
         boolean result = false;
 
-        if (rectangle.contains(mouseLocation) == true) {
+        if (rectangle.contains(mouseLocation)) {
             state = TileState.Showing;
 
             if (imageType == Resources.ImageType.Mine) {
@@ -134,12 +128,11 @@ public class Tile {
     public FlagState flag(Point mouseLocation) {
         FlagState result = FlagState.None;
 
-        if (rectangle.contains(mouseLocation) == true) {
+        if (rectangle.contains(mouseLocation)) {
             if (state == TileState.Flagged) {
                 state = TileState.Hidden;
                 result = FlagState.Unflag;
-            }
-            else {
+            } else {
                 state = TileState.Flagged;
                 result = FlagState.Flag;
             }
@@ -160,7 +153,7 @@ public class Tile {
         return result;
     }
 
-    public enum TileUncover {Stop, Continue, Done}
+    public enum TileUncover { Stop, Continue, Done }
 
     public TileUncover uncover() {
         TileUncover result = TileUncover.Stop;
@@ -169,8 +162,7 @@ public class Tile {
             if (imageType == Resources.ImageType.ExposedTile) {
                 state = TileState.Showing;
                 result = TileUncover.Continue;
-            }
-            else if (imageType != Resources.ImageType.ExposedTile) {
+            } else {
                 state = TileState.Showing;
                 result = TileUncover.Done;
             }

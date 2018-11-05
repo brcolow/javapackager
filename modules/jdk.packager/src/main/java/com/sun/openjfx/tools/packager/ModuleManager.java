@@ -67,6 +67,10 @@ public final class ModuleManager {
         File lfolder = new File(directory);
         File[] files = lfolder.listFiles();
 
+        if (files == null) {
+            throw new IllegalArgumentException("Can not get modules in directory: " + directory +
+                    " because it does not exist");
+        }
         for (File file : files) {
             Module module = new Module(file);
 

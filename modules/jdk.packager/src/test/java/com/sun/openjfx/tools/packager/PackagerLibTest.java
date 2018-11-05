@@ -98,7 +98,6 @@ public class PackagerLibTest {
         File inputJar = createTestJar(m, "DUMMY.class");
 
         SignJarParams params = new SignJarParams();
-        System.out.println("curr dir: " + Paths.get(".").toAbsolutePath());
         params.setKeyStore(Paths.get("./src/test/resources/com/sun/openjfx/tools", "test.keystore").toFile());
         params.setStorePass("nopassword");
         params.setAlias("simple-http-server");

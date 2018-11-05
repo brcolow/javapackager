@@ -9,7 +9,6 @@ endif()
 project(javapackager VERSION 0.0.1 LANGUAGES C CXX)
 if(WIN32)
     include(InstallRequiredSystemLibraries)
-    message(STATUS "Installing system DLLs: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
 endif()
 
 add_library(launcher_lib SHARED modules/jdk.packager/src/main/native/library/common/Exports.h
@@ -51,6 +50,9 @@ add_library(launcher_lib SHARED modules/jdk.packager/src/main/native/library/com
 target_compile_definitions(launcher_lib PUBLIC $<$<CONFIG:DEBUG>:DEBUG>)
 
 if(WIN32)
+    if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+        message(WARNING "Compiling Windows native binaries without 64-bit!")
+    endif()
     add_executable(javapackager modules/jdk.packager/src/main/native/javapackager/win/ByteBuffer.cpp
                    modules/jdk.packager/src/main/native/javapackager/win/ByteBuffer.h
                    modules/jdk.packager/src/main/native/javapackager/win/IconSwap.cpp

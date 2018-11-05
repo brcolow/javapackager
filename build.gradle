@@ -50,6 +50,59 @@ project(":fxpackagerservices") {
     }
 }
 
+project(":minesweeperfx") {
+    apply plugin: 'java'
+    apply plugin: 'application'
+
+    ext.moduleName = 'minesweeperfx'
+
+    compileJava {
+        inputs.property("moduleName", moduleName)
+        doFirst {
+            options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'javafx.controls',
+                    '--add-modules', 'javafx.graphics',
+                    '--add-modules', 'com.brcolow.javapackager.services',
+                    '--patch-module', "$moduleName=" + files(sourceSets.main.resources.srcDirs).asPath,
+            ]
+            classpath = files()
+        }
+    }
+
+    jar {
+        manifest {
+            attributes(
+                    "Main-Class": "minesweeperfx.MinesweeperFX"
+            )
+        }
+    }
+
+    mainClassName = "$moduleName/minesweeperfx.MinesweeperFX"
+
+    run {
+        inputs.property("moduleName", moduleName)
+        doFirst {
+            jvmArgs = [
+                    '--module-path', classpath.asPath,
+                    '--module', mainClassName
+            ]
+            classpath = files()
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compile "org.openjfx:javafx-base:11:${PLATFORM}"
+        compile "org.openjfx:javafx-graphics:11:${PLATFORM}"
+        compile "org.openjfx:javafx-controls:11:${PLATFORM}"
+        compile project(":fxpackagerservices")
+    }
+}
+
 project(":fxpackager") {
     apply plugin: 'java'
     apply plugin: 'checkstyle'
@@ -74,10 +127,6 @@ project(":fxpackager") {
         }
     }
 
-    jar {
-        from "$buildDir/generated-resources"
-    }
-
     checkstyle {
         configFile = rootProject.file("gradle/checkstyle.xml")
         showViolations = true
@@ -91,10 +140,12 @@ project(":fxpackager") {
         task.logging.setLevel(LogLevel.LIFECYCLE)
     }
 
-    manifest {
-        attributes(
-                "Main-Class": "com.sun.openjfx.tools.packager.Main"
-        )
+    jar {
+        from "$buildDir/generated-resources"
+
+        manifest {
+            attributes "Main-Class": "com.sun.openjfx.tools.packager.Main"
+        }
     }
 
     repositories {
@@ -111,6 +162,11 @@ project(":fxpackager") {
         testCompile group: "com.github.stefanbirkner", name: "system-rules", "version": "1.18.0"
         testCompile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
         testCompile project(":fxpackager")
+    }
+
+    task copyDependencies(type: Copy) {
+        from configurations.compile
+        into 'build/deps'
     }
 
     compileJava {
@@ -130,6 +186,7 @@ project(":fxpackager") {
             classpath = files()
         }
         options.encoding = 'UTF-8'
+        dependsOn copyDependencies
     }
 
     task setupPackagerFakeJar(type: Copy) {

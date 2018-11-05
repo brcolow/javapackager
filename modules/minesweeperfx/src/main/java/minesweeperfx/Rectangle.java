@@ -31,13 +31,30 @@
  */
 package minesweeperfx;
 
+class Rectangle {
 
-class Location {
-    public int x;
-    public int y;
+    public double x;
+    public double y;
+    public double width;
+    public double height;
 
-    public Location(int aX, int aY) {
+    public Rectangle(double aX, double aY, double aWidth, double aHeight) {
         x = aX;
         y = aY;
+        width = aWidth;
+        height = aHeight;
+    }
+
+    public boolean contains(Point value) {
+        boolean result = false;
+
+        if ((value != null) &&
+            (x <= value.x) && (y <= value.y) &&
+            (value.x <= x + width) && (value.y <= y + height)) {
+
+            result = true;
+        }
+
+        return result;
     }
 }

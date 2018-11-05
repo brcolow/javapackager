@@ -59,7 +59,6 @@ public final class MacCertificate {
     }
 
     private static File findCertificate(String certificate, boolean verbose) {
-        System.out.println("CERTIFICATE FILE: " + certificate);
         File result = null;
 
         List<String> args = new ArrayList<>();
@@ -93,7 +92,6 @@ public final class MacCertificate {
     }
 
     private static Date findCertificateDate(String filename, boolean verbose) {
-        System.out.println("CERTIFICATE DATE FILENAME: " + filename);
         Date result = null;
 
         List<String> args = new ArrayList<>();
