@@ -207,6 +207,7 @@ public class WinAppBundler extends AbstractImageBundler {
             return null;
         } catch (Exception ex) {
             Log.info("Exception: " + ex);
+            ex.printStackTrace();
             Log.debug(ex);
             return null;
         }

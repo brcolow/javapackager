@@ -240,8 +240,6 @@ public class WindowsAppImageBuilder extends AbstractAppImageBuilder {
                 REDIST_MSVCP.replaceAll("VS_VER", vsVer));
 
         if (Files.exists(msvcrPath) && Files.exists(msvcpPath)) {
-            System.out.println("Copying to: " + root.resolve(REDIST_MSVCR.replaceAll("VS_VER", vsVer)));
-            System.out.println("Copying to: " + root.resolve(REDIST_MSVCP.replaceAll("VS_VER", vsVer)));
             Files.copy(msvcrPath, root.resolve(REDIST_MSVCR.replaceAll("VS_VER", vsVer)));
             Files.copy(msvcpPath, root.resolve(REDIST_MSVCP.replaceAll("VS_VER", vsVer)));
             return true;

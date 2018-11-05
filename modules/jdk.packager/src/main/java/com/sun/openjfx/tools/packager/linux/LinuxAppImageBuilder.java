@@ -158,6 +158,9 @@ public class LinuxAppImageBuilder extends AbstractAppImageBuilder {
         if (appResourcesList == null) {
             throw new RuntimeException("Null app resources?");
         }
+        if (appResourcesList.isEmpty()) {
+            Log.error("App resources are empty!");
+        }
         for (RelativeFileSet appResources : appResourcesList) {
             if (appResources == null) {
                 throw new RuntimeException("Null app resources?");

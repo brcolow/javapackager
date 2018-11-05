@@ -246,7 +246,7 @@ public class WinMsiBundler extends AbstractBundler {
         return results;
     }
 
-    public static Collection<BundlerParamInfo<?>> getMsiBundleParameters() {
+    private static Collection<BundlerParamInfo<?>> getMsiBundleParameters() {
         return Arrays.asList(DESCRIPTION,
                 MENU_GROUP,
                 MENU_HINT,
@@ -576,7 +576,7 @@ public class WinMsiBundler extends AbstractBundler {
         }
     }
 
-    protected void cleanupConfigFiles(Map<String, ? super Object> params) {
+    private void cleanupConfigFiles(Map<String, ? super Object> params) {
         if (getConfig_ProjectFile(params) != null) {
             getConfig_ProjectFile(params).delete();
         }
@@ -605,7 +605,7 @@ public class WinMsiBundler extends AbstractBundler {
                 basedir.getAbsolutePath().length() + 1);
     }
 
-    boolean prepareMainProjectFile(Map<String, ? super Object> params) throws IOException {
+    private boolean prepareMainProjectFile(Map<String, ? super Object> params) throws IOException {
         Map<String, String> data = new HashMap<>();
 
         UUID productGUID = UUID.randomUUID();
@@ -684,7 +684,7 @@ public class WinMsiBundler extends AbstractBundler {
         w.write(preprocessTextResource(
                 WinAppBundler.WIN_BUNDLER_PREFIX + getConfig_ProjectFile(params).getName(),
                 "WiX config file",
-                MSI_PROJECT_TEMPLATE, data, VERBOSE.fetchFrom(params),
+                "packager/windows/template.wxs", data, VERBOSE.fetchFrom(params),
                 DROP_IN_RESOURCES_ROOT.fetchFrom(params)));
         w.close();
         return true;
@@ -777,7 +777,7 @@ public class WinMsiBundler extends AbstractBundler {
         }
 
         // have files => need to output component
-        out.println(prefix + " <Component Id=\"comp" + (compId++) + "\" DiskId=\"1\"" +
+        out.println(prefix + " <Component Id=\"comp" + compId++ + "\" DiskId=\"1\"" +
                 " Guid=\"" + UUID.randomUUID().toString() + "\"" +
                 (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
         out.println(prefix + "  <CreateFolder/>");
@@ -829,7 +829,7 @@ public class WinMsiBundler extends AbstractBundler {
 
             boolean doShortcuts = isLauncher && (menuShortcut || desktopShortcut);
 
-            String thisFileId = isLauncher ? LAUNCHER_ID : ("FileId" + (id++));
+            String thisFileId = isLauncher ? LAUNCHER_ID : "FileId" + id++;
             idToFileMap.put(f.getName(), thisFileId);
 
             out.println(prefix + "   <File Id=\"" +
@@ -909,23 +909,19 @@ public class WinMsiBundler extends AbstractBundler {
                         }
                         out.println(">");
 
-                        if (extensions == null) {
-                            Log.info("Creating association with null extension.");
+                        out.print(prefix + "    <Extension Id='" + ext + "' Advertise='no'");
+                        if (mime == null) {
+                            out.println(">");
                         } else {
-                            out.print(prefix + "    <Extension Id='" + ext + "' Advertise='no'");
-                            if (mime == null) {
-                                out.println(">");
-                            } else {
-                                out.println(" ContentType='" + mime + "'>");
-                                if (!defaultedMimes.contains(mime)) {
-                                    out.println(prefix + "      <MIME ContentType='" + mime + "' Default='yes' />");
-                                    defaultedMimes.add(mime);
-                                }
+                            out.println(" ContentType='" + mime + "'>");
+                            if (!defaultedMimes.contains(mime)) {
+                                out.println(prefix + "      <MIME ContentType='" + mime + "' Default='yes' />");
+                                defaultedMimes.add(mime);
                             }
-                            out.println(prefix + "      <Verb Id='open' Command='Open' TargetFile='" +
-                                    LAUNCHER_ID + "' Argument='\"%1\"' />");
-                            out.println(prefix + "    </Extension>");
                         }
+                        out.println(prefix + "      <Verb Id='open' Command='Open' TargetFile='" +
+                                LAUNCHER_ID + "' Argument='\"%1\"' />");
+                        out.println(prefix + "    </Extension>");
                         out.println(prefix + "   </ProgId>");
                     }
                 }
@@ -950,7 +946,7 @@ public class WinMsiBundler extends AbstractBundler {
         }
 
         if (needServiceEntries) {
-            out.println(prefix + " <Component Id=\"comp" + (compId++) + "\" DiskId=\"1\"" +
+            out.println(prefix + " <Component Id=\"comp" + compId++ + "\" DiskId=\"1\"" +
                     " Guid=\"" + UUID.randomUUID().toString() + "\"" +
                     (BIT_ARCH_64.fetchFrom(params) ? " Win64=\"yes\"" : "") + ">");
             out.println("  <CreateFolder/>");
@@ -996,7 +992,7 @@ public class WinMsiBundler extends AbstractBundler {
     }
 
     private boolean prepareContentList(Map<String, ? super Object> params) throws FileNotFoundException {
-        File f = new File(CONFIG_ROOT.fetchFrom(params), MSI_PROJECT_CONTENT_FILE);
+        File f = new File(CONFIG_ROOT.fetchFrom(params), "bundle.wxi");
         PrintStream out = new PrintStream(f);
 
         // opening
@@ -1066,7 +1062,7 @@ public class WinMsiBundler extends AbstractBundler {
     }
 
     private File getConfig_ProjectFile(Map<String, ? super Object> params) {
-        return new File(CONFIG_ROOT.fetchFrom(params), APP_NAME.fetchFrom(params) + ".wxs");
+        return new File(CONFIG_ROOT.fetchFrom(params), APP_FS_NAME.fetchFrom(params) + ".wxs");
     }
 
     private String getLicenseFile(Map<String, ? super Object> params) {
@@ -1082,12 +1078,10 @@ public class WinMsiBundler extends AbstractBundler {
         return prepareMainProjectFile(params) && prepareContentList(params);
 
     }
-    private static final  String MSI_PROJECT_TEMPLATE = "template.wxs";
-    private static final String MSI_PROJECT_CONTENT_FILE = "bundle.wxi";
 
     private File buildMSI(Map<String, ? super Object> params, File outdir) throws IOException {
         File tmpDir = new File(BUILD_ROOT.fetchFrom(params), "tmp");
-        File candleOut = new File(tmpDir, APP_NAME.fetchFrom(params) + ".wixobj");
+        File candleOut = new File(tmpDir, APP_FS_NAME.fetchFrom(params) + ".wixobj");
         File msiOut = new File(outdir, INSTALLER_FILE_NAME.fetchFrom(params) + ".msi");
 
         Log.verbose(MessageFormat.format("Preparing MSI config: {0}", msiOut.getAbsolutePath()));

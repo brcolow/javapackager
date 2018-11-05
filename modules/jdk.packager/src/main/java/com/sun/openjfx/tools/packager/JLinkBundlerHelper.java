@@ -273,8 +273,8 @@ public final class JLinkBundlerHelper {
         appRuntimeBuilder.setExcludeFileList(excludeFileList);
         appRuntimeBuilder.setStripNativeCommands(stripNativeCommands);
         appRuntimeBuilder.setUserArguments(userArguments);
-
         appRuntimeBuilder.build();
+
         imageBuilder.prepareApplicationFiles();
     }
 

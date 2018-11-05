@@ -116,7 +116,7 @@ public class Main {
 
     public static void main(String... args) throws Exception {
         // Create logger with default system.out and system.err
-        Log.Logger logger = new Log.Logger(false);
+        Log.Logger logger = new Log.Logger(System.getenv("JAVAPACKAGER_DEBUG") != null);
         Log.setLogger(logger);
 
         int status = run(args);
@@ -125,7 +125,7 @@ public class Main {
 
     public static int run(PrintWriter out, PrintWriter err, String... args) throws Exception {
         // Create logger with provided streams
-        Log.Logger logger = new Log.Logger(false);
+        Log.Logger logger = new Log.Logger(System.getenv("JAVAPACKAGER_DEBUG") != null);
         logger.setPrintWriter(out, err);
         Log.setLogger(logger);
 

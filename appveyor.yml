@@ -11,6 +11,7 @@ shallow_clone: true
 
 build_script:
   - ps: |
+      choco install wixtoolset --no-progress
       choco install cmake --installargs 'ADD_CMAKE_TO_PATH=""User""'` --no-progress --pre --dir C:\Users\Appveyor\cmake
       $client = New-Object net.webclient
       $client.DownloadFile('http://jdk.java.net/11/', 'C:\Users\appveyor\openjdk11.html')
@@ -23,12 +24,16 @@ build_script:
       mkdir build
       cd build
       $env:PATH += ";C:\Users\Appveyor\cmake\bin"
-      cmake ..
+      cmake -G "Visual Studio 15 2017" -A x64 -T host=x64 ..
       cmake --build . --config Release
-      dir Release
       cd ..
   - cmd: .\gradlew build --no-daemon --warning-mode all
-
+  - ps: |
+       $env:PATH = "${env:JAVA_HOME}\bin;${env:PATH};C:\Program Files (x86)\WiX Toolset v3.11\bin"
+       cd modules\jdk.packager
+       $env:JAVAPACKAGER_DEBUG="true"
+       build\generated-resources\com\sun\openjfx\tools\packager\windows\javapackager.exe -deploy -v -native -outdir build\minesweeper -name MinesweeperFX -BappResources="..\..\modules\minesweeperfx\build\libs" -BsignBundle=false -Bversion=9 --module minesweeperfx/minesweeperfx.MinesweeperFX --module-path "..\..\modules\minesweeperfx\build\libs;..\..\modules\jdk.packager\build\deps;..\..\modules\jdk.packager.services\build\libs" -appClass minesweeperfx.MinesweeperFX
+       cd ..\..
 on_success:
   - ps: |
         $buildZip = "build.zip"

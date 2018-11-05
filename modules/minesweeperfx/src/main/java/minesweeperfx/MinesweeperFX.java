@@ -31,7 +31,6 @@
  */
 package minesweeperfx;
 
-
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -43,12 +42,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import jdk.packager.services.singleton.SingleInstanceService;
-import jdk.packager.services.singleton.SingleInstanceListener;
 
+import com.openjfx.packager.services.singleton.SingleInstanceListener;
+import com.openjfx.packager.services.singleton.SingleInstanceService;
 
 public class MinesweeperFX extends Application implements SingleInstanceListener {
-    Game game;
+    private Game game;
 
     @Override
     public void newActivation(String... params) {
@@ -59,7 +58,7 @@ public class MinesweeperFX extends Application implements SingleInstanceListener
 
     @Override
     public void stop() {
-         SingleInstanceService.unregisterSingleInstance(this);
+        SingleInstanceService.unregisterSingleInstance(this);
     }
 
     @Override
@@ -67,16 +66,16 @@ public class MinesweeperFX extends Application implements SingleInstanceListener
         // the app will be single instance only if the option
         // "-singleton" is specified for javapackager
         SingleInstanceService.registerSingleInstance(this);
-        BorderPane root = new BorderPane();
         HBox hbox = new HBox();
         hbox.setPadding(new Insets(5));
         hbox.setSpacing(20);
         hbox.setAlignment(Pos.CENTER_LEFT);
+        BorderPane root = new BorderPane();
         root.setTop(hbox);
 
         Button newGameButton = new Button();
         newGameButton.setText("New Game");
-        newGameButton.setOnAction((event) -> game.newGame("New Game"));
+        newGameButton.setOnAction(event -> game.newGame("New Game"));
 
         Text minesDescriptionLabel = new Text();
         minesDescriptionLabel.setText("Mines:");
@@ -95,22 +94,20 @@ public class MinesweeperFX extends Application implements SingleInstanceListener
         GraphicsContext gc = canvas.getGraphicsContext2D();
         game.setGraphicsContext(gc);
 
-        game.setOnMouseMoved((event) -> {
+        game.setOnMouseMoved(event -> {
             Point point = new Point(event.getX(), event.getY());
             game.draw(gc, point);
         });
 
-        game.setOnMousePressed((event) -> {
-            if (event.isPrimaryButtonDown() && (event.isControlDown() == false)) {
+        game.setOnMousePressed(event -> {
+            if (event.isPrimaryButtonDown() && !event.isControlDown()) {
                 if (Globals.debug) {
                     System.out.println("click " + event.getX() + "  " + event.getY());
                 }
 
                 Point point = new Point(event.getX(), event.getY());
                 game.leftClick(point);
-            }
-            else if (event.isSecondaryButtonDown() ||
-                     (event.isPrimaryButtonDown() && (event.isControlDown() == true))) {
+            } else if (event.isSecondaryButtonDown() || event.isPrimaryButtonDown()) {
                 if (Globals.debug) {
                     System.out.println("rightclick " + event.getX() + "  " + event.getY());
                 }

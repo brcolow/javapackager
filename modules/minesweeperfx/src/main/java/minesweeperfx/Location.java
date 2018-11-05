@@ -31,7 +31,12 @@
  */
 package minesweeperfx;
 
+class Location {
+    public int x;
+    public int y;
 
-public final class Globals {
-    public static final boolean debug = false;
+    public Location(int aX, int aY) {
+        x = aX;
+        y = aY;
+    }
 }

@@ -606,7 +606,6 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
         boolean hasMainJarClassPath = params.containsKey(CLASSPATH.getID());
         boolean hasPreloader = params.containsKey(PRELOADER_CLASS.getID());
         boolean hasModule = params.containsKey(MODULE.getID());
-
         if (hasMainClass && hasMainJar && hasMainJarClassPath || hasModule) {
             return;
         }
@@ -713,6 +712,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
+                throw new IllegalStateException(ex);
             }
         }
     }
@@ -743,8 +743,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                         "Please specify a applicationClass or ensure that the classpath has a jar containing one " +
                                 "in the manifest.");
             } else {
-                throw new ConfigException(
-                        "An application class was not specified nor was one found in the supplied " +
+                throw new ConfigException("An application class was not specified nor was one found in the supplied " +
                                 "application resources",
                         "Please specify a applicationClass or ensure that the appResources has a jar containing " +
                                 "one in the manifest.");

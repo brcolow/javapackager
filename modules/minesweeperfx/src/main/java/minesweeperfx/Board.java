@@ -31,12 +31,9 @@
  */
 package minesweeperfx;
 
-
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-
 
 public class Board extends GridPane {
     private Tile[][] tiles;
@@ -119,7 +116,7 @@ public class Board extends GridPane {
                 for (int i = 1; i <= xDimension; i++) {
                     boolean hasBomb = bombs[i][j];
 
-                    if (hasBomb == false) {
+                    if (!hasBomb) {
                         if (Math.random() < r) {
                             if (lMineCount > 0) {
                                 lMineCount--;
@@ -141,8 +138,7 @@ public class Board extends GridPane {
                 for (int i = 1; i <= xDimension; i++) {
                     if (bombs[i][j]) {
                         System.out.print("* ");
-                    }
-                    else {
+                    } else {
                         System.out.print(". ");
                     }
                 }
@@ -160,7 +156,9 @@ public class Board extends GridPane {
             for (int i = 1; i <= xDimension; i++) {
                 for (int iindex = i - 1; iindex <= i + 1; iindex++) {
                     for (int jindex = j - 1; jindex <= j + 1; jindex++) {
-                        if (bombs[iindex][jindex]) board[i][j]++;
+                        if (bombs[iindex][jindex]) {
+                            board[i][j]++;
+                        }
                     }
                 }
             }
@@ -169,8 +167,8 @@ public class Board extends GridPane {
         Image image = Resources.getInstance().getImage(Resources.ImageType.Blank);
         double width = image.getWidth();
         double height = image.getHeight();
-        double ypos = 5; // 10 is boarder.
-        boardWidth = (xDimension * width) + 20; // 20 is boarder.
+        double ypos = 5; // 10 is border.
+        boardWidth = (xDimension * width) + 20; // 20 is border.
         boardHeight = (yDimension * height) + 28;
 
         // Convert board into tiles.
@@ -185,8 +183,7 @@ public class Board extends GridPane {
                     }
 
                     tile = new Tile(xpos, ypos, width, height, Resources.ImageType.Mine, new Location(i - 1, j - 1));
-                }
-                else {
+                } else {
                     if (Globals.debug) {
                         System.out.print(board[i][j] + " ");
                     }
@@ -237,7 +234,7 @@ public class Board extends GridPane {
     }
 
     private interface Loop {
-        public void process(Tile value);
+        void process(Tile value);
     }
 
     private void forEachTile(Loop function) {
@@ -249,11 +246,11 @@ public class Board extends GridPane {
     }
 
     public void draw(GraphicsContext graphics, Point mouseLocation) {
-        forEachTile((tile) -> tile.draw(graphics, mouseLocation));
+        forEachTile(tile -> tile.draw(graphics, mouseLocation));
     }
 
     public void draw(GraphicsContext graphics) {
-        forEachTile((tile) -> tile.draw(graphics));
+        forEachTile(tile -> tile.draw(graphics));
     }
 
     public void invalidate(GraphicsContext graphics) {
@@ -265,7 +262,7 @@ public class Board extends GridPane {
 
         for (int i = 0; i < tiles.length; i++) {
             for (int j = 0; j < tiles[i].length; j++) {
-                if (tiles[i][j].isFlaggedAndMine() == false) {
+                if (!tiles[i][j].isFlaggedAndMine()) {
                     result = false;
                 }
             }
@@ -277,7 +274,7 @@ public class Board extends GridPane {
     public Tile getTile(Point mouseLocation) {
         for (int i = 0; i < tiles.length; i++) {
             for (int j = 0; j < tiles[i].length; j++) {
-                if (tiles[i][j].hitTest(mouseLocation) == true) {
+                if (tiles[i][j].hitTest(mouseLocation)) {
                     return tiles[i][j];
                 }
             }

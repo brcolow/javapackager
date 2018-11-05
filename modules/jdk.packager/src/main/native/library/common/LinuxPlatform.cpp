@@ -200,7 +200,7 @@ int LinuxPlatform::GetProcessID() {
 #ifndef __UNIX_DEPLOY_PLATFORM__
 #define __UNIX_DEPLOY_PLATFORM__
 
-/** Provide an abstraction for difference in the platform APIs,
+/** Provide an abstraction for differences in the platform APIs,
      e.g. string manipulation functions, etc. */
 #include <stdio.h>
 #include <string.h>

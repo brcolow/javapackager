@@ -1,0 +1,12 @@
+com.sun.openjfx.tools.packager.linux.LinuxAppBundler
+com.sun.openjfx.tools.packager.linux.LinuxDebBundler
+com.sun.openjfx.tools.packager.linux.LinuxRpmBundler
+com.sun.openjfx.tools.packager.mac.MacAppBundler
+com.sun.openjfx.tools.packager.mac.MacAppStoreBundler
+com.sun.openjfx.tools.packager.mac.MacDaemonBundler
+com.sun.openjfx.tools.packager.mac.MacDmgBundler
+com.sun.openjfx.tools.packager.mac.MacPkgBundler
+com.sun.openjfx.tools.packager.windows.WinAppBundler
+com.sun.openjfx.tools.packager.windows.WinExeBundler
+com.sun.openjfx.tools.packager.windows.WinMsiBundler
+com.sun.openjfx.tools.packager.windows.WinServiceBundler

@@ -362,8 +362,6 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
         String hdiUtilVerbosityFlag = Log.isDebug() ? "-verbose" : "-quiet";
 
         // create temp image
-        System.out.println("HDIUTIL srcfolder: " + srcFolder.getAbsolutePath());
-        System.out.println("-ov: " + protoDmg.getAbsolutePath());
         ScheduledExecutorService scheduler = null;
         if (System.getenv("TRAVIS") != null) {
             scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -383,10 +381,6 @@ public class MacDmgBundler extends MacBaseInstallerBundler {
         if (scheduler != null) {
             scheduler.shutdown();
         }
-        System.out.println("does dmg exist? " + protoDmg.exists());
-        System.out.println("protoDmg: " + protoDmg.getAbsolutePath());
-        System.out.println("imagesRoot: " + imagesRoot.getAbsolutePath());
-        System.out.println("imagesRoot exists: " + imagesRoot.exists());
 
         // mount temp image
         pb = new ProcessBuilder(HDIUTIL,

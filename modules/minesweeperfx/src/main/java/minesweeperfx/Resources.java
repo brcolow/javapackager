@@ -31,11 +31,9 @@
  */
 package minesweeperfx;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import javafx.scene.image.Image;
-
 
 public class Resources {
 
@@ -58,7 +56,7 @@ public class Resources {
 
     private Map<ImageType, Image> images;
 
-    private static Resources resources = null;
+    private static Resources resources;
 
     public static Resources getInstance() {
         if (resources == null) {
@@ -69,27 +67,27 @@ public class Resources {
     }
 
     private Resources() {
-        images = new HashMap<ImageType, Image>();
+        images = new HashMap<>();
         loadImages();
     }
 
     private void loadImages() {
-        loadImage("resources/blank.png",     ImageType.Blank);
-        loadImage("resources/blankover.png", ImageType.Over);
-        loadImage("resources/exposed.png",   ImageType.ExposedTile);
-        loadImage("resources/flag.png",      ImageType.Flag);
-        loadImage("resources/flag.png",      ImageType.FlagOver);
-        loadImage("resources/hitmine.png",   ImageType.HitMine);
-        loadImage("resources/mine.png",      ImageType.Mine);
-        loadImage("resources/wrongmine.png", ImageType.WrongMine);
-        loadImage("resources/number1.png",   ImageType.Number1);
-        loadImage("resources/number2.png",   ImageType.Number2);
-        loadImage("resources/number3.png",   ImageType.Number3);
-        loadImage("resources/number4.png",   ImageType.Number4);
-        loadImage("resources/number5.png",   ImageType.Number5);
-        loadImage("resources/number6.png",   ImageType.Number6);
-        loadImage("resources/number7.png",   ImageType.Number7);
-        loadImage("resources/number8.png",   ImageType.Number8);
+        loadImage("blank.png",     ImageType.Blank);
+        loadImage("blankover.png", ImageType.Over);
+        loadImage("exposed.png",   ImageType.ExposedTile);
+        loadImage("flag.png",      ImageType.Flag);
+        loadImage("flag.png",      ImageType.FlagOver);
+        loadImage("hitmine.png",   ImageType.HitMine);
+        loadImage("mine.png",      ImageType.Mine);
+        loadImage("wrongmine.png", ImageType.WrongMine);
+        loadImage("number1.png",   ImageType.Number1);
+        loadImage("number2.png",   ImageType.Number2);
+        loadImage("number3.png",   ImageType.Number3);
+        loadImage("number4.png",   ImageType.Number4);
+        loadImage("number5.png",   ImageType.Number5);
+        loadImage("number6.png",   ImageType.Number6);
+        loadImage("number7.png",   ImageType.Number7);
+        loadImage("number8.png",   ImageType.Number8);
     }
 
     private void loadImage(String imageName, ImageType type) {

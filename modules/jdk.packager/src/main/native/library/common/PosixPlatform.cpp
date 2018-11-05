@@ -237,7 +237,7 @@ bool PosixProcess::ReadOutput() {
         }
     }
 
-    return false;
+    return result;
 }
 
 bool PosixProcess::IsRunning() {

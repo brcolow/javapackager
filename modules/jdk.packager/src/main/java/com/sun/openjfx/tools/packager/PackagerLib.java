@@ -79,8 +79,10 @@ public class PackagerLib {
                 }
             }
         } catch (PackagerException ex) {
+            ex.printStackTrace();
             throw ex;
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new PackagerException(ex, "Error: deploy failed", ex.getMessage());
         }
 
@@ -120,6 +122,7 @@ public class PackagerLib {
                             bundler.getName(), e.getMessage()));
                 }
             } catch (RuntimeException re) {
+                re.printStackTrace();
                 Log.info(MessageFormat.format("Bundler {0} failed because of {1}", bundler.getName(), re.toString()));
                 Log.debug(re);
             }

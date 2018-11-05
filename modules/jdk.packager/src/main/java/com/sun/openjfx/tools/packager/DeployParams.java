@@ -159,6 +159,9 @@ public class DeployParams extends CommonParams {
     }
 
     public void setModule(String value) {
+        // TODO: Validate this (not necessarily here)!!! We were passing in "minesweeperfx" instead of
+        //  "minesweeperfx/minesweeperfx.MinesweeperFX" and the javapackager looks like it succeeds in producing
+        //  native installers but the launcher fails to find the module and it looks like the app never starts.
         this.module = value;
     }
 
