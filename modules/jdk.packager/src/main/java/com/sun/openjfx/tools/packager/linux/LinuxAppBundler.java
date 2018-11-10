@@ -26,9 +26,6 @@
 package com.sun.openjfx.tools.packager.linux;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,7 +65,6 @@ public class LinuxAppBundler extends AbstractImageBundler {
 
     protected static final String LINUX_BUNDLER_PREFIX =
             BUNDLER_PREFIX + "linux" + File.separator;
-    private static final String EXECUTABLE_NAME = "JavaAppLauncher";
 
     public static final BundlerParamInfo<File> ICON_PNG = new StandardBundlerParam<>(
             ".png Icon",
