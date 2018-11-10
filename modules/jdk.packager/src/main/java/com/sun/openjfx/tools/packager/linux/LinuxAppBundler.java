@@ -255,9 +255,7 @@ public class LinuxAppBundler extends AbstractImageBundler {
     public static Collection<BundlerParamInfo<?>> getAppBundleParameters() {
         return Arrays.asList(APP_NAME,
                 APP_RESOURCES,
-                // APP_RESOURCES_LIST, // ??
                 ARGUMENTS,
-                CLASSPATH,
                 JVM_OPTIONS,
                 JVM_PROPERTIES,
                 LINUX_RUNTIME,

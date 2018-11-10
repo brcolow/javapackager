@@ -170,7 +170,7 @@ public class LinuxAppBundlerTest {
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
         bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
                 new HashSet<>(Arrays.asList(fakeMainJar))));
-        bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
+        // bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(VERBOSE.getID(), true);
 
@@ -279,7 +279,7 @@ public class LinuxAppBundlerTest {
         bundleParams.put(MODULE.getID(), "com.everything");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(ARGUMENTS.getID(), Arrays.asList("He Said", "She Said"));
-        bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
+        // bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
 
         if (runtimeJdk != null) {
             bundleParams.put(LINUX_RUNTIME.getID(), runtimeJdk);
@@ -349,14 +349,13 @@ public class LinuxAppBundlerTest {
         Map<String, Object> bundleParams = new HashMap<>();
 
         bundleParams.put(BUILD_ROOT.getID(), tmpBase);
-
         bundleParams.put(APP_NAME.getID(), "Two Launchers Test");
         bundleParams.put(MODULE.getID(), "hello");
         bundleParams.put(MAIN_CLASS.getID(), "hello.HelloRectangle");
         bundleParams.put(PREFERENCES_ID.getID(), "the/really/long/preferences/id");
         bundleParams.put(MAIN_JAR.getID(), new RelativeFileSet(fakeMainJar.getParentFile(),
                 new HashSet<>(Arrays.asList(fakeMainJar))));
-        bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
+        //bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(VERBOSE.getID(), true);
 
