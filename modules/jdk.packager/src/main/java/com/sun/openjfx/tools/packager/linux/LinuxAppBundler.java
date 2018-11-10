@@ -53,7 +53,6 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.ARGUMENTS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.CLASSPATH;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_OPTIONS;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES;
@@ -86,29 +85,6 @@ public class LinuxAppBundler extends AbstractImageBundler {
             return f;
         },
         (s, p) -> new File(s));
-
-    public static final BundlerParamInfo<URL> RAW_EXECUTABLE_URL = new StandardBundlerParam<>(
-            "Launcher URL",
-            "Override the packager default launcher with a custom launcher.",
-            "linux.launcher.url",
-            URL.class,
-        params -> {
-            try {
-                return Paths.get("./build/generated-resources/com/sun/openjfx/tools/packager/linux/" +
-                        EXECUTABLE_NAME).toUri().toURL();
-            } catch (MalformedURLException e) {
-                Log.info(e.toString());
-                return null;
-            }
-        },
-        (s, p) -> {
-            try {
-                return new URL(s);
-            } catch (MalformedURLException e) {
-                Log.info(e.toString());
-                return null;
-            }
-        });
 
     // Subsetting of JRE is restricted.
     // JRE README defines what is allowed to strip:
