@@ -313,7 +313,7 @@ public class LinuxDebBundlerTest {
         bundleParams.put(APP_NAME.getID(), "Everything App Name");
         bundleParams.put(APP_RESOURCES.getID(), new RelativeFileSet(appResourcesDir, appResources));
         bundleParams.put(ARGUMENTS.getID(), Arrays.asList("He Said", "She Said"));
-        bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
+        //bundleParams.put(CLASSPATH.getID(), "mainApp.jar");
         bundleParams.put(LINUX_RUNTIME.getID(), System.getProperty("java.home"));
         bundleParams.put(JVM_OPTIONS.getID(), "-Xms128M");
         bundleParams.put(JVM_PROPERTIES.getID(), "everything.jvm.property=everything.jvm.property.value");
