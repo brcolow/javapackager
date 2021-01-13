@@ -46,8 +46,8 @@ import java.util.Locale;
 import com.sun.openjfx.tools.packager.IOUtils;
 
 public final class MacCertificate {
-    private String certificate;
-    private boolean verbose;
+    private final String certificate;
+    private final boolean verbose;
 
     public MacCertificate(String certificate, boolean verbose) {
         this.certificate = certificate;

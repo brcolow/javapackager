@@ -50,8 +50,7 @@ public enum Platform {
     UNKNOWN,
     WINDOWS,
     LINUX,
-    MAC,
-    SOLARIS;
+    MAC;
 
     private static final Platform PLATFORM;
     private static final int MAJOR_VERSION;
@@ -66,8 +65,6 @@ public enum Platform {
             PLATFORM = Platform.LINUX;
         } else if (os.contains("mac")) {
             PLATFORM = Platform.MAC;
-        } else if (os.contains("sunos") || os.contains("solaris")) {
-            PLATFORM = Platform.SOLARIS;
         } else {
             PLATFORM = Platform.UNKNOWN;
         }

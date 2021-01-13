@@ -129,9 +129,8 @@ public class MacDaemonBundler extends AbstractBundler {
 
     private void cleanupConfigFiles(Map<String, ? super Object> params) {
         if (CONFIG_ROOT.fetchFrom(params) != null) {
-            if (getConfig_LaunchdPlist(params) != null) {
-                getConfig_LaunchdPlist(params).delete();
-            }
+            getConfig_LaunchdPlist(params);
+            getConfig_LaunchdPlist(params).delete();
         }
     }
 

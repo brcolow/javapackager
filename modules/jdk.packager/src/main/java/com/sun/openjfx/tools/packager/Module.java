@@ -34,8 +34,8 @@ import java.util.zip.ZipInputStream;
 
 public final class Module {
 
-    private String filename;
-    private ModuleType moduleType;
+    private final String filename;
+    private final ModuleType moduleType;
 
     public enum JarType { All, UnnamedJar, ModularJar }
     public enum ModuleType { Unknown, UnnamedJar, ModularJar, Jmod, ExplodedModule }

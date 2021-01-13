@@ -270,10 +270,10 @@ public class Main {
                         } else if (arg.startsWith(LIMIT_MODULES + "=")) {
                             deployParams.addLimitModule(arg.replace(LIMIT_MODULES + "=", ""));
                         } else if (arg.equals(STRIP_NATIVE_COMMANDS)) {
-                            deployParams.setStripNativeCommands(Boolean.valueOf(nextArg(args, i++)));
+                            deployParams.setStripNativeCommands(Boolean.parseBoolean(nextArg(args, i++)));
                         } else if (arg.equals(STRIP_NATIVE_COMMANDS + "=")) {
                             deployParams.setStripNativeCommands(
-                                    Boolean.valueOf(arg.replace(STRIP_NATIVE_COMMANDS + "=", "")));
+                                    Boolean.parseBoolean(arg.replace(STRIP_NATIVE_COMMANDS + "=", "")));
                         } else if (arg.equals(DETECT_MODULES)) {
                             deployParams.setDetectModules(true);
                         } else if (arg.equals(MODULE_PATH) || arg.equals(P)) {
