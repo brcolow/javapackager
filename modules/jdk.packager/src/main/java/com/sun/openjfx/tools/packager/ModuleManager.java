@@ -32,7 +32,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 public final class ModuleManager {
-    private List<String> folders = new ArrayList<>();
+    private final List<String> folders = new ArrayList<>();
 
     public enum SearchType { UnnamedJar, ModularJar, Jmod, ExplodedModule }
 

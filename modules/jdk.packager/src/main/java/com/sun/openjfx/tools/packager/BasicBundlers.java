@@ -48,7 +48,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class BasicBundlers implements Bundlers {
 
-    private Collection<Bundler> bundlers = new CopyOnWriteArrayList<>();
+    private final Collection<Bundler> bundlers = new CopyOnWriteArrayList<>();
 
     public Collection<Bundler> getBundlers() {
         return Collections.unmodifiableCollection(bundlers);
@@ -74,26 +74,23 @@ public class BasicBundlers implements Bundlers {
      * Loads all appropriate bundlers for the platform we are running on.
      */
     public void loadBundlersFromServices(ClassLoader cl) {
-        ServiceLoader<Bundler> bunndlers = ServiceLoader.load(Bundler.class, cl);
-        for (Bundler bundler : bunndlers) {
+        ServiceLoader<Bundler> bundlers = ServiceLoader.load(Bundler.class, cl);
+        for (Bundler bundler : bundlers) {
             switch (Platform.getPlatform()) {
                 case WINDOWS:
                     if (bundler.getName().startsWith("Windows")) {
-                        bundlers.add(bundler);
+                        this.bundlers.add(bundler);
                     }
                     break;
                 case LINUX:
                     if (bundler.getName().startsWith("Linux")) {
-                        bundlers.add(bundler);
+                        this.bundlers.add(bundler);
                     }
                     break;
                 case MAC:
                     if (bundler.getName().startsWith("Mac")) {
-                        bundlers.add(bundler);
+                        this.bundlers.add(bundler);
                     }
-                    break;
-                case SOLARIS:
-                    // No Solaris bundlers - yet!?
                     break;
             }
         }

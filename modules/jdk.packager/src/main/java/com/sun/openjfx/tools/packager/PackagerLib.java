@@ -54,8 +54,6 @@ import com.sun.openjfx.tools.packager.bundlers.Bundler.BundleType;
 public class PackagerLib {
     public static final String JAVAFX_VERSION = System.getProperty("java.version");
 
-    private CreateBSSParams createBssParams;
-
     public void generateDeploymentPackages(DeployParams deployParams) throws PackagerException {
         if (deployParams == null) {
             throw new IllegalArgumentException("Parameters must not be null.");
@@ -133,9 +131,7 @@ public class PackagerLib {
         if (params == null) {
             throw new IllegalArgumentException("Parameters must not be null.");
         }
-        this.createBssParams = params;
-        createBinaryCss(createBssParams.resources, createBssParams.outdir);
-        this.createBssParams = null;
+        createBinaryCss(params.resources, params.outdir);
     }
 
     public void signJar(SignJarParams params) throws PackagerException {

@@ -26,9 +26,6 @@
 package com.sun.openjfx.tools.packager.linux;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,7 +50,6 @@ import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_FS_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_NAME;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.APP_RESOURCES;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.ARGUMENTS;
-import static com.sun.openjfx.tools.packager.StandardBundlerParam.CLASSPATH;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.ICON;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_OPTIONS;
 import static com.sun.openjfx.tools.packager.StandardBundlerParam.JVM_PROPERTIES;
@@ -69,7 +65,6 @@ public class LinuxAppBundler extends AbstractImageBundler {
 
     protected static final String LINUX_BUNDLER_PREFIX =
             BUNDLER_PREFIX + "linux" + File.separator;
-    private static final String EXECUTABLE_NAME = "JavaAppLauncher";
 
     public static final BundlerParamInfo<File> ICON_PNG = new StandardBundlerParam<>(
             ".png Icon",
@@ -86,29 +81,6 @@ public class LinuxAppBundler extends AbstractImageBundler {
             return f;
         },
         (s, p) -> new File(s));
-
-    public static final BundlerParamInfo<URL> RAW_EXECUTABLE_URL = new StandardBundlerParam<>(
-            "Launcher URL",
-            "Override the packager default launcher with a custom launcher.",
-            "linux.launcher.url",
-            URL.class,
-        params -> {
-            try {
-                return Paths.get("./build/generated-resources/com/sun/openjfx/tools/packager/linux/" +
-                        EXECUTABLE_NAME).toUri().toURL();
-            } catch (MalformedURLException e) {
-                Log.info(e.toString());
-                return null;
-            }
-        },
-        (s, p) -> {
-            try {
-                return new URL(s);
-            } catch (MalformedURLException e) {
-                Log.info(e.toString());
-                return null;
-            }
-        });
 
     // Subsetting of JRE is restricted.
     // JRE README defines what is allowed to strip:
@@ -255,9 +227,7 @@ public class LinuxAppBundler extends AbstractImageBundler {
     public static Collection<BundlerParamInfo<?>> getAppBundleParameters() {
         return Arrays.asList(APP_NAME,
                 APP_RESOURCES,
-                // APP_RESOURCES_LIST, // ??
                 ARGUMENTS,
-                CLASSPATH,
                 JVM_OPTIONS,
                 JVM_PROPERTIES,
                 LINUX_RUNTIME,

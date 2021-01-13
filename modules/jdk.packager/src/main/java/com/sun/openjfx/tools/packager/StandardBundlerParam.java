@@ -547,11 +547,8 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
             // Add the default JDK module path to the module path.
             if (javaBasePath == null) {
                 List<Path> jdkModulePath = getDefaultModulePath();
-
-                if (jdkModulePath != null) {
-                    modulePath.addAll(jdkModulePath);
-                    javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
-                }
+                modulePath.addAll(jdkModulePath);
+                javaBasePath = JLinkBundlerHelper.findPathOfModule(modulePath, JAVABASEJMOD);
             }
 
             if (javaBasePath == null || !Files.exists(javaBasePath)) {
@@ -824,7 +821,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
         List<Path> result = new ArrayList<>();
         Path jdkModulePath = Paths.get(System.getProperty("java.home"), "jmods").toAbsolutePath();
 
-        if (jdkModulePath != null && Files.exists(jdkModulePath)) {
+        if (Files.exists(jdkModulePath)) {
             result.add(jdkModulePath);
         } else {
             // On a developer build the JDK Home isn't where we expect it
@@ -836,7 +833,7 @@ public class StandardBundlerParam<T> extends BundlerParamInfo<T> {
                 jdkModulePath = Paths.get(env.get("JDK_HOME"), ".." + File.separator + "images" +
                         File.separator + "jmods").toAbsolutePath();
 
-                if (jdkModulePath != null && Files.exists(jdkModulePath)) {
+                if (Files.exists(jdkModulePath)) {
                     result.add(jdkModulePath);
                 }
             }

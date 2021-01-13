@@ -100,7 +100,7 @@ public final class JLinkBundlerHelper {
             String filename = fileset.getIncludedFiles().iterator().next();
             result = fileset.getBaseDirectory().toPath().resolve(filename).toFile();
 
-            if (result == null || !result.exists()) {
+            if (!result.exists()) {
                 String srcdir = StandardBundlerParam.SOURCE_DIR.fetchFrom(params);
 
                 if (srcdir != null) {
